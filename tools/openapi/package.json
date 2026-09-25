@@ -1,0 +1,6 @@
+{
+  "name": "tanidikvar-openapi-generator",
+  "private": true,
+  "scripts": { "generate": "openapi-typescript ../../../tanidikvar-app-api/target/mobile-openapi.json -o ../../packages/api-client/schema.d.ts" },
+  "devDependencies": { "openapi-typescript": "7.13.0", "typescript": "~5.9.3" }
+}

@@ -1,0 +1,36 @@
+appId: com.tanidikvar.app.dev
+---
+- runFlow: login.yaml
+- openLink: tanidikvar-dev://bildirimler
+- assertVisible:
+    id: notifications-screen
+- stopApp
+- launchApp
+- openLink: tanidikvar-dev://bildirimler
+- assertVisible:
+    id: notifications-screen
+- openLink: tanidikvar-dev://account
+- tapOn:
+    id: logout-submit
+- assertVisible:
+    id: login-email
+- openLink: tanidikvar-dev://questions/${QUESTION_ID}
+- assertVisible:
+    id: login-email
+- tapOn:
+    id: login-email
+- inputText: ${TEST_EMAIL}
+- tapOn:
+    id: login-password
+- inputText: ${TEST_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: login-submit
+- assertVisible: ${QUESTION_TITLE}
+- openLink: tanidikvar-dev://questions/invalid
+- assertVisible: Geçersiz bağlantı
+- openLink: tanidikvar-dev://account
+- tapOn:
+    id: logout-submit
+- assertVisible:
+    id: login-email

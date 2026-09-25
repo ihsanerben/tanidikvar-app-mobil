@@ -1,0 +1,98 @@
+appId: com.tanidikvar.app.dev
+---
+- runFlow: login.yaml
+- openLink: tanidikvar-dev://kesfet
+- assertVisible:
+    id: catalog-search
+- tapOn:
+    id: catalog-search
+- inputText: ${UNIVERSITY_QUERY}
+- hideKeyboard
+- tapOn:
+    id: catalog-search-submit
+- assertVisible: ${UNIVERSITY_NAME}
+- openLink: tanidikvar-dev://universities/${UNIVERSITY_ID}
+- assertVisible: ${UNIVERSITY_NAME}
+- tapOn:
+    id: follow-toggle
+- assertVisible: Takibi bırak
+- openLink: tanidikvar-dev://collection?kind=follows
+- assertVisible: ${UNIVERSITY_NAME}
+- openLink: tanidikvar-dev://programs/${PROGRAM_ID}
+- assertVisible: ${PROGRAM_NAME}
+- openLink: tanidikvar-dev://profile/edit
+- scrollUntilVisible:
+    element:
+      id: firstName
+- tapOn:
+    id: firstName
+- eraseText
+- inputText: Mobil
+- tapOn:
+    id: lastName
+- eraseText
+- inputText: Test
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: profile-submit
+- tapOn:
+    id: profile-submit
+- assertVisible: Profilin kaydedildi.
+- openLink: tanidikvar-dev://questions/new
+- scrollUntilVisible:
+    element:
+      id: title
+- tapOn:
+    id: title
+- inputText: ${QUESTION_TITLE}
+- tapOn:
+    id: body
+- inputText: Mobil uygulama kabul testi icin olusturulan izole soru.
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: question-submit
+- tapOn:
+    id: question-submit
+- assertVisible: ${QUESTION_TITLE}
+- scrollUntilVisible:
+    element:
+      id: write-answer
+- tapOn:
+    id: write-answer
+- tapOn:
+    id: body
+- inputText: Kampus kuluplerine katilarak insanlarla tanisabilirsin.
+- hideKeyboard
+- tapOn:
+    id: answer-submit
+- assertVisible: Kampus kuluplerine katilarak insanlarla tanisabilirsin.
+- scrollUntilVisible:
+    element:
+      id: save-toggle
+    direction: UP
+- tapOn:
+    id: save-toggle
+- assertVisible: Kaydı kaldır
+- openLink: tanidikvar-dev://collection?kind=saved
+- assertVisible: ${QUESTION_TITLE}
+- openLink: tanidikvar-dev://leaderboard?period=WEEKLY
+- assertVisible: Tanıdık sıralaması
+- openLink: tanidikvar-dev://profile/preferences
+- tapOn:
+    id: preference-emailEnabled
+- scrollUntilVisible:
+    element:
+      id: preferences-submit
+- tapOn:
+    id: preferences-submit
+- assertVisible: Bildirim tercihlerin kaydedildi.
+- openLink: tanidikvar-dev://account
+- tapOn:
+    id: logout-submit
+- assertVisible:
+    id: login-email
+- openLink: tanidikvar-dev://questions/${QUESTION_ID}
+- assertVisible:
+    id: login-email

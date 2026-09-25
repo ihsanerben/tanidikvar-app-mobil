@@ -1,0 +1,27 @@
+appId: com.tanidikvar.app.dev
+---
+- launchApp
+- openLink: tanidikvar-dev://account
+- runFlow:
+    when:
+      visible:
+        id: logout-submit
+    commands:
+      - tapOn:
+          id: logout-submit
+- assertVisible:
+    id: login-email
+- tapOn:
+    id: login-email
+- inputText: ${TEST_EMAIL}
+- tapOn:
+    id: login-password
+- inputText: ${TEST_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: login-submit
+- assertVisible:
+    id: logout-submit
+- openLink: tanidikvar-dev://
+- assertVisible:
+    id: ask-question

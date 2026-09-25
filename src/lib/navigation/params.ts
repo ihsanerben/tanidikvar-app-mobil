@@ -1,0 +1,62 @@
+import { z } from "zod";
+export const idParams = z.object({ id: z.uuid() });
+export const catalogParams = z.object({
+  kind: z.enum(["universities", "programs"]).default("universities"),
+  q: z.string().max(150).default(""),
+  city: z.string().max(100).default(""),
+  institutionType: z
+    .enum(["", "DEVLET", "VAKIF", "KKTC", "YURT_DISI"])
+    .default(""),
+  universityId: z.uuid().optional(),
+  scoreType: z.enum(["", "SAY", "EA", "SÖZ", "DİL", "TYT"]).default(""),
+});
+export const questionParams = z.object({
+  q: z.string().max(150).default(""),
+  universityId: z.uuid().optional(),
+  departmentId: z.uuid().optional(),
+  sort: z.enum(["NEWEST", "MOST_LIKED"]).default("NEWEST"),
+});
+export const creationParams = z.object({
+  universityId: z.uuid().optional(),
+  programId: z.uuid().optional(),
+  departmentId: z.uuid().optional(),
+});
+export function numberText(value?: number | null) {
+  return value == null
+    ? "—"
+    : value.toLocaleString("tr-TR", { maximumFractionDigits: 2 });
+}
+export function sharePath(
+  kind: "sorular" | "universiteler" | "programlar" | "profil",
+  id: string,
+  title = "icerik",
+) {
+  const base = {
+    sorular: "soru",
+    universiteler: "universite",
+    programlar: "program",
+    profil: "profiles",
+  }[kind];
+  const uuid = z.uuid().parse(id);
+  const slug =
+    title
+      .toLocaleLowerCase("tr-TR")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/ı/g, "i")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "icerik";
+  const segment =
+    kind === "universiteler"
+      ? `${slug}--${uuid}`
+      : kind === "sorular"
+        ? `${slug}-${uuid}`
+        : uuid;
+  return `https://tanidikvar.com.tr/${base}/${segment}`;
+}
+export const communityParams = z.object({
+  universityId: z.uuid(),
+  departmentId: z.uuid().optional(),
+  programId: z.uuid().optional(),
+  view: z.enum(["questions", "people", "evaluations"]).default("questions"),
+});

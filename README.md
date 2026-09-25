@@ -1,56 +1,38 @@
-# Welcome to your Expo app 👋
+# TanıdıkVar Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+TanıdıkVar'ın iOS ve Android için Expo/React Native istemcisidir. Spring Boot API ile konuşur; web arayüzünün kopyası değil, aynı ürün alanını kullanan native bir istemcidir.
 
-## Get started
+## Gereksinimler
 
-1. Install dependencies
+- Node.js 22
+- npm 10+
+- iOS ve Android gerçek cihaz veya simulator/emulator
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Yerel başlangıç
 
 ```bash
-npm run reset-project
+cp .env.example .env.local
+npm install
+npm run start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Fiziksel cihazdan yerel API'ye erişirken `EXPO_PUBLIC_API_URL`, bilgisayarın cihaz tarafından erişilebilen ağ adresi olmalıdır; `localhost` cihazın kendisini gösterir.
 
-### Other setup steps
+## Kontroller
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run doctor
+```
 
-## Learn more
+Native bağımlılık içeren değişiklikler Expo Go yerine development build ile doğrulanır. `ios/` ve `android/` klasörleri üretilmiş çıktıdır; elle değiştirilmez.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Uygulanan ürün kapsamı
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Tasarım sistemi, ana sayfa/keşif filtreleri, üniversite/program detayları ve topluluk listeleri, soru/cevap/yorum katkıları, profil/eğitim düzenleme, Tanıdık başvuruları ve bildirim tercihleri gerçek API sözleşmesine bağlıdır. Liste sayfalaması FlashList, formlar RHF/Zod, sunucu durumu TanStack Query kullanır.
 
-## Join the community
+Tip güvenli API istemcisi `packages/api-client/schema.d.ts` üzerinden üretilmiş sözleşmeyi kullanır. Path/query parametreleri doğrulanır, sürüm çakışmaları taslağı korur ve çevrimdışı yazma eylemleri kapatılır.
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Maestro akışları ve izole test verisi gereksinimleri [.maestro/README.md](.maestro/README.md) içindedir. Yerel test/export başarısı native development build veya gerçek cihaz kabulü anlamına gelmez; bu kontroller henüz yapılmamıştır. Takip/kayıt, sıralama, puan, rozet vitrini ve yıllık karne de API’ye bağlıdır. Push ve yayın işleri sonraki aşamalardadır.
