@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -13,6 +13,7 @@ import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { FeatureForm } from "@/components/ui/feature-form";
 import { Skeleton, ErrorState, EmptyState } from "@/components/ui/states";
 import { authApi, authKeys } from "@/features/auth/api";
+import { tokenManager } from "@/lib/auth/token-manager";
 import { idParams } from "@/lib/navigation/params";
 import type { Schema } from "@/lib/api/types";
 import { achievementsQuery, retentionKeys, setShowcase } from "./api";
@@ -30,12 +31,14 @@ export function AchievementsScreen() {
   );
 }
 function Achievements({ id }: { id: string }) {
+  const sessionStatus = useSyncExternalStore(tokenManager.subscribe, tokenManager.getStatus, () => "bootstrapping" as const);
   const query = useQuery(achievementsQuery(id));
   const client = useQueryClient();
   const me = useQuery({
     queryKey: authKeys.me(),
     queryFn: ({ signal }) => authApi.me(signal),
     staleTime: 30_000,
+    enabled: sessionStatus === "authenticated",
   });
   const [editing, setEditing] = useState<
     Schema["AchievementResponse"][] | null

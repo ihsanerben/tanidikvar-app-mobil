@@ -38,17 +38,18 @@ function Profile({ id }: { id: string }) {
       />
     );
   const p = profile.data;
+  const tanidik = p.role === "TANIDIK";
   const header = (
     <View className="gap-4 pb-5">
-      <PageHeader title={p.name ?? "Profil"} />
-      <Avatar name={p.name} />
-      <ScoreSummary id={id} />
-      <Text variant="heading">{p.universityName}</Text>
-      <Text>{p.departmentName}</Text>
-      <Text>{p.biography}</Text>
-      <Text variant="muted">
-        {p.occupation} {p.company}
-      </Text>
+      <PageHeader title={tanidik ? "Tanıdık profili" : "Profil"} />
+      <Card className="gap-3"><View className="flex-row items-center gap-4"><Avatar name={p.name} educationStatus={p.educationStatus} tanidik={tanidik} size={tanidik ? "large" : "account"} />
+        <View className="min-w-0 flex-1"><Text variant="heading">{p.name ?? "Üye"}</Text><Text variant="muted">{tanidik ? "Tanıdık" : "Üye"} · {p.educationStatus === "MEZUN" ? "Mezun" : p.educationStatus === "UNIVERSITE_OGRENCISI" ? "Öğrenci" : "YKS adayı"}</Text></View></View>
+        {!!p.universityName && <Text>{p.universityName}</Text>}{!!p.departmentName && <Text>{p.departmentName}</Text>}
+        {!!p.graduationYear && <Text variant="muted">{p.graduationYear} mezunu</Text>}
+        {!!p.biography && <Text>{p.biography}</Text>}
+        {!!(p.occupation || p.company) && <Text variant="muted">{[p.occupation, p.company].filter(Boolean).join(" · ")}</Text>}
+      </Card>
+      {tanidik && <ScoreSummary id={id} />}
       {[p.linkedinUrl, p.portfolioUrl]
         .filter((url): url is string => !!url && /^https?:\/\//.test(url))
         .map((url) => (
@@ -62,7 +63,7 @@ function Profile({ id }: { id: string }) {
         label="Profili paylaş"
         action={() => Share.share({ message: sharePath("profil", id) })}
       />
-      <Choice
+      {tanidik && <Choice
         label="Katkılar"
         value={tab}
         onChange={setTab}
@@ -70,7 +71,7 @@ function Profile({ id }: { id: string }) {
           { value: "community", label: "Topluluk cevapları" },
           { value: "tanidik", label: "Tanıdık cevapları" },
         ]}
-      />
+      />}
     </View>
   );
   return tab === "community" ? (

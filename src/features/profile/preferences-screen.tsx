@@ -10,11 +10,14 @@ import { ErrorState, Skeleton } from "@/components/ui/states";
 import { preferences, profileApi } from "./api";
 import { preferenceSchema } from "./schemas";
 export function PreferencesScreen() {
+  return <Page title="Bildirim tercihleri"><PreferencesForm /></Page>;
+}
+export function PreferencesForm({ onSaved }: { onSaved?: () => void } = {}) {
   const query = useQuery({ ...preferences(), refetchOnWindowFocus: false, refetchOnReconnect: false });
   const [saved, setSaved] = useState(false);
   const p = query.data;
   return (
-    <Page title="Bildirim tercihleri">
+    <View className="gap-4">
       {saved && <Text accessibilityRole="alert" className="text-success">Bildirim tercihlerin kaydedildi.</Text>}
       {query.isPending ? (
         <Skeleton />
@@ -27,7 +30,7 @@ export function PreferencesScreen() {
         />
       ) : (
         <FeatureForm
-          onSuccess={() => setSaved(true)}
+          onSuccess={() => { setSaved(true); onSaved?.(); }}
           testID="preferences-submit"
           key={p?.version}
           schema={preferenceSchema}
@@ -99,6 +102,6 @@ export function PreferencesScreen() {
           )}
         </FeatureForm>
       )}
-    </Page>
+    </View>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
+import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { Controller } from "react-hook-form";
 import { Page } from "@/components/ui/page";
@@ -7,6 +8,7 @@ import { FeatureForm } from "@/components/ui/feature-form";
 import { Choice } from "@/components/ui/choice";
 import { FormField } from "@/components/ui/form-field";
 import { Text } from "@/components/ui/text";
+import { Button } from "@/components/ui/button";
 import { ErrorState, Skeleton } from "@/components/ui/states";
 import { CatalogPicker } from "@/features/catalog/catalog-picker";
 import type { Schema } from "@/lib/api/types";
@@ -59,6 +61,7 @@ function Editor({
     profile.education?.departmentName,
   );
   return (
+    <View className="gap-3">
     <FeatureForm
       schema={profileSchema}
       reload={reload}
@@ -78,15 +81,8 @@ function Editor({
         linkedinUrl: profile.linkedinUrl ?? "",
         portfolioUrl: profile.portfolioUrl ?? "",
       }}
-      fields={[
-        { name: "firstName", label: "Ad" },
-        { name: "lastName", label: "Soyad" },
-        { name: "biography", label: "Hakkında", multiline: true },
-        { name: "occupation", label: "Meslek" },
-        { name: "company", label: "Şirket" },
-        { name: "linkedinUrl", label: "LinkedIn bağlantısı" },
-        { name: "portfolioUrl", label: "Web sitesi / portfolyo" },
-      ]}
+      fields={[]}
+      label="Profili kaydet"
       testID="profile-submit"
       submit={(values) =>
         profileApi.save({
@@ -118,6 +114,11 @@ function Editor({
     >
       {(form) => (
         <View className="gap-4">
+          <View className="gap-3 rounded-card border border-border bg-surface p-4">
+            <Text variant="heading">Temel bilgiler</Text>
+            <View className="flex-row flex-wrap justify-between gap-y-3">
+              {([ ["firstName", "Ad"], ["lastName", "Soyad"] ] as const).map(([name, label]) => <View key={name} className="w-[48%]"><Controller control={form.control} name={name} render={({ field, fieldState }) => <FormField label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} />} /></View>)}
+            </View>
           <Choice
             label="Eğitim durumun"
             value={form.watch("educationStatus")}
@@ -147,10 +148,7 @@ function Editor({
               }}
             />
           )}
-          <Text className="text-danger">
-            {form.formState.errors.universityId?.message ||
-              form.formState.errors.programId?.message}
-          </Text>
+          {(form.formState.errors.universityId?.message || form.formState.errors.programId?.message) && <Text accessibilityRole="alert" className="text-danger">{form.formState.errors.universityId?.message || form.formState.errors.programId?.message}</Text>}
           {form.watch("educationStatus") === "UNIVERSITE_OGRENCISI" && (
             <Controller
               control={form.control}
@@ -181,8 +179,16 @@ function Editor({
               )}
             />
           )}
+          </View>
+          <View className="gap-3 rounded-card border border-border bg-surface p-4">
+            <Text variant="heading">İsteğe bağlı bilgiler</Text>
+            {([ ["biography", "Kısa biyografi", true], ["occupation", "Meslek", false], ["company", "Şirket", false], ["linkedinUrl", "LinkedIn bağlantısı", false], ["portfolioUrl", "Portfolyo sitesi", false] ] as const).map(([name, label, multiline]) => <Controller key={name} control={form.control} name={name} render={({ field, fieldState }) => <FormField label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} multiline={multiline} />} />)}
+            <Text variant="muted">Bu bağlantılar profilinde herkese açık görünür.</Text>
+          </View>
         </View>
       )}
     </FeatureForm>
+    <Button label="Hesabıma dön" variant="secondary" onPress={() => router.push("/profil")} />
+    </View>
   );
 }
