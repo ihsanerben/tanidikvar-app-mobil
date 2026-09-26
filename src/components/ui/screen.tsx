@@ -10,7 +10,7 @@ export function Screen({ children }: PropsWithChildren) {
   return (
     <SafeAreaView className="flex-1 bg-page" edges={["top", "bottom", "left", "right"]}>
       <AppHeader />
-      <View className="flex-1 px-gutter pt-page-top pb-3">{children}</View>
+      <View className="w-full max-w-content flex-1 self-center px-gutter pt-page-top pb-3">{children}</View>
     </SafeAreaView>
   );
 }

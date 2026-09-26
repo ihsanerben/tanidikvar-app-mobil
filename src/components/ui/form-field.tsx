@@ -1,5 +1,6 @@
-import { Text, TextInput, type TextInputProps, View } from "react-native";
-import { theme } from '@/lib/theme';
+import { TextInput, type TextInputProps, View } from "react-native";
+import { Text } from "./text";
+import { theme, fontFamily } from '@/lib/theme';
 
 type Props = TextInputProps & { label: string; error?: string };
 export function FormField({ label, error, ...input }: Props) {
@@ -8,6 +9,7 @@ export function FormField({ label, error, ...input }: Props) {
       <Text className="text-caption font-semibold text-text">{label}</Text>
       <TextInput
         {...input}
+        style={[{fontFamily},input.style]}
         accessibilityLabel={label}
         placeholderTextColor={theme.muted}
         textAlignVertical={input.multiline ? 'top' : 'center'}

@@ -42,6 +42,8 @@ export function programList(filters: Partial<z.infer<typeof catalogParams>>) {
           universityId: filters.universityId,
           institutionType: filters.institutionType,
           scoreType: filters.scoreType,
+          degreeLevel: filters.degreeLevel,
+          sort: filters.sort,
           page: pageParam,
           size: 20,
         },
@@ -74,14 +76,14 @@ export const universityStats = (id: string) =>
         signal,
       }),
   });
-export function peopleList(universityId?: string, departmentId?: string, q?: string) {
+export function peopleList(universityId?: string, departmentId?: string, q?: string, filters: {educationStatus?:string;classYear?:number;verified?:boolean;expertise?:string} = {}) {
   return infiniteQueryOptions({
-    queryKey: [...catalogKeys.all, "people", universityId, departmentId, q],
+    queryKey: [...catalogKeys.all, "people", universityId, departmentId, q, filters],
     staleTime: 30_000,
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       api.call("get", "/api/tanidiklar", {
-        query: { universityId, departmentId, q, page: pageParam, size: 20 },
+        query: { universityId, departmentId, q, ...filters, page: pageParam, size: 20 },
         signal,
       }),
     getNextPageParam: nextPage,

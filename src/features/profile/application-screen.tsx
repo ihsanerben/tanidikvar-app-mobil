@@ -10,105 +10,70 @@ import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BottomSheet } from "@/components/ui/bottom-sheet";
-import { ErrorState, Skeleton } from "@/components/ui/states";
+import { EmptyState, ErrorState, Skeleton } from "@/components/ui/states";
 import type { Schema } from "@/lib/api/types";
 import { newRequestId } from "@/features/questions/api";
 import { myProfile, applications, profileApi } from "./api";
 import { applicationSchema } from "./schemas";
+
 const statuses: Record<string, string> = {
-  PENDING: "İnceleniyor",
-  APPROVED: "Onaylandı",
-  REJECTED: "Reddedildi",
-  REVOKED: "Kaldırıldı",
+  PENDING: "İnceleme bekliyor", APPROVED: "Onaylandı", REJECTED: "Reddedildi", REVOKED: "Kaldırıldı",
 };
+const educationLabel = (status?: string, year?: number) => status === "MEZUN"
+  ? `${year ?? "—"} Mezunu` : status === "YKS_ADAYI" ? "YKS Adayı" : "Üniversite Öğrencisi";
+const date = (value: string) => new Intl.DateTimeFormat("tr-TR", {
+  dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Istanbul",
+}).format(new Date(value));
+
 export function ApplicationScreen() {
   const profile = useQuery(myProfile());
   const query = useInfiniteQuery(applications());
-  const [open, setOpen] = useState(false);
   const [requestId, setRequestId] = useState(newRequestId);
-  const pending = query.data?.pages
-    .flatMap((p) => p.items ?? [])
-    .some((item) => item.status === "PENDING" || item.activeVerification);
-  const header = (
-    <View className="gap-4 pb-4">
-      <PageHeader title="Tanıdık başvurusu" />
-      <Text>
-        Üniversite deneyimini paylaşarak adaylara yardımcı ol. Başvurun ekip
-        tarafından incelenir.
-      </Text>
-      {profile.isPending ? (
-        <Skeleton />
-      ) : profile.isError ? (
-        <ErrorState
-          error={profile.error}
-          retry={() => {
-            void profile.refetch();
-          }}
-        />
-      ) : !profile.data.completed ? (
-        <Button
-          label="Önce profilini tamamla"
-          onPress={() => router.push("/profile/edit")}
-        />
-      ) : (
-        <Button
-          label={
-            pending ? "Aktif başvurun veya Tanıdık onayın var" : "Başvuru yap"
-          }
-          disabled={pending || !query.isSuccess}
-          onPress={() => setOpen(true)}
-        />
-      )}
-      <BottomSheet
-        visible={open}
-        title="Neden Tanıdık olmak istiyorsun?"
-        close={() => setOpen(false)}
-      >
-        <FeatureForm
-          schema={applicationSchema}
-          defaults={{ coverLetter: "" }}
-          fields={[
-            { name: "coverLetter", label: "Başvuru yazısı", multiline: true },
-          ]}
-          label="Başvuruyu gönder"
-          testID="application-submit"
-          submit={(values) =>
-            profileApi.apply({
-              requestId,
-              profileVersion: profile.data?.version,
-              coverLetter: values.coverLetter,
-            })
-          }
-          onSuccess={() => {
-            setOpen(false);
-            setRequestId(newRequestId());
-            void query.refetch();
-          }}
-        />
-      </BottomSheet>
-      <Text variant="heading">Başvuru geçmişin</Text>
-    </View>
-  );
-  return (
-    <Screen>
-      <PagedList query={query} renderItem={Application} header={header} />
-    </Screen>
-  );
+  const [saved, setSaved] = useState(false);
+  const items = query.data?.pages.flatMap(page => page.items ?? []) ?? [];
+  const pending = items.some(item => item.status === "PENDING");
+  const approved = items.some(item => item.activeVerification);
+  const current = profile.data;
+  const header = <View className="gap-4 pb-4">
+    <PageHeader title="Başvurularım" backHref="/profil" backLabel="Hesabıma dön" />
+    {profile.isPending && <Skeleton />}
+    {profile.isError && <ErrorState error={profile.error} retry={() => { void profile.refetch(); }} />}
+    {current && !current.completed && <Card>
+      <Text>Tanıdık başvurusu için eğitim bilgilerini tamamla.</Text>
+      <Button label="Profilime git" variant="secondary" onPress={() => router.push("/profile/edit")} />
+    </Card>}
+    {saved && <Text accessibilityRole="alert" className="text-success">Tanıdık başvurun alındı.</Text>}
+  </View>;
+  const footer = current?.completed && query.isSuccess && !saved && !pending && !approved ? <Card>
+    <Text variant="heading">Tanıdık başvurusu</Text>
+    <Text>{[current.firstName, current.lastName].filter(Boolean).join(" ")}
+      {current.education && ` · ${current.education.universityName ?? ""} · ${current.education.departmentName ?? ""}`}</Text>
+    <Text>{educationLabel(current.educationStatus, current.graduationYear)}</Text>
+    <Text variant="muted">Başvurun eğitim ve profil bilgilerine göre incelenir. Gönderilen bilgiler sonradan değiştirilemez.</Text>
+    <FeatureForm key={requestId} schema={applicationSchema} defaults={{ coverLetter: "" }}
+      fields={[{ name: "coverLetter", label: "Kısa ön yazı (20–1000 karakter)", multiline: true }]}
+      label="Başvuruyu gönder" testID="application-submit"
+      submit={values => profileApi.apply({ requestId, profileVersion: current.version, coverLetter: values.coverLetter })}
+      onSuccess={() => { setSaved(true); setRequestId(newRequestId()); void query.refetch(); }} />
+  </Card> : undefined;
+  return <Screen><PagedList query={query} renderItem={Application} header={header} footer={footer}
+    empty={<EmptyState title="Henüz başvurun yok" description="Eğitim bilgilerini tamamladıktan sonra Tanıdık başvurusu yapabilirsin." />} /></Screen>;
 }
 function Application({ item }: { item: Schema["ApplicationResponse"] }) {
-  return (
-    <Card>
-      <Badge label={statuses[item.status ?? ""] ?? "Başvuru"} />
-      <Text>{item.coverLetter}</Text>
-      <Text variant="muted">
-        {item.submittedAt
-          ? new Date(item.submittedAt).toLocaleDateString("tr-TR")
-          : ""}
-      </Text>
-      {item.rejectionReason && (
-        <Text>Değerlendirme notu: {item.rejectionReason}</Text>
-      )}
-    </Card>
-  );
+  return <Card>
+    <Badge label={statuses[item.status ?? ""] ?? "Başvuru"} />
+    <Text variant="heading">{[item.firstName, item.lastName].filter(Boolean).join(" ")}</Text>
+    {(item.universityName || item.departmentName) && <Text>{[item.universityName, item.departmentName].filter(Boolean).join(" · ")}</Text>}
+    <Text>{educationLabel(item.educationStatus, item.graduationYear)}</Text>
+    {(item.occupation || item.company) && <Text>{[item.occupation, item.company].filter(Boolean).join(" · ")} <Text variant="muted">(kişisel beyan)</Text></Text>}
+    <View className="gap-1 rounded-control bg-account-summary p-3">
+      <Text variant="label">Ön yazı:</Text><Text>{item.coverLetter || "Eski başvuruda ön yazı bulunmuyor."}</Text>
+    </View>
+    {item.submittedAt && <Text variant="muted">Başvuru tarihi: {date(item.submittedAt)}</Text>}
+    {item.reviewedAt && <Text variant="muted">{item.status === "APPROVED" ? "Onay tarihi" : "Karar tarihi"}: {date(item.reviewedAt)}</Text>}
+    {item.status === "APPROVED" && !item.activeVerification && <Text className="text-warning">Tanıdık statün şu anda aktif değil.</Text>}
+    {item.rejectionReason && <View className="gap-1 rounded-control bg-danger-soft p-3">
+      <Text variant="label" className="text-danger-text">Ret gerekçesi:</Text><Text>{item.rejectionReason}</Text>
+    </View>}
+  </Card>;
 }

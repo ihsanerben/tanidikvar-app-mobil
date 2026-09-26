@@ -7,7 +7,7 @@ export function VerifyScreen() {
   const params = actionParamsSchema.safeParse(useLocalSearchParams());
   const token = params.success ? params.data.token ?? '' : '';
   return <AuthForm surface key={token} title="E-postanı doğrula"
-    description={params.success ? 'E-postandaki doğrulama kodunu yapıştır.' : 'Bağlantıdaki kod geçersiz. E-postandaki kodu aşağıya yapıştır.'}
+    description=""
     schema={verifySchema} defaults={{ token }}
     fields={[{ name: 'token', label: 'Doğrulama kodu', kind: 'token', testID: 'verify-token' }]}
     submitLabel="Doğrula" testID="verify-submit" submit={authApi.verify} successMessage="E-postan doğrulandı. Giriş yapabilirsin."

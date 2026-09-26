@@ -1,4 +1,5 @@
 import { Text as NativeText, type TextProps } from "react-native";
+import { fontFamily } from "@/lib/theme";
 import { cva } from "class-variance-authority";
 const styles = cva("text-text", {
   variants: {
@@ -15,11 +16,13 @@ const styles = cva("text-text", {
 export function Text({
   variant = "body",
   className,
+  style,
   ...props
 }: TextProps & { variant?: "body" | "title" | "heading" | "muted" | "label" }) {
   return (
     <NativeText
       {...props}
+      style={[{fontFamily},style]}
       accessibilityRole={
         variant === "title" || variant === "heading"
           ? "header"

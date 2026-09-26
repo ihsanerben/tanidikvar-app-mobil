@@ -34,6 +34,13 @@ export function incomingLink(input: unknown, trustedHost?: string, expoGo = fals
     if (path.includes('#') || path.includes('\\') || path.startsWith('//')) return null;
     const [pathname, search = ''] = path.split('?');
     if (path.split('?').length > 2) return null;
+    const department = pathname.match(/^\/universite\/([a-z0-9-]+)\/([a-z0-9-]+)$/);
+    if (department && !search) {
+      const universityId=department[1].slice(-36),departmentId=department[2].slice(-36);
+      if(!z.uuid().safeParse(universityId).success || !z.uuid().safeParse(departmentId).success)return null;
+      if([department[1],department[2]].some(segment => {const prefix=segment.slice(0,-36);return prefix && !prefix.endsWith('-');}))return null;
+      return `/department?universityId=${universityId}&departmentId=${departmentId}`;
+    }
     const canonical = pathname.match(/^\/(soru|universite|program)\/([a-z0-9-]+)$/);
     if (canonical && !search) {
       const id = canonical[2].slice(-36);

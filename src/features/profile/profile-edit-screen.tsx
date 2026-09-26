@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Controller } from "react-hook-form";
 import { Page } from "@/components/ui/page";
 import { FeatureForm } from "@/components/ui/feature-form";
-import { Choice } from "@/components/ui/choice";
+import { Select } from "@/components/ui/select";
 import { FormField } from "@/components/ui/form-field";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export function ProfileEditScreen() {
   const [revision, setRevision] = useState(0);
   const [saved, setSaved] = useState(false);
   return (
-    <Page title="Profilini düzenle">
+    <Page title="Profilim" backHref="/profil" backLabel="Hesabıma dön">
       {saved && <Text accessibilityRole="alert" className="text-success">Profilin kaydedildi.</Text>}
       {query.isPending ? (
         <Skeleton />
@@ -114,13 +114,13 @@ function Editor({
     >
       {(form) => (
         <View className="gap-4">
-          <View className="gap-3 rounded-card border border-border bg-surface p-4">
+          <View className="gap-3 rounded-card border border-border bg-surface p-card-inset">
             <Text variant="heading">Temel bilgiler</Text>
-            <View className="flex-row flex-wrap justify-between gap-y-3">
-              {([ ["firstName", "Ad"], ["lastName", "Soyad"] ] as const).map(([name, label]) => <View key={name} className="w-[48%]"><Controller control={form.control} name={name} render={({ field, fieldState }) => <FormField label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} />} /></View>)}
+            <View className="gap-3">
+              {([ ["firstName", "Ad"], ["lastName", "Soyad"] ] as const).map(([name, label]) => <View key={name}><Controller control={form.control} name={name} render={({ field, fieldState }) => <FormField label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} />} /></View>)}
             </View>
-          <Choice
-            label="Eğitim durumun"
+          <Select
+            label="Eğitim durumu"
             value={form.watch("educationStatus")}
             onChange={(value) => form.setValue("educationStatus", value)}
             options={[
@@ -180,7 +180,7 @@ function Editor({
             />
           )}
           </View>
-          <View className="gap-3 rounded-card border border-border bg-surface p-4">
+          <View className="gap-3 rounded-card border border-border bg-surface p-card-inset">
             <Text variant="heading">İsteğe bağlı bilgiler</Text>
             {([ ["biography", "Kısa biyografi", true], ["occupation", "Meslek", false], ["company", "Şirket", false], ["linkedinUrl", "LinkedIn bağlantısı", false], ["portfolioUrl", "Portfolyo sitesi", false] ] as const).map(([name, label, multiline]) => <Controller key={name} control={form.control} name={name} render={({ field, fieldState }) => <FormField label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} multiline={multiline} />} />)}
             <Text variant="muted">Bu bağlantılar profilinde herkese açık görünür.</Text>

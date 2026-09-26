@@ -7,7 +7,8 @@ import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { Choice } from "@/components/ui/choice";
+import { Tabs } from "@/components/ui/tabs";
+import { Select } from "@/components/ui/select";
 import { FormField } from "@/components/ui/form-field";
 import { PagedList } from "@/components/ui/paged-list";
 import { ErrorState } from "@/components/ui/states";
@@ -50,6 +51,7 @@ function Feed({
         help={filters.period ? 'Dönemler İstanbul saatine göre takvim bazlıdır: bugün 00.00, bu hafta Pazartesi 00.00, bu ay ayın ilk günü ve bu yıl 1 Ocak başlangıç alınır.' : 'Soruları üniversite, bölüm, etiket ve cevap durumuna göre filtreleyebilir veya kendi sorunu yayınlayabilirsin.'}
         action={!filters.period && <Button
         label="Soru sor"
+        size="standard"
         testID="ask-question"
         onPress={() =>
           router.push({
@@ -76,19 +78,19 @@ function Feed({
         )}
       />}
       {!filters.period && <View className="flex-row gap-2">
-        <Button label="Filtrele" variant="secondary" onPress={() => setOpen(true)} />
-        <Button label="Ara" onPress={form.handleSubmit(values => router.setParams(values))} />
+        <View className="min-w-0 flex-1"><Button fullWidth label="Filtrele" variant="secondary" onPress={() => setOpen(true)} /></View>
+        <View className="min-w-0 flex-1"><Button fullWidth label="Ara" onPress={form.handleSubmit(values => router.setParams(values))} /></View>
       </View>}
-      {!!filters.period && <Choice label="Dönem" value={filters.period} options={[{ value: 'DAILY', label: 'Bugün' }, { value: 'WEEKLY', label: 'Bu hafta' }, { value: 'MONTHLY', label: 'Bu ay' }, { value: 'YEARLY', label: 'Bu yıl' }, { value: 'ALL_TIME', label: 'Tüm zamanlar' }]} onChange={period => router.setParams({ period })} />}
+      {!!filters.period && <Tabs label="Dönem" value={filters.period} options={[{ value: 'DAILY', label: 'Bugün' }, { value: 'WEEKLY', label: 'Bu hafta' }, { value: 'MONTHLY', label: 'Bu ay' }, { value: 'YEARLY', label: 'Bu yıl' }, { value: 'ALL_TIME', label: 'Tüm zamanlar' }]} onChange={period => router.setParams({ period })} />}
       <Text variant="muted">{query.data?.pages[0]?.totalElements ?? 0} sonuç</Text>
       {!filters.period && <BottomSheet visible={open} title="Soruları filtrele" close={() => setOpen(false)}>
-        <Controller control={form.control} name="sort" render={({ field }) => <Choice label="Sıralama" value={field.value} onChange={field.onChange} options={[{ value: 'NEWEST', label: 'En yeni' }, { value: 'MOST_COMMENTED', label: 'En çok cevaplanan' }, { value: 'MOST_LIKED', label: 'En faydalı' }, { value: 'MOST_VIEWED', label: 'En çok görüntülenen' }, { value: 'OLDEST', label: 'En eski' }]} />} />
-        <Controller control={form.control} name="scope" render={({ field }) => <Choice label="Kapsam" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'GENERAL', label: 'Genel' }, { value: 'UNIVERSITY', label: 'Üniversite' }, { value: 'UNIVERSITY_DEPARTMENT', label: 'Program' }]} />} />
+        <Controller control={form.control} name="sort" render={({ field }) => <Select label="Sıralama" value={field.value} onChange={field.onChange} options={[{ value: 'NEWEST', label: 'En yeni' }, { value: 'MOST_COMMENTED', label: 'En çok cevaplanan' }, { value: 'MOST_LIKED', label: 'En faydalı' }, { value: 'MOST_VIEWED', label: 'En çok görüntülenen' }, { value: 'OLDEST', label: 'En eski' }]} />} />
+        <Controller control={form.control} name="scope" render={({ field }) => <Select label="Kapsam" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'GENERAL', label: 'Genel' }, { value: 'UNIVERSITY', label: 'Üniversite' }, { value: 'UNIVERSITY_DEPARTMENT', label: 'Program' }]} />} />
         <CatalogPicker universityId={selectedUniversity} universityName={universityName} programName={programName} onUniversity={item => { form.setValue('universityId', item.id); form.setValue('departmentId', undefined); setUniversityName(item.name); setProgramName(undefined); }} onProgram={item => { form.setValue('departmentId', item.departmentId); setProgramName(item.name); }} />
         <TagPicker selected={selectedTag ? [selectedTag] : []} onChange={ids => form.setValue('tagId', ids.at(-1))} />
         <Controller control={form.control} name="city" render={({ field }) => <FormField label="Şehir" value={field.value} onChangeText={field.onChange} />} />
-        <Controller control={form.control} name="answered" render={({ field }) => <Choice label="Cevap durumu" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Cevaplanmış' }, { value: 'false', label: 'Cevapsız' }]} />} />
-        <Controller control={form.control} name="verifiedAnswer" render={({ field }) => <Choice label="Doğrulanmış kişi cevabı" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Var' }, { value: 'false', label: 'Yok' }]} />} />
+        <Controller control={form.control} name="answered" render={({ field }) => <Select label="Cevap durumu" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Cevaplanmış' }, { value: 'false', label: 'Cevapsız' }]} />} />
+        <Controller control={form.control} name="verifiedAnswer" render={({ field }) => <Select label="Doğrulanmış kişi cevabı" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Var' }, { value: 'false', label: 'Yok' }]} />} />
         <Button label="Filtreleri uygula" onPress={form.handleSubmit(values => { router.setParams(values); setOpen(false); })} />
         <Button label="Tümünü temizle" variant="secondary" onPress={() => { router.replace('/'); setOpen(false); }} />
       </BottomSheet>}

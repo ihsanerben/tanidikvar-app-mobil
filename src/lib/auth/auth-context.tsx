@@ -1,6 +1,7 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { createContext, type PropsWithChildren, useContext, useEffect, useState, useSyncExternalStore } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text';
 
 import { tokenManager } from '@/lib/auth/token-manager';
 import { queryClient } from '@/lib/query/query-client';

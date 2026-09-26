@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { z } from "zod";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { ActionsMenu } from "@/components/ui/actions-menu";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FeatureForm } from "@/components/ui/feature-form";
@@ -21,9 +22,9 @@ function ReviewCard({ item, questionId }: { item: Content; questionId: string })
   const mutation = useMutation({ mutationFn: (body: { reason: string }) => api.call("put", "/api/manager/content/{kind}/{id}/status", {
     params: { id: item.id!, kind: item.kind! }, body: { hidden: !item.moderatedAt, version: item.version, reason: body.reason }, authenticated: true,
   }), onSuccess: async () => { setOpen(false); await Promise.all([client.invalidateQueries({ queryKey: ["manager", "question", questionId] }), client.invalidateQueries({ queryKey: ["manager", "content"] })]); } });
-  return <Card className="gap-2 border-[#e0e3ec]"><Text variant="heading">{item.title || (item.kind === "QUESTION" ? "Soru" : "Yorum")}</Text>
+  return <Card className="gap-2 border-manager-border"><Text variant="heading">{item.title || (item.kind === "QUESTION" ? "Soru" : "Yorum")}</Text>
     <Text>{item.body}</Text><Text variant="muted">{item.authorName || "Üye"} · {item.deletedAt ? "Silinmiş" : item.moderatedAt ? "Gizli" : "Görünür"}</Text>
-    {item.id && item.kind && <Button label={item.moderatedAt ? "Görünür yap" : "Gizle"} variant="secondary" onPress={() => setOpen(true)} />}
+    {item.id && item.kind && <ActionsMenu title="İçerik işlemleri"><Button label={item.moderatedAt ? "Görünür yap" : "Gizle"} variant="secondary" onPress={() => setOpen(true)} /></ActionsMenu>}
     <BottomSheet visible={open} title={item.moderatedAt ? "İçeriği görünür yap" : "İçeriği gizle"} close={() => { if (!mutation.isPending) setOpen(false); }}>
       <FeatureForm schema={reasonSchema} defaults={{ reason: "" }} fields={[{ name: "reason", label: "Gerekçe", multiline: true }]} label="Kararı kaydet" submit={body => mutation.mutateAsync(body)} />
       {mutation.isError && <ErrorState error={mutation.error} />}

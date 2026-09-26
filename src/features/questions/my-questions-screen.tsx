@@ -1,16 +1,19 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Choice } from "@/components/ui/choice";
+import { Tabs } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/page";
 import { PagedList } from "@/components/ui/paged-list";
 import { Screen } from "@/components/ui/screen";
-import { ErrorState } from "@/components/ui/states";
-import { Text } from "@/components/ui/text";
+import { EmptyState, ErrorState } from "@/components/ui/states";
 import { api } from "@/lib/api/client";
 import { nextPage } from "@/lib/query/pagination";
+import { ActionsMenu } from "@/components/ui/actions-menu";
+import { ActionButton } from "@/components/ui/action-button";
+import { Button } from "@/components/ui/button";
+import type { Schema } from "@/lib/api/types";
+import { questionsApi, refreshQuestions } from "./api";
 import { QuestionCard } from "./question-card";
 
 const params = z.object({ status: z.enum(["ACTIVE", "ARCHIVED"]).default("ACTIVE") });
@@ -31,15 +34,22 @@ function MyQuestions({ status }: { status: "ACTIVE" | "ARCHIVED" }) {
     queryFn: ({ pageParam, signal }) => mine(status, pageParam, signal),
     getNextPageParam: nextPage,
   });
-  return <Screen><PagedList query={list} renderItem={QuestionCard} header={<View className="gap-4 pb-5">
-    <PageHeader title="Sorularım" help="Yayınladığın aktif ve arşivlenmiş soruları burada görebilir, düzenleme ve arşivleme işlemlerini soru detayından yapabilirsin." />
-    <Choice label="Soru durumu" value={status} options={[
-      { value: "ACTIVE", label: `Aktif sorular (${active.data?.totalElements ?? 0})` },
-      { value: "ARCHIVED", label: `Arşivlenmiş sorular (${archived.data?.totalElements ?? 0})` },
+  return <Screen><PagedList query={list} renderItem={OwnQuestion}
+    empty={<EmptyState title={status === "ACTIVE" ? "Henüz soru sormadın" : "Arşivlenmiş sorun yok"}
+      description={status === "ACTIVE" ? "İlk sorunu topluluğa sorabilirsin." : "Arşivlediğin sorular burada görünecek."}
+      label="Soru sor" action={() => router.push("/questions/new")} />}
+    header={<View className="gap-4 pb-5">
+    <PageHeader title="Sorularım" backHref="/profil" backLabel="Hesabıma dön" help="Yayınladığın aktif ve arşivlenmiş soruları burada görebilir, düzenleme ve arşivleme işlemlerini soru detayından yapabilirsin." />
+    <Tabs label="Soru durumu" value={status} options={[
+      { value: "ACTIVE", label: `Aktif sorular (${active.data?.totalElements ?? "…"})` },
+      { value: "ARCHIVED", label: `Arşivlenmiş sorular (${archived.data?.totalElements ?? "…"})` },
     ]} onChange={value => router.setParams({ status: value })} />
-    {list.isSuccess && !list.data.pages.some(page => page.items?.length) && <View className="items-start gap-2 py-5">
-      <Text variant="heading">{status === "ACTIVE" ? "Henüz soru sormadın" : "Arşivlenmiş sorun yok"}</Text>
-      <Button label="Soru sor" onPress={() => router.push("/questions/new")} />
-    </View>}
+    {(active.isError || archived.isError) && <ErrorState error={active.error || archived.error}
+      retry={() => { void active.refetch(); void archived.refetch(); }} />}
   </View>} /></Screen>;
+}
+
+function OwnQuestion({item}: {item:Schema["QuestionResponse"]}) {
+  const client=useQueryClient();
+  return <QuestionCard item={item} actions={<ActionsMenu title="Soru işlemleri"><Button label="Soruyu düzenle" variant="secondary" onPress={()=>item.id && router.push({pathname:"/questions/[id]/edit",params:{id:item.id}})} /><ActionButton label={item.archivedAt?"Soruyu yeniden aç":"Soruyu arşivle"} confirm="Sorunun durumunu değiştirmek istediğine emin misin?" action={()=>item.archivedAt?questionsApi.restore(item.id!,item.version!):questionsApi.archive(item.id!,item.version!)} after={async()=>{await Promise.all([refreshQuestions(item.id),client.invalidateQueries({queryKey:["my-questions"]})]);}} /></ActionsMenu>} />;
 }

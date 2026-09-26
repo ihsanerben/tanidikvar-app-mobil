@@ -29,27 +29,21 @@ export function CommunityScreen() {
   const p = communityParams.safeParse(useLocalSearchParams());
   if (!p.success)
     return (
-      <Screen>
-        <ErrorState error={null} />
-      </Screen>
+      <Screen><ErrorState error={null} /></Screen>
     );
-  return p.data.view === "questions" ? (
-    <Questions params={p.data} />
-  ) : p.data.view === "people" ? (
-    <People params={p.data} />
-  ) : (
-    <Evaluations params={p.data} />
-  );
+  return <Screen><ContextCommunity params={p.data} /></Screen>;
+}
+export function ContextCommunity({params,header}: {params:Params;header?:React.ReactElement}) {
+  return params.view === "questions" ? <Questions params={params} header={header} /> : params.view === "people" ? <People params={params} header={header} /> : <Evaluations params={params} />;
 }
 type Params = z.infer<typeof communityParams>;
-function Questions({ params }: { params: Params }) {
+function Questions({ params, header }: { params: Params; header?:React.ReactElement }) {
   const query = useInfiniteQuery(questionList(params));
   return (
-    <Screen>
       <PagedList
         query={query}
         renderItem={QuestionCard}
-        header={
+        header={header ??
           <View className="gap-4 pb-4">
             <PageHeader title="Sorular" />
             <Button
@@ -61,21 +55,18 @@ function Questions({ params }: { params: Params }) {
           </View>
         }
       />
-    </Screen>
   );
 }
-function People({ params }: { params: Params }) {
+function People({ params, header }: { params: Params; header?:React.ReactElement }) {
   const query = useInfiniteQuery(
     peopleList(params.universityId, params.departmentId),
   );
   return (
-    <Screen>
       <PagedList
         query={query}
         renderItem={Person}
-        header={<PageHeader title="Tanıdıklar" />}
+        header={header ?? <PageHeader title="Tanıdıklar" />}
       />
-    </Screen>
   );
 }
 function Evaluations({ params }: { params: Params }) {
@@ -121,9 +112,7 @@ function Evaluations({ params }: { params: Params }) {
     </View>
   );
   return (
-    <Screen>
       <PagedList query={query} renderItem={Evaluation} header={header} />
-    </Screen>
   );
 }
 function Evaluation({ item }: { item: Schema["EvaluationResponse"] }) {

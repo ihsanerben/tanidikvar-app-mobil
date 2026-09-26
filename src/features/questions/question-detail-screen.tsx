@@ -12,7 +12,8 @@ import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/ui/action-button";
-import { Choice } from "@/components/ui/choice";
+import { Tabs } from "@/components/ui/tabs";
+import { QuestionByline } from "./question-byline";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { FeatureForm } from "@/components/ui/feature-form";
 import { ErrorState, Skeleton } from "@/components/ui/states";
@@ -87,7 +88,7 @@ function Detail({ id }: { id: string }) {
       void questionsApi.view(id, opening.current.event).catch(() => undefined);
     }
   }, [id, query.isSuccess]);
-  if (query.isPending) return <Skeleton />;
+  if (query.isPending) return <Skeleton variant="detail" />;
   if (query.isError && !query.data)
     return (
       <ErrorState
@@ -102,35 +103,14 @@ function Detail({ id }: { id: string }) {
   const canWrite = !!user.data && user.data.role !== "MANAGER" && !question.archivedAt;
   const header = (
     <View className="gap-4 pb-5">
-      <PageHeader title="Soru" />
-      <RetentionButton kind="saved" id={id} />
+      <PageHeader title="" />
       <Card>
         <QuestionContext question={question} />
         <Text variant="title">{question.title}</Text>
         <Text>{question.body}</Text>
-        <Text variant="muted">
-          {question.authorName} ·{" "}
-          {question.createdAt
-            ? new Date(question.createdAt).toLocaleDateString("tr-TR")
-            : ""}
-        </Text>
-        {question.authorId && (
-          <Button
-            label="Yazarın profili"
-            variant="secondary"
-            onPress={() =>
-              router.push({
-                pathname: "/profiles/[id]",
-                params: { id: question.authorId! },
-              })
-            }
-          />
-        )}
+        <QuestionByline question={question} />
         {question.archivedAt && <><Badge label="Arşivlenmiş soru" /><Text variant="muted">Bu soru okunabilir; arşivde olduğu için yeni katkı kabul etmiyor.</Text></>}
-        <Text variant="muted">
-          {question.statistics?.viewCount ?? 0} görüntülenme · {question.statistics?.totalAnswerCount ?? 0} cevap ·{" "}
-          {question.statistics?.likeCount ?? 0} beğeni
-        </Text>
+        <RetentionButton kind="saved" id={id} />
         <ActionButton
           label={like.data?.liked ? "Beğeniyi geri al" : "Beğen"}
           disabled={!like.isSuccess || !canWrite}
@@ -207,7 +187,7 @@ function Detail({ id }: { id: string }) {
             isOwn
           />
         )}
-      <Choice
+      <Tabs
         label="Cevaplar"
         value={tab}
         onChange={setTab}
@@ -223,7 +203,7 @@ function Detail({ id }: { id: string }) {
       >
         {quota.data && <Text variant="muted">Bugün {quota.data.used ?? 0}/{quota.data.limit ?? 0} Tanıdık cevabı · {quota.data.remaining ?? 0} hakkın kaldı.</Text>}
         {user.data?.role === "TANIDIK" && (
-          <Choice
+          <Tabs
             label="Cevap türü"
             value={asTanidik ? "tanidik" : "community"}
             onChange={(value) => setAsTanidik(value === "tanidik")}

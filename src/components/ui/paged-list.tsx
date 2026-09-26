@@ -18,10 +18,16 @@ export function PagedList<T extends { id?: string }>({
   query,
   renderItem,
   header,
+  empty,
+  footer,
+  publicFooter = true,
 }: {
   query: UseInfiniteQueryResult<InfiniteData<Page<T>>, Error>;
   renderItem: ListRenderItem<T>;
   header?: ReactElement;
+  empty?: ReactElement;
+  footer?: ReactElement;
+  publicFooter?:boolean;
 }) {
   const offline = useOffline();
   const data = query.data?.pages.flatMap((page) => page.items ?? []) ?? [];
@@ -55,7 +61,7 @@ export function PagedList<T extends { id?: string }>({
             }}
           />
         ) : (
-          <EmptyState
+          empty ?? <EmptyState
             action={() => {
               void query.refetch();
             }}
@@ -88,7 +94,8 @@ export function PagedList<T extends { id?: string }>({
               />
             )
           )}
-          <AppFooter />
+          {footer}
+          {publicFooter && <AppFooter />}
         </View>
       }
     />

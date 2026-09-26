@@ -3,12 +3,25 @@ import { Button } from './button';
 import { Choice } from './choice';
 import { PageHeader } from './page';
 import { Help } from './help';
-import { BottomSheet } from './bottom-sheet';
+import { BottomSheet, DialogContentContext } from './bottom-sheet';
 import { Text } from './text';
+import { Tabs } from './tabs';
+import { Select } from './select';
+import { router } from 'expo-router';
 
-jest.mock('expo-router', () => ({ router: { canGoBack: () => false, replace: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { canGoBack: () => false, replace: jest.fn(), push: jest.fn() } }));
 jest.mock('./screen', () => ({ Screen: ({ children }: { children: React.ReactNode }) => children }));
-jest.mock('./bottom-sheet', () => ({ BottomSheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) => visible ? children : null }));
+jest.mock('./bottom-sheet', () => ({
+  DialogContentContext: jest.requireActual<typeof import('react')>('react').createContext(false),
+  BottomSheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) => visible ? children : null,
+}));
+jest.mock('@shopify/flash-list', () => ({
+  FlashList: ({ data, renderItem }: { data: { value: string; label: string }[]; renderItem: (args: { item: { value: string; label: string }; index: number }) => React.ReactNode }) =>
+    data.map((item, index) => {
+      const React = jest.requireActual<typeof import('react')>('react');
+      return React.createElement(React.Fragment, { key: item.value }, renderItem({ item, index }));
+    }),
+}));
 
 describe('shared design control behavior', () => {
   let tree: ReactTestRenderer;
@@ -39,5 +52,39 @@ describe('shared design control behavior', () => {
     expect(tree.root.findByType(BottomSheet).props.visible).toBe(true);
     await act(async () => tree.root.findByType(Button).props.onPress());
     expect(tree.root.findByType(BottomSheet).props.visible).toBe(false);
+  });
+  it('changes account tabs and announces exactly one selected tab', async () => {
+    const change = jest.fn();
+    await act(async () => { tree = create(<Tabs label="Soru durumu" value="active" options={[{ value: 'active', label: 'Aktif' }, { value: 'archived', label: 'Arşiv' }]} onChange={change} />); });
+    const tabs = ['Aktif', 'Arşiv'].map(accessibilityLabel => tree.root.findAllByProps({ accessibilityRole: 'tab', accessibilityLabel })[0]);
+    expect(tabs.map(tab => tab.props.accessibilityState.selected)).toEqual([true, false]);
+    await act(async () => tabs[1].props.onPress());
+    expect(change).toHaveBeenCalledWith('archived');
+  });
+  it('opens the select and closes it after choosing a value', async () => {
+    const change = jest.fn();
+    await act(async () => { tree = create(<Select label="Kapsam" value="all" options={[{ value: 'all', label: 'Tümü' }, { value: 'general', label: 'Genel' }]} onChange={change} />); });
+    const trigger = () => tree.root.findAllByProps({ accessibilityLabel: 'Kapsam: Tümü', accessibilityRole: 'button' })[0];
+    expect(trigger().props.accessibilityState.expanded).toBe(false);
+    await act(async () => trigger().props.onPress());
+    expect(tree.root.findByType(BottomSheet).props.visible).toBe(true);
+    await act(async () => tree.root.findAllByProps({ accessibilityRole: 'radio', accessibilityLabel: 'Genel' })[0].props.onPress());
+    expect(change).toHaveBeenCalledWith('general');
+    expect(trigger().props.accessibilityState.expanded).toBe(false);
+    expect(tree.root.findByType(BottomSheet).props.visible).toBe(false);
+  });
+  it('keeps a select inside the current dialog instead of opening a second modal', async () => {
+    const change = jest.fn();
+    await act(async () => { tree = create(<DialogContentContext.Provider value={true}><Select label="Sıklık" value="daily" options={[{ value: 'daily', label: 'Günlük' }, { value: 'weekly', label: 'Haftalık' }]} onChange={change} /></DialogContentContext.Provider>); });
+    await act(async () => tree.root.findAllByProps({ accessibilityLabel: 'Sıklık: Günlük', accessibilityRole: 'button' })[0].props.onPress());
+    expect(tree.root.findAllByType(BottomSheet)).toHaveLength(0);
+    await act(async () => tree.root.findAllByProps({ accessibilityLabel: 'Haftalık', accessibilityRole: 'radio' })[0].props.onPress());
+    expect(change).toHaveBeenCalledWith('weekly');
+    expect(tree.root.findAllByProps({ accessibilityRole: 'radio' })).toHaveLength(0);
+  });
+  it('returns account subpages to the account even without a navigation history', async () => {
+    await act(async () => { tree = create(<PageHeader title="Sorularım" backHref="/profil" backLabel="Hesabıma dön" />); });
+    await act(async () => tree.root.findAllByProps({ accessibilityRole: 'link', accessibilityLabel: 'Hesabıma dön' })[0].props.onPress());
+    expect(router.push).toHaveBeenCalledWith('/profil');
   });
 });

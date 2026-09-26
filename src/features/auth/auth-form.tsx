@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Link, type Href } from 'expo-router';
 import { useNetworkState } from 'expo-network';
-import { Controller, useForm, type DefaultValues, type FieldValues, type Path } from 'react-hook-form';
+import { Controller, useForm, useWatch, type DefaultValues, type FieldValues, type Path } from 'react-hook-form';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { z } from 'zod';
 
@@ -21,6 +21,10 @@ type Props<T extends FieldValues> = {
 };
 export function AuthForm<T extends FieldValues>({ title, description, schema, defaults, fields, submitLabel, submit, successMessage, successTitle, onSuccess, links, testID, surface = false }: Props<T>) {
   const form = useForm<T>({ resolver: zodResolver(schema), defaultValues: defaults });
+  const tokenField = fields.find(field => field.kind === 'token');
+  const tokenNames: Path<T>[] = tokenField ? [tokenField.name] : [];
+  const [token] = useWatch<T, Path<T>[]>({ control: form.control, name: tokenNames });
+  const missingToken = !!tokenField && !token;
   const network = useNetworkState();
   const offline = network.isConnected === false || network.isInternetReachable === false;
   const mutation = useMutation({
@@ -39,12 +43,12 @@ export function AuthForm<T extends FieldValues>({ title, description, schema, de
     <Screen>
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* A short, bounded form scrolls for the keyboard and large accessibility fonts; this is not a data list. */}
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="gap-4 pb-8 pt-page-top">
-          <View className={surface ? 'gap-4 rounded-surface border border-border bg-surface p-5' : 'gap-4'}>
-          {mutation.isSuccess && successTitle ? <View accessibilityRole="alert" className="gap-2 rounded-card bg-primary-soft p-5"><Text variant="heading">{successTitle}</Text><Text>{successMessage}</Text></View> : <>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="gap-4 pb-8 pt-2">
+          <View className={surface ? 'gap-4 rounded-surface border border-border bg-surface px-dialog-x py-account-inset' : 'gap-4'}>
           <Text variant="title">{title}</Text>
-          {description ? <Text className="text-base leading-6 text-muted">{description}</Text> : null}
-          {fields.map(field => (
+          {mutation.isSuccess && successTitle ? <View accessibilityRole="alert" className="gap-2 rounded-card bg-primary-soft p-5"><Text variant="heading">{successTitle}</Text><Text>{successMessage}</Text></View> : <>
+          {description ? <Text className="text-body text-muted">{description}</Text> : null}
+          {fields.filter(field => field.kind !== 'token').map(field => (
             <Controller key={field.name} control={form.control} name={field.name}
               render={({ field: input, fieldState }) => (
                 <FormField label={field.label} value={String(input.value ?? '')}
@@ -56,6 +60,7 @@ export function AuthForm<T extends FieldValues>({ title, description, schema, de
                   textContentType={field.kind === 'email' ? 'emailAddress' : field.kind === 'password' ? 'password' : field.kind === 'new-password' ? 'newPassword' : 'none'} />
               )} />
           ))}
+          {missingToken && <Text accessibilityRole="alert" className="text-danger">Bu sayfa geçerli bir e-posta bağlantısıyla açılmalı. Yeni bir bağlantı iste.</Text>}
           {offline ? <Text accessibilityRole="alert" className="text-warning">Bağlantı bekleniyor. İnternete bağlandıktan sonra devam edebilirsin.</Text> : null}
           {mutation.isError ? <View>
             <Text accessibilityRole="alert" className="text-danger">{message}</Text>
@@ -65,10 +70,10 @@ export function AuthForm<T extends FieldValues>({ title, description, schema, de
           {mutation.isSuccess && successMessage ? <Text accessibilityRole="alert" className="text-success">{successMessage}</Text> : null}
           <Button label={mutation.isPending ? 'İşlem yapılıyor…' : submitLabel} testID={testID}
             fullWidth
-            disabled={offline || mutation.isPending || form.formState.isSubmitting}
+            disabled={offline || missingToken || mutation.isPending || form.formState.isSubmitting}
             onPress={form.handleSubmit(values => { Keyboard.dismiss(); return mutation.mutateAsync(values).catch(() => undefined); })} />
-          {links?.map(link => <Link key={link.label} href={link.href} className="min-h-11 py-3 text-sm font-semibold text-primary">{link.label}</Link>)}
           </>}
+          {links?.map(link => <Link key={link.label} href={link.href} className="min-h-11 py-3 text-sm font-semibold text-primary">{link.label}</Link>)}
           </View>
           <AppFooter />
         </ScrollView>

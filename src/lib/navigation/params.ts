@@ -8,6 +8,8 @@ export const catalogParams = z.object({
     .enum(["", "DEVLET", "VAKIF", "KKTC", "YURT_DISI"])
     .default(""),
   universityId: z.uuid().optional(),
+  degreeLevel: z.enum(["", "LISANS", "ONLISANS"]).default(""),
+  sort: z.enum(["NAME", "RANK"]).default("RANK"),
   scoreType: z.enum(["", "SAY", "EA", "SÖZ", "DİL", "TYT"]).default(""),
 });
 export const questionParams = z.object({
@@ -66,3 +68,5 @@ export const communityParams = z.object({
   programId: z.uuid().optional(),
   view: z.enum(["questions", "people", "evaluations"]).default("questions"),
 });
+
+export const peopleParams=z.object({ q:z.string().max(150).default(""),universityId:z.uuid().optional(),departmentId:z.uuid().optional(),educationStatus:z.enum(["","UNIVERSITE_OGRENCISI","MEZUN"]).default(""),classYear:z.enum(["","1","2","3","4","5","6"]).default(""),expertise:z.string().max(80).default(""),verified:z.enum(["","true"]).default("") });

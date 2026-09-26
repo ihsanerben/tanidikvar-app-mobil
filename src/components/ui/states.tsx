@@ -5,18 +5,10 @@ import { ApiError } from "../../../packages/api-client/errors";
 import { Text } from "./text";
 import { Button } from "./button";
 import { Card } from "./card";
-export function Skeleton() {
-  return (
-    <View
-      accessibilityLabel="İçerik yükleniyor"
-      accessibilityState={{ busy: true }}
-      className="gap-4 py-4"
-    >
-      <View className="h-6 w-2/3 rounded-control bg-border" />
-      <View className="h-24 rounded-card bg-border" />
-      <View className="h-24 rounded-card bg-border" />
-    </View>
-  );
+export function Skeleton({variant='list'}: {variant?:'list'|'profile'|'form'|'detail'|'metrics'}) {
+  return <View accessibilityLabel="İçerik yükleniyor" accessibilityState={{busy:true}} className="gap-3 py-4"><View className="h-6 w-2/3 rounded-control bg-border" />
+    {variant==='profile' ? <><View className="flex-row items-center gap-3"><View className="h-20 w-20 rounded-full bg-border" /><View className="min-w-0 flex-1 gap-2"><View className="h-4 rounded-control bg-border" /><View className="h-4 w-2/3 rounded-control bg-border" /></View></View><View className="h-24 rounded-card bg-border" /></> : variant==='form' ? <>{[0,1,2,3].map(index=><View key={index} className="gap-2"><View className="h-3 w-1/3 rounded-control bg-border" /><View className="h-control-large rounded-control bg-border" /></View>)}</> : variant==='metrics' ? <View className="flex-row gap-2">{[0,1,2].map(index=><View key={index} className="h-20 min-w-0 flex-1 rounded-card bg-border" />)}</View> : <><View className={variant==='detail'?'h-40 rounded-card bg-border':'h-24 rounded-card bg-border'} /><View className="h-24 rounded-card bg-border" /></>}
+  </View>;
 }
 export function EmptyState({
   title = "Henüz içerik yok",

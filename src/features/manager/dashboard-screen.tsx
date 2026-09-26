@@ -1,3 +1,4 @@
+import { actionLabels, targetLabels } from "./labels";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -25,12 +26,12 @@ export function ManagerDashboardScreen() {
   const actions = useQuery({ queryKey: ["manager", "actions", "recent"], queryFn: ({ signal }) => api.call("get", "/api/manager/actions", { query: { page: 0, size: 5 }, authenticated: true, signal }), staleTime: 30_000 });
   return <ManagerPage title="Platforma genel bakış">
     {query.isPending ? <Skeleton /> : query.isError && !query.data ? <ErrorState error={query.error} retry={() => void query.refetch()} /> : <View className="flex-row flex-wrap justify-between gap-y-2">
-      {metrics.map(([key, label]) => <Pressable key={key} accessibilityRole="link" onPress={() => router.push(destinations[key])} className="min-h-28 w-[48%] justify-between gap-2 rounded-card border border-[#e0e3ec] bg-surface p-4">
-        <Text className="text-caption font-semibold text-[#50546a]">{label}</Text><Text className="text-[24px] font-bold text-[#202638]">{(query.data?.[key] ?? 0).toLocaleString("tr-TR")}</Text>
+      {metrics.map(([key, label]) => <Pressable key={key} accessibilityRole="link" onPress={() => router.push(destinations[key])} className="min-h-28 w-metric-half justify-between gap-2 rounded-card border border-manager-border bg-surface p-4">
+        <Text className="text-caption font-semibold text-manager-muted">{label}</Text><Text className="text-metric font-bold text-manager-text">{(query.data?.[key] ?? 0).toLocaleString("tr-TR")}</Text>
       </Pressable>)}
     </View>}
     <Text variant="heading">Son işlemler</Text>
-    {(actions.data?.items ?? []).map(item => <Card key={item.id} className="gap-1 border-[#e0e3ec]"><Text>{item.action || "İşlem"}</Text><Text variant="muted">{item.targetType || "—"} · {item.occurredAt ? new Date(item.occurredAt).toLocaleString("tr-TR") : "—"}</Text></Card>)}
+    {(actions.data?.items ?? []).map(item => <Card key={item.id} className="gap-1 border-manager-border"><Text>{actionLabels[item.action ?? ""] ?? item.action ?? "İşlem"}</Text><Text variant="muted">{targetLabels[item.targetType ?? ""] ?? item.targetType ?? "—"} · {item.occurredAt ? new Date(item.occurredAt).toLocaleString("tr-TR") : "—"}</Text></Card>)}
     {actions.isError && <ErrorState error={actions.error} retry={() => void actions.refetch()} />}
     <Button label="Tüm işlemler" variant="secondary" onPress={() => router.push("/manager/actions")} />
     <Button label="İstatistikleri yenile" variant="secondary" onPress={() => void query.refetch()} />

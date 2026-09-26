@@ -7,7 +7,7 @@ import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { Choice } from "@/components/ui/choice";
+import { Tabs } from "@/components/ui/tabs";
 import { ErrorState, Skeleton, EmptyState } from "@/components/ui/states";
 import { CatalogPicker } from "@/features/catalog/catalog-picker";
 import { numberText } from "@/lib/navigation/params";
@@ -44,7 +44,7 @@ function Leaderboard({ filters }: { filters: LeaderboardFilters }) {
       ListHeaderComponent={
         <View className="gap-4 pb-5">
           <PageHeader title="Katkı sıralaması" help="Katkı sıralaması doğrulanmış ve faydalı topluluk katkılarının puanlarına göre oluşur. Dönemler İstanbul saatine göre hesaplanır." />
-          <Choice
+          <Tabs
             label="Dönem"
             value={filters.period}
             options={[

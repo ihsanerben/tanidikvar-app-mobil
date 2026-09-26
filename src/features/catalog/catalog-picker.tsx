@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { FormField } from "@/components/ui/form-field";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { PagedList } from "@/components/ui/paged-list";
-import { universityList, programList } from "./api";
+import { universityList, programList, universityDetail } from "./api";
 import type { Schema } from "@/lib/api/types";
 export function CatalogPicker({
   universityId,
@@ -22,17 +22,19 @@ export function CatalogPicker({
   onUniversity: (item: Schema["UniversityResponse"]) => void;
   onProgram: (item: Schema["ProgramSummaryResponse"]) => void;
 }) {
+  const university = useQuery({ ...universityDetail(universityId ?? ""), enabled: !!universityId && !universityName });
+  const [pickedProgram,setPickedProgram] = useState<string>();
   const [kind, setKind] = useState<"university" | "program" | null>(null);
   return (
     <View className="gap-3">
       <Button
         variant="secondary"
-        label={universityName || "Üniversite seç"}
+        label={universityName || university.data?.name || "Üniversite seç"}
         onPress={() => setKind("university")}
       />
       {showProgram && <Button
         variant="secondary"
-        label={programName || "Program seç"}
+        label={programName || pickedProgram || "Program seç"}
         disabled={!universityId}
         onPress={() => setKind("program")}
       />}
@@ -48,10 +50,12 @@ export function CatalogPicker({
             kind={kind}
             universityId={universityId}
             onUniversity={(item) => {
+              setPickedProgram(undefined);
               onUniversity(item);
               setKind(null);
             }}
             onProgram={(item) => {
+              setPickedProgram(item.name);
               onProgram(item);
               setKind(null);
             }}

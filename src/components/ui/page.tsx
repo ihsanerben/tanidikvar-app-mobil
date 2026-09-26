@@ -7,7 +7,7 @@ import {
   RefreshControl,
   Pressable,
 } from "react-native";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { Screen } from "./screen";
 import { Text } from "./text";
 import { OfflineBanner } from "./states";
@@ -18,31 +18,35 @@ export function PageHeader({
   back = true,
   help,
   action,
+  backHref,
+  backLabel = "Geri",
 }: {
   title: string;
   back?: boolean;
   help?: string;
   action?: React.ReactNode;
+  backHref?: Href;
+  backLabel?: string;
 }) {
   return (
     <View className="gap-3 pb-4">
       {back && (
         <Pressable
           accessibilityRole="link"
-          accessibilityLabel="Önceki sayfaya dön"
+          accessibilityLabel={backLabel === "Geri" ? "Önceki sayfaya dön" : backLabel}
           className="min-h-11 self-start justify-center"
           onPress={() =>
-            router.canGoBack() ? router.back() : router.replace("/")
+            backHref ? router.push(backHref) : router.canGoBack() ? router.back() : router.replace("/")
           }
-        ><Text variant="muted" className="text-primary underline">← Geri</Text></Pressable>
+        ><Text variant="muted" className="text-primary underline">← {backLabel}</Text></Pressable>
       )}
-      <View className="flex-row flex-wrap items-center justify-between gap-2">
+      {!!(title || action || help) && <View className="flex-row flex-wrap items-center justify-between gap-2">
         <View className="min-w-0 flex-1 flex-row items-center gap-1">
           <Text variant="title" className="shrink">{title}</Text>
           {help && <Help title={title} description={help} />}
         </View>
         {action}
-      </View>
+      </View>}
       <OfflineBanner />
     </View>
   );
@@ -54,12 +58,18 @@ export function Page({
   refresh,
   refreshing = false,
   help,
+  backHref,
+  backLabel,
+  scrollRef,
 }: PropsWithChildren<{
   title: string;
   back?: boolean;
   refresh?: () => void;
   refreshing?: boolean;
   help?: string;
+  backHref?: Href;
+  backLabel?: string;
+  scrollRef?:React.Ref<ScrollView>;
 }>) {
   return (
     <Screen>
@@ -68,6 +78,7 @@ export function Page({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
+          ref={scrollRef}
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="gap-4 pb-10"
           refreshControl={
@@ -76,7 +87,7 @@ export function Page({
             ) : undefined
           }
         >
-          <PageHeader title={title} back={back} help={help} />
+          <PageHeader title={title} back={back} help={help} backHref={backHref} backLabel={backLabel} />
           {children}
           <AppFooter />
         </ScrollView>

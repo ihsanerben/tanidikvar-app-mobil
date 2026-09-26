@@ -7,7 +7,7 @@ const links = [
   { label: "Üniversiteler", open: () => router.push("/kesfet") },
   { label: "Programlar", open: () => router.push({ pathname: "/kesfet", params: { kind: "programs" } }) },
   { label: "İstatistikler", open: () => router.push("/statistics") },
-  { label: "İletişim", open: () => router.push("/about") },
+  { label: "İletişim", open: () => router.push({pathname:"/about",params:{section:"contact"}}) },
   { label: "Sistem durumu ↗", open: () => router.push("/status") },
 ];
 export function AppFooter() {

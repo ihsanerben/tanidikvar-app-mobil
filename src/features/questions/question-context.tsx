@@ -7,8 +7,9 @@ const badge = cva('rounded-control px-2 py-1', { variants: { scope: { GENERAL: '
 const label = cva('text-metadata font-semibold', { variants: { scope: { GENERAL: 'text-scope-general-text', UNIVERSITY: 'text-scope-university-text', UNIVERSITY_DEPARTMENT: 'text-scope-program-text' } } });
 export function QuestionContext({ question }: { question: Schema['QuestionResponse'] }) {
   const scope = question.scope ?? 'GENERAL';
+  if(scope === 'GENERAL' && !question.tags?.some(tag=>tag.available)) return null;
   function open() {
-    if (scope === 'UNIVERSITY_DEPARTMENT' && question.programId) router.push({ pathname: '/programs/[id]', params: { id: question.programId } });
+    if (scope === 'UNIVERSITY_DEPARTMENT' && question.universityId && question.departmentId) router.push({ pathname: '/department', params: { universityId: question.universityId,departmentId:question.departmentId } });
     else if (question.universityId) router.push({ pathname: '/universities/[id]', params: { id: question.universityId } });
     else router.push({ pathname: '/', params: { scope: 'GENERAL' } });
   }

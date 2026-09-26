@@ -8,5 +8,5 @@ export function ResendScreen() {
     fields={[{ name: 'email', label: 'E-posta', kind: 'email', testID: 'resend-email' }]}
     submitLabel="Gönder" testID="resend-submit" submit={authApi.resend}
     successMessage="Adres uygunsa doğrulama e-postası gönderildi."
-    links={[{ href: '/verify-email', label: 'Kodu gir' }, { href: '/login', label: 'Girişe dön' }]} />;
+    links={[{ href: '/login', label: '← Oturum açmaya dön' }]} />;
 }

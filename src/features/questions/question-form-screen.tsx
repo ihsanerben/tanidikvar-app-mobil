@@ -6,7 +6,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 import { Page } from "@/components/ui/page";
 import { Text } from "@/components/ui/text";
-import { Choice } from "@/components/ui/choice";
+import { Select } from "@/components/ui/select";
 import { FeatureForm } from "@/components/ui/feature-form";
 import { ErrorState, Skeleton } from "@/components/ui/states";
 import { CatalogPicker } from "@/features/catalog/catalog-picker";
@@ -98,10 +98,10 @@ function Editor({
         tagIds: initial.tags?.flatMap((tag) => (tag.id ? [tag.id] : [])) ?? [],
       }}
       fields={[
-        { name: "title", label: "Başlık" },
-        { name: "body", label: "Sorunun ayrıntıları", multiline: true },
+        { name: "title", label: "Soru başlığı" },
+        { name: "body", label: "Soru açıklaması (isteğe bağlı)", multiline: true },
       ]}
-      label={initial.id ? "Değişiklikleri kaydet" : "Soruyu yayımla"}
+      label={initial.id ? "Değişiklikleri kaydet" : "Soruyu yayınla"}
       testID="question-submit"
       submit={async (values) => {
         const content: Schema["QuestionContent"] = {
@@ -137,18 +137,19 @@ function Editor({
       {(form) => (
         <View className="gap-4">
           {!initial.id && <TemplatePicker choose={template => { form.setValue('title', template.title ?? '', { shouldValidate: true }); form.setValue('body', template.body ?? '', { shouldValidate: true }); }} />}
-          <Choice
-            label="Sorunun kapsamı"
+          <Select
+            label="Bağlam"
             value={form.watch("scope")}
             onChange={(value) => form.setValue("scope", value)}
             options={[
               { value: "GENERAL", label: "Genel" },
               { value: "UNIVERSITY", label: "Üniversite" },
-              { value: "UNIVERSITY_DEPARTMENT", label: "Program" },
+              { value: "UNIVERSITY_DEPARTMENT", label: "Üniversite + Bölüm" },
             ]}
           />
           {form.watch("scope") !== "GENERAL" && (
             <CatalogPicker
+              showProgram={form.watch("scope") === "UNIVERSITY_DEPARTMENT"}
               universityId={form.watch("universityId")}
               universityName={universityName}
               programName={programName}
@@ -166,19 +167,14 @@ function Editor({
               }}
             />
           )}
-          <Text className="text-danger">
-            {form.formState.errors.universityId?.message ||
-              form.formState.errors.programId?.message}
-          </Text>
+          {(form.formState.errors.universityId?.message || form.formState.errors.programId?.message) && <Text accessibilityRole="alert" className="text-danger">{form.formState.errors.universityId?.message || form.formState.errors.programId?.message}</Text>}
           <TagPicker
             selected={form.watch("tagIds")}
             onChange={(ids) =>
               form.setValue("tagIds", ids, { shouldValidate: true })
             }
           />
-          <Text className="text-danger">
-            {form.formState.errors.tagIds?.message}
-          </Text>
+          {form.formState.errors.tagIds?.message && <Text accessibilityRole="alert" className="text-danger">{form.formState.errors.tagIds.message}</Text>}
         </View>
       )}
     </FeatureForm>

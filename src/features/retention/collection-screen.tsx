@@ -1,4 +1,5 @@
-import { View } from "react-native";
+import { ApiError } from "../../../packages/api-client/errors";
+import { Pressable, View } from "react-native";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { Screen } from "@/components/ui/screen";
@@ -6,9 +7,7 @@ import { PageHeader } from "@/components/ui/page";
 import { PagedList } from "@/components/ui/paged-list";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { Button } from "@/components/ui/button";
-import { ErrorState, Skeleton } from "@/components/ui/states";
-import { Choice } from "@/components/ui/choice";
+import { EmptyState, ErrorState, Skeleton } from "@/components/ui/states";
 import { universityDetail } from "@/features/catalog/api";
 import { questionDetail } from "@/features/questions/api";
 import type { Schema } from "@/lib/api/types";
@@ -33,18 +32,15 @@ function Collection({ kind }: { kind: CollectionKind }) {
   return (
     <PagedList
       query={query}
+      empty={<EmptyState title={kind === "follows" ? "Henüz takip ettiğin bir üniversite yok" : "Henüz kaydettiğin bir soru yok"}
+        description={kind === "follows" ? "Üniversite sayfasından takip etmeye başlayabilirsin." : "Soru detayından ilginç bulduğun soruları kaydedebilirsin."}
+        label={kind === "follows" ? "Üniversiteleri keşfet" : "Sorulara git"}
+        action={() => router.push(kind === "follows" ? "/kesfet" : "/")} />}
       header={
         <View className="gap-4 pb-5">
-          <PageHeader title={kind === "follows" ? "Takipler" : "Kaydedilenler"} />
-          <Choice
-            label="Liste"
-            value={kind}
-            options={[
-              { value: "follows", label: "Üniversiteler" },
-              { value: "saved", label: "Sorular" },
-            ]}
-            onChange={(kind) => router.setParams({ kind })}
-          />
+          <PageHeader title={kind === "follows" ? "Takip edilen üniversiteler" : "Kaydedilen sorular"}
+            backHref="/profil" backLabel="Hesabıma dön"
+            help={kind === "follows" ? "Takip ettiğin üniversiteleri ve bu üniversitelerden gelen yeni soru bildirimlerini burada görebilirsin." : "Kaydettiğin soruları buradan tekrar açabilir ve kayıtlarından kaldırabilirsin."} />
         </View>
       }
       renderItem={({ item }) => (
@@ -74,11 +70,11 @@ function CollectionItem({
 function Followed({ id }: { id: string }) {
   const query = useQuery(universityDetail(id));
   return (
-    <Card>
+    <View className="gap-2">
       {query.isPending ? (
         <Skeleton />
       ) : query.isError && !query.data ? (
-        <ErrorState
+        query.error instanceof ApiError && query.error.status===404 ? <Card><Text variant="heading">Bu içerik artık görüntülenemiyor</Text><Text variant="muted">Kaydı listenden kaldırabilirsin.</Text><RetentionButton kind="follows" id={id} initialActive={true} /></Card> : <ErrorState
           error={query.error}
           retry={() => {
             void query.refetch();
@@ -86,28 +82,27 @@ function Followed({ id }: { id: string }) {
         />
       ) : (
         <>
-          <Text variant="heading">{query.data.name}</Text>
-          <Text variant="muted">{query.data.city}</Text>
-          <Button
-            label="Üniversiteyi aç"
+          <Pressable accessibilityRole="link" accessibilityLabel={query.data.name}
+            className="min-h-touch-android flex-row items-center justify-between gap-3 rounded-card border border-border bg-surface px-3 py-3 active:opacity-80"
             onPress={() =>
               router.push({ pathname: "/universities/[id]", params: { id } })
             }
-          />
+          ><View className="min-w-0 flex-1 gap-1"><Text variant="heading">{query.data.name}</Text>
+            <Text variant="muted">Üniversite</Text></View><Text accessible={false} className="text-muted">→</Text></Pressable>
           <RetentionButton kind="follows" id={id} initialActive={true} />
         </>
       )}
-    </Card>
+    </View>
   );
 }
 function Saved({ id }: { id: string }) {
   const query = useQuery(questionDetail(id));
   return (
-    <Card>
+    <View className="gap-2">
       {query.isPending ? (
         <Skeleton />
       ) : query.isError && !query.data ? (
-        <ErrorState
+        query.error instanceof ApiError && query.error.status===404 ? <Card><Text variant="heading">Bu içerik artık görüntülenemiyor</Text><Text variant="muted">Kaydı listenden kaldırabilirsin.</Text><RetentionButton kind="saved" id={id} initialActive={true} /></Card> : <ErrorState
           error={query.error}
           retry={() => {
             void query.refetch();
@@ -119,6 +114,6 @@ function Saved({ id }: { id: string }) {
           <RetentionButton kind="saved" id={id} initialActive={true} />
         </>
       )}
-    </Card>
+    </View>
   );
 }

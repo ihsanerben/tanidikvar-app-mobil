@@ -18,13 +18,13 @@ export function ManagerAccountScreen() {
   const logout = useMutation({ mutationFn: authApi.logout, retry: 0 });
   return <ManagerPage title="Yönetim hesabım">
     {query.isPending ? <Skeleton /> : query.isError && !query.data ? <ErrorState error={query.error} retry={() => void query.refetch()} /> : query.data && <>
-      <Card className="gap-3 border-[#e0e3ec]"><Text variant="heading">Yönetim kimliği</Text>
+      <Card className="gap-3 border-manager-border"><Text variant="heading">Yönetim kimliği</Text>
         <Text variant="muted">E-posta: {query.data.email}</Text>
         <FeatureForm key={query.data.version} schema={identity} defaults={{ firstName: query.data.firstName ?? "", lastName: query.data.lastName ?? "" }} fields={[{ name: "firstName", label: "Ad" }, { name: "lastName", label: "Soyad" }]} label="Bilgilerimi kaydet" submit={body => save.mutateAsync(body)} />
         {save.isSuccess && <Text>Yönetim kimliğin kaydedildi.</Text>}
         {save.isError && <ErrorState error={save.error} retry={() => void query.refetch()} />}
       </Card>
-      <Card className="gap-3 border-[#e0e3ec]"><Text variant="heading">Hesap güvenliği</Text><Text>E-posta adresin doğrulanmış.</Text>
+      <Card className="gap-3 border-manager-border"><Text variant="heading">Hesap güvenliği</Text><Text>E-posta adresin doğrulanmış.</Text>
         <Button label="Şifre yenileme bağlantısı iste" variant="secondary" onPress={() => router.push("/forgot-password")} />
         <Button label="Çıkış yap" variant="danger" pending={logout.isPending} onPress={() => logout.mutate()} />
         {logout.isError && <ErrorState error={logout.error} />}

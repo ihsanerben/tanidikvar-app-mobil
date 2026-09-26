@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Page } from "@/components/ui/page";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { Choice } from "@/components/ui/choice";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ErrorState, Skeleton } from "@/components/ui/states";
 import { numberText } from "@/lib/navigation/params";
@@ -12,7 +12,7 @@ import { reportQuery } from "./api";
 import { reportParams } from "./schemas";
 import { publicProfile } from "@/features/profile/api";
 function Metric({ value, label }: { value?: number; label: string }) {
-  return <View className="w-[48%] gap-1 rounded-control bg-primary-soft p-3"><Text variant="heading">{numberText(value)}</Text><Text variant="muted">{label}</Text></View>;
+  return <View className="w-metric-half gap-1 rounded-control bg-primary-soft p-3"><Text variant="heading">{numberText(value)}</Text><Text variant="muted">{label}</Text></View>;
 }
 export function ReportScreen() {
   const p = reportParams.safeParse(useLocalSearchParams());
@@ -36,7 +36,7 @@ function Report({ id, year }: { id: string; year: number }) {
       }}
       refreshing={query.isRefetching}
     >
-      <Choice
+      <Select
         label="Yıl"
         value={String(year)}
         onChange={(year) => router.setParams({ year })}

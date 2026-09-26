@@ -8,5 +8,5 @@ export function ForgotScreen() {
     fields={[{ name: 'email', label: 'E-posta', kind: 'email', testID: 'forgot-email' }]}
     submitLabel="Yenileme bağlantısı gönder" testID="forgot-submit" submit={authApi.forgot}
     successMessage="Adres uygunsa şifre yenileme e-postası gönderildi."
-    links={[{ href: '/reset-password', label: 'Yenileme kodunu gir' }, { href: '/login', label: 'Girişe dön' }]} />;
+    links={[{ href: '/login', label: '← Oturum açmaya dön' }]} />;
 }

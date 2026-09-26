@@ -10,7 +10,8 @@ import { PageHeader } from "@/components/ui/page";
 import { PagedList } from "@/components/ui/paged-list";
 import { FormField } from "@/components/ui/form-field";
 import { Button } from "@/components/ui/button";
-import { Choice } from "@/components/ui/choice";
+import { Select } from "@/components/ui/select";
+import { CatalogPicker } from "./catalog-picker";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ErrorState } from "@/components/ui/states";
 import { catalogParams } from "@/lib/navigation/params";
@@ -35,13 +36,13 @@ function Explorer({ filters }: { filters: z.infer<typeof catalogParams> }) {
   });
   const header = (
     <View className="gap-4 pb-5">
-      <PageHeader title="Üniversiteni keşfet" back={false} />
+      <PageHeader title={filters.kind === "programs" ? "Programlar" : "Üniversiteler"} back={false} />
       <Controller
         control={form.control}
         name="q"
         render={({ field, fieldState }) => (
           <FormField
-            label="Üniversite veya program ara"
+            label={filters.kind === "programs" ? "Program ara" : "Üniversite ara"}
             value={field.value}
             onChangeText={field.onChange}
             error={fieldState.error?.message}
@@ -57,15 +58,6 @@ function Explorer({ filters }: { filters: z.infer<typeof catalogParams> }) {
         label="Ara"
           testID="catalog-search-submit"
         onPress={form.handleSubmit((values) => router.setParams(values))}
-      />
-      <Choice
-        label="Ne arıyorsun?"
-        value={filters.kind}
-        options={[
-          { value: "universities", label: "Üniversiteler" },
-          { value: "programs", label: "Programlar" },
-        ]}
-        onChange={(kind) => router.setParams({ ...filters, kind })}
       />
       <Button
         label="Filtreler"
@@ -92,7 +84,7 @@ function Explorer({ filters }: { filters: z.infer<typeof catalogParams> }) {
           control={form.control}
           name="institutionType"
           render={({ field }) => (
-            <Choice
+            <Select
               label="Üniversite türü"
               value={field.value}
               onChange={field.onChange}
@@ -100,16 +92,23 @@ function Explorer({ filters }: { filters: z.infer<typeof catalogParams> }) {
                 { value: "", label: "Tümü" },
                 { value: "DEVLET", label: "Devlet" },
                 { value: "VAKIF", label: "Vakıf" },
+                { value: "KKTC", label: "KKTC" },
+                { value: "YURT_DISI", label: "Yurt dışı" },
               ]}
             />
           )}
         />
+        {filters.kind === "programs" && <>
+          <CatalogPicker showProgram={false} universityId={filters.universityId} onUniversity={item => form.setValue("universityId", item.id)} onProgram={() => undefined} />
+          <Controller control={form.control} name="degreeLevel" render={({field}) => <Select label="Düzey" value={field.value} onChange={field.onChange} options={[{value:"",label:"Tümü"},{value:"LISANS",label:"Lisans"},{value:"ONLISANS",label:"Ön lisans"}]} />} />
+          <Controller control={form.control} name="sort" render={({field}) => <Select label="Sırala" value={field.value} onChange={field.onChange} options={[{value:"RANK",label:"Başarı sırasına göre"},{value:"NAME",label:"Ada göre"}]} />} />
+        </>}
         {filters.kind === "programs" && (
           <Controller
             control={form.control}
             name="scoreType"
             render={({ field }) => (
-              <Choice
+              <Select
                 label="Puan türü"
                 value={field.value}
                 onChange={field.onChange}
@@ -131,7 +130,7 @@ function Explorer({ filters }: { filters: z.infer<typeof catalogParams> }) {
           label="Filtreleri temizle"
           variant="secondary"
           onPress={() => {
-            router.replace("/kesfet");
+            router.replace({ pathname: "/kesfet", params: { kind: filters.kind } });
             setOpen(false);
           }}
         />

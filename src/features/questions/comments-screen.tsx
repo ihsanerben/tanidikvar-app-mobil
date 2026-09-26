@@ -9,6 +9,8 @@ import { PageHeader } from "@/components/ui/page";
 import { PagedList } from "@/components/ui/paged-list";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
+import { ActionsMenu } from "@/components/ui/actions-menu";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FeatureForm } from "@/components/ui/feature-form";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -37,17 +39,17 @@ function Comments({ id }: { id: string }) {
   function render({ item }: { item: Schema["AnswerCommentResponse"] }) {
     return (
       <Card>
-        <Text variant="label">{item.authorName}</Text>
+        <View className="flex-row items-center gap-2"><Avatar name={item.authorName} size="small" /><Text variant="label">{item.authorName}</Text></View>
         <Text>{item.body}</Text>
         <Text variant="muted">{item.createdAt ? new Date(item.createdAt).toLocaleString('tr-TR') : ''}</Text>
-        <Button label="Yorumu bildir" variant="secondary" onPress={() => loginAction(() => setReportId(item.id!))} />
+        <ActionsMenu title="Alt yorum işlemleri"><Button label="Yorumu bildir" variant="secondary" onPress={() => loginAction(() => setReportId(item.id!))} />
         {item.authorId === me.data?.id && (
           <Button
             label="Yorumunu düzenle"
             variant="secondary"
             onPress={() => setEdit(item)}
           />
-        )}
+        )}</ActionsMenu>
       </Card>
     );
   }

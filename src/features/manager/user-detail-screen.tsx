@@ -1,3 +1,4 @@
+import { statusLabels } from "./labels";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -28,9 +29,9 @@ function Detail({ id }: { id: string }) {
   return <ManagerPage title="Kullanıcı detayı">
     <Button label="← Kullanıcılara dön" variant="secondary" onPress={() => router.push("/manager/users")} />
     {query.isPending ? <Skeleton /> : query.isError && !data ? <ErrorState error={query.error} retry={() => void query.refetch()} /> : data && <>
-      <Card className="border-[#e0e3ec]"><Text variant="heading">{data.user?.name || data.user?.email}</Text><Text>{data.user?.email}</Text><Text variant="muted">{data.user?.authority} · {data.user?.deletedAt ? "Pasif" : "Aktif"} · {data.user?.emailVerified ? "E-posta doğrulandı" : "E-posta doğrulanmadı"}</Text></Card>
-      <Card className="border-[#e0e3ec]"><Text variant="heading">Eğitim ve profil</Text><Text>{data.universityName || "Üniversite yok"} · {data.departmentName || "Bölüm yok"}</Text><Text variant="muted">{data.user?.educationStatus || "Eğitim durumu yok"} · {data.graduationYear || "Mezuniyet yılı yok"}</Text><Text>{data.biography}</Text></Card>
-      <Card className="border-[#e0e3ec]"><Text variant="heading">Katkılar</Text><Text>{data.questions ?? 0} soru · {data.communityAnswers ?? 0} topluluk yorumu · {data.adminAnswers ?? 0} Tanıdık yorumu</Text></Card>
+      <Card className="border-manager-border"><Text variant="heading">{data.user?.name || data.user?.email}</Text><Text>{data.user?.email}</Text><Text variant="muted">{statusLabels[data.user?.authority ?? ""] ?? data.user?.authority} · {data.user?.deletedAt ? "Pasif" : "Aktif"} · {data.user?.emailVerified ? "E-posta doğrulandı" : "E-posta doğrulanmadı"}</Text></Card>
+      <Card className="border-manager-border"><Text variant="heading">Eğitim ve profil</Text><Text>{data.universityName || "Üniversite yok"} · {data.departmentName || "Bölüm yok"}</Text><Text variant="muted">{data.user?.educationStatus || "Eğitim durumu yok"} · {data.graduationYear || "Mezuniyet yılı yok"}</Text><Text>{data.biography}</Text></Card>
+      <Card className="border-manager-border"><Text variant="heading">Katkılar</Text><Text>{data.questions ?? 0} soru · {data.communityAnswers ?? 0} topluluk yorumu · {data.adminAnswers ?? 0} Tanıdık yorumu</Text></Card>
       <Button label="Başvuru geçmişi" variant="secondary" onPress={() => router.push({ pathname: "/manager/users/[id]/applications", params: { id } })} />
       {data.user?.authority !== "MANAGER" && <Button label={data.user?.deletedAt ? "Hesabı yeniden etkinleştir" : "Hesabı pasifleştir"} variant="danger" onPress={() => setConfirmOpen(true)} />}
       {data.user?.authority === "TANIDIK" && data.verificationId && <Button label="Tanıdık yetkisini kaldır" variant="secondary" onPress={() => setRevokeOpen(true)} />}
