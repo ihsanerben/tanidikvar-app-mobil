@@ -16,7 +16,9 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run check:native-config
       - run: npm test -- --runInBand
+      - run: npm run test:release
       - run: npx expo export --platform all
       - run: npm run check:bundle
 # Native device acceptance is a separate required release gate; JS export is not a device test.

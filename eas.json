@@ -10,7 +10,8 @@
       "environment": "development",
       "env": {
         "APP_VARIANT": "development",
-        "EXPO_PUBLIC_APP_VARIANT": "development"
+        "EXPO_PUBLIC_APP_VARIANT": "development",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       },
       "channel": "development"
     },
@@ -31,9 +32,20 @@
         "APP_VARIANT": "production",
         "EXPO_PUBLIC_APP_VARIANT": "production"
       }
+    },
+    "development-simulator": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
   }
 }

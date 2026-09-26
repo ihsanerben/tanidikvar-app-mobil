@@ -1,0 +1,138 @@
+[
+  {
+    "title": "TanıdıkVar ve roller",
+    "summary": "Üniversiteyi öğrencilerden ve mezunlardan dinle. Soruları herkes okuyabilir; deneyim paylaşmak için hesabını ve profilini tamamla.",
+    "details": [
+      "TanıdıkVar, üniversite ve bölüm seçimi, kampüs yaşamı, dersler, stajlar ve mezuniyet sonrası deneyimler için herkese açık bir soru ve yorum platformudur. Paylaşımlar kişisel görüşlerdir; resmî üniversite açıklaması veya yerleştirme garantisi değildir.",
+      "Eğitim durumları YKS Adayı, Üniversite Öğrencisi ve Mezun’dur. Admin, öğrencilik veya mezuniyet belgesi Manager tarafından onaylanan kullanıcıdır. Admin etiketi her yorumun doğruluğunun ayrıca onaylandığı anlamına gelmez.",
+      "Manager başvuruları, kullanıcıları, içerik görünürlüğünü ve katalogları yöneten ayrı yetkidir. Manager içerik katkısı yapmaz. Eğitim durumu ile yönetim yetkisi birbirinden ayrıdır.",
+      "Ana sayfa Sorular’a açılır. Üst menüde Sorular, Popülerler, Adminler ve Hakkımızda bulunur. Giriş sonrasında Hesabım kişisel işlemlere, Manager girişinde ayrı yönetim menüsü yönetim ekranlarına götürür."
+    ]
+  },
+  {
+    "title": "Kayıt, doğrulama ve hesap güvenliği",
+    "summary": "E-posta adresinle kayıt ol, gelen bağlantıyla adresini doğrula ve giriş yap. Şifreni unuttuğunda yeni bağlantı iste.",
+    "details": [
+      "Kayıtta e-posta ve en az 8 karakterlik şifre kullanılır; çok uzun şifrelerde ekrandaki uzunluk sınırını izle. Kayıt otomatik giriş yapmaz. E-postadaki bağlantıyı açıp doğrulama düğmesine basarak işlemi tamamla.",
+      "Doğrulanmamış adresle giriş yapılamaz. E-posta gelmezse gelen kutusu ve spam klasörünü kontrol et; doğrulama bağlantısını yeniden iste. Yerel Docker kullanımında iletiler Mailpit gelen kutusuna gider.",
+      "Şifremi unuttum sayfasından bağlantı iste, e-postadaki bağlantıyla yeni şifreni kaydet. Başarılı sıfırlama eski oturumları kapatır. Doğrulama ve sıfırlama bağlantıları tek kullanımlıdır; geçersiz veya süresi dolmuş bağlantı için yenisini iste.",
+      "Hesabım → Hesap durumu e-posta doğrulama ve profil tamamlama durumunu gösterir. Çıkış yap oturumu kapatır. Yoğun denemelerde ekrandaki bekleme süresini izle. E-posta talebinin başarı mesajı, adresin sistemde kayıtlı olup olmadığını açıklamaz."
+    ]
+  },
+  {
+    "title": "Profil, eğitim ve fotoğraf",
+    "summary": "Ad-soyad ve eğitim bilgilerini tamamla. Hesabım kutusu YKS adayında mavi, öğrencide yeşil, mezunda kırmızıdır.",
+    "details": [
+      "YKS adayında ad, soyad ve eğitim durumu; üniversite öğrencisinde ayrıca üniversite ve bölüm; mezunda bunlara ek olarak mezuniyet yılı gerekir. Eğitim bilgilerini Profilimi düzenle üzerinden güncelleyebilirsin.",
+      "Normal sürümde profil tamamlamak için fotoğraf gerekir. Fotoğraf penceresinde JPEG veya PNG seç, önizlemeyi kontrol et ve Fotoğrafı kaydet düğmesine bas. Üst sınır 5 MB’dır. Fotoğraf herkese açıktır; resmî belgeleri fotoğraf alanına yükleme.",
+      "Üniversite değişince bölüm seçimi temizlenir. Yeni eğitim seçimleri aktif katalogdan yapılır; daha önce seçilen ve sonradan pasifleştirilen mevcut eğitim bağlantısı korunabilir. Listede bulunmayan programı başka programmış gibi seçme.",
+      "Biyografi, LinkedIn ve Portfolyo isteğe bağlıdır. Mezun profiline meslek ve şirket de eklenebilir. Bu alanlar herkese açık profilinde görünür; paylaşmak istediğin bilgileri yaz.",
+      "Hesabım ad-soyad, e-posta ve eğitim özetini toplar. Eğitim kutusu ile üstteki Hesabım düğmesi aynı rol rengini kullanır: YKS adayı mavi, öğrenci yeşil, mezun kırmızı. Rol ayrıca yazıyla belirtilir.",
+      "Profil fotoğrafı yükleme kapalı olduğunda profil fotoğrafsız tamamlanabilir. Manager kendi Yönetim hesabım ekranında eğitim seçmeden ad-soyad ve hesap güvenliğini yönetir."
+    ]
+  },
+  {
+    "title": "Soruları bulma ve Popülerler",
+    "summary": "Anahtar kelime, üniversite, bölüm ve taglerle ara; sıralamayı veya Popülerler dönemini seç.",
+    "details": [
+      "Sorular’da arama metnini gönder; Filtrele alanından kapsam, üniversite, bağlı bölüm ve tag seçeneklerini kullan. Seçimler sonuçlara uygulanır. Tümünü temizle arama ve filtreleri sıfırlar.",
+      "Sorular sıralaması yeniden eskiye, eskiden yeniye, en çok görüntülenen, en çok beğenilen veya en çok yorumlanan olabilir. Sonuçların devamı sayfalama düğmeleriyle açılır.",
+      "Popülerler İstanbul saatine göre bugün, bu hafta, bu ay ve bu yıl takvim dönemlerini sunar. Görüntülenme, beğeni ve iki yorum türü birlikte değerlendirilir; yalnız soru tarihi veya toplam beğeni kullanılmaz.",
+      "Eski bir soru yeni etkileşimlerle yeniden öne çıkabilir. Kartlardaki sayaçlar tüm zamanların görünür toplamlarıdır; seçilen dönemin puanı değildir.",
+      "Katalog Manager tarafından yönetilir ve genişletilebilir. Görünen liste Türkiye’deki tüm üniversite ve programların eksiksiz veya resmî sıralaması değildir."
+    ]
+  },
+  {
+    "title": "Soru oluşturma, düzenleme ve arşivleme",
+    "summary": "Soru sor penceresinde başlık, isteğe bağlı açıklama, kapsam ve tagleri belirle. Kendi sorularını Hesabım’dan yönet.",
+    "details": [
+      "Tamamlanmış profili olan üyeler ve Adminler soru oluşturabilir. Başlık 10–200 karakter, isteğe bağlı açıklama en fazla 5.000 karakterdir. Düzenleme sırasında mevcut açıklama korunur ve değiştirilebilir.",
+      "Genel kapsam üniversiteye bağlı değildir; Üniversite kapsamı bir üniversiteye, Üniversite + Bölüm kapsamı o üniversitenin bir bölümüne bağlıdır. Rozetler sırasıyla mavi, turuncu ve mordur.",
+      "Bir soruya hazır listeden en fazla beş farklı tag seçilir. Yeni tag yönetimi Manager’a aittir. Sorunu anlatan açık bir başlık ve gerekiyorsa bağlam sağlayan açıklama kullan.",
+      "Hesabım → Sorularım üzerinden kendi sorularına ulaş. Yalnız sahibi soru metnini düzenleyebilir veya arşivleyebilir; Admin yetkisi başkasının sorusunu değiştirme hakkı vermez.",
+      "Arşivleme onay ister. Arşivlenen soru keşif listesinden çıkar, kişisel geçmişte ve doğrudan bağlantıda okunabilir; yeni etkileşimlere kapatılır. Manager tarafından gizleme farklı bir işlemdir.",
+      "Başka sekmede değişen kayıtta eski sürüm uyarısı alırsan güncel soruyu yükleyip değişikliğini kontrol et. Başkasının veya diğer sekmenin güncellemesi sessizce ezilmez."
+    ]
+  },
+  {
+    "title": "Topluluk yorumları ve etkileşimler",
+    "summary": "Admin yorumları ve Topluluk yorumları ayrı sekmelerdedir. Yorumunu pencerede yaz; beğeniyi kalp düğmesiyle aç veya kapat.",
+    "details": [
+      "Soru detayında Admin yorumları varsayılan sekmedir. Topluluk yorumları sekmesine geçerek diğer katkıları görürsün. Sekmeler klavyede ok, Home ve End tuşlarıyla da seçilebilir.",
+      "Tamamlanmış profille soru başına tek topluluk yorumu yayımlanır. Metin 10–5.000 karakterdir. Topluluk yorumu yap düğmesi yazma penceresini açar. İç içe yanıt zinciri bulunmaz.",
+      "Kendi yorumunu düzenleyebilir, kaldırabilir ve koşullar uygunsa geri yükleyebilirsin. Kaldırılan yorumun yerine ikinci kayıt açılmaz. Manager tarafından gizlenen yorumu sahibi düzenleyemez veya geri açamaz.",
+      "Kalp düğmesi soruyu beğenir; yeniden basmak beğeniyi geri alır. Her başarılı soru detayı açılışı görüntülenme sayılabilir; sayı tekil ziyaretçi sayısı değildir. Manager incelemeleri görüntülenmeyi artırmaz.",
+      "Hesabım → Topluluk yorumlarım kendi yorumlarını ve durumlarını gösterir. Soru detayı bağlantısı ilgili soruya ve yorum sekmesine götürür. Admin yorumlarının geçmişi ayrı ekrandadır."
+    ]
+  },
+  {
+    "title": "Kişi pencereleri ve profil detayları",
+    "summary": "Yorumdaki kişinin adına basarak kısa profilini aç. Profil detayında eğitim, biyografi ve görünür yorumlarını birlikte gör.",
+    "details": [
+      "Kişi adına tıklamak mini profil penceresini açar. Fotoğraf, ad-soyad, eğitim durumu ve varsa üniversite, bölüm, mezuniyet ve çalışma bilgileri gösterilir.",
+      "Mini profilde LinkedIn ve Portfolyo bağlantıları birlikte bulunur. Profil detayını aç düğmesi bunların sağında ayrı boşlukla yer alır; dar ekranda alt satıra geçebilir.",
+      "Profil detay sayfasında mezuniyet yılı, meslek, şirket ve biyografi kişi kartının içindedir. LinkedIn ve Portfolyo düğmeleri aynı kartın sağında dikey sıralanır. Yalnız doldurulmuş bilgiler ve geçerli bağlantılar gösterilir.",
+      "Kartın altında görünür Admin ve topluluk yorumları ayrı listelenir. Soru detayı bağlantıları ilgili tartışmaya götürür. Dış profil bağlantıları yeni sekmede açılır.",
+      "Admin listesinde ad, üniversite, bölüm, eğitim rolü ve aktiflik filtreleri vardır. Yetkisi kaldırılmış kişi açıkça belirtilir. Altın Admin işareti ve eğitim durumuna bağlı yıldızlar bir yorum puanı değildir; YKS adayında bir, öğrencide iki, mezunda üç yıldız gösterilir."
+    ]
+  },
+  {
+    "title": "Admin başvuruları ve belge gizliliği",
+    "summary": "Öğrenci veya mezun olarak belgeyle başvur; kararını ve önceki başvurularını Başvurularım’da takip et.",
+    "details": [
+      "Normal sürümde tamamlanmış öğrenci veya mezun profiliyle Admin başvurusu yapılır. e-Devlet öğrenci/mezun belgesi PDF olarak, en fazla 10 MB yüklenir. YKS adayları bu başvuruyu yapamaz.",
+      "Başvuru gönderildiği andaki kişisel ve eğitim bilgilerini saklar; gönderilmiş bilgi veya belge sonradan düzenlenmez. Manager başvuruyu onaylar veya gerekçeyle reddeder.",
+      "Başvurularım karar, tarih, varsa ret gerekçesi ve belge indirme işlemini sunar. Geçmiş kayıtlar sayfalanır. Aynı anda tek bekleyen başvuru olabilir; aktif Admin için yeni başvuru formu gösterilmez.",
+      "Reddedilen başvurudan sonra bilgilerini kontrol ederek yeniden başvurabilirsin. Admin yetkisi kaldırıldıktan sonra uygun öğrenci/mezun hesabı yeniden başvurabilir; eski onay tek başına engel değildir.",
+      "Belge herkese açık değildir; yetkili sahibi ve Manager erişebilir. Diğer Adminler belgeyi göremez. Gönderim anındaki doğrulama geçmişi korunur; yorum kartındaki profil bilgileri ise kişinin güncel profilinden gösterilir.",
+      "Admin başvurusu belge eklenerek veya belgesiz gönderilebilir. Eklenen PDF yalnız kullanıcı ve Manager tarafından görüntülenir; belge olmadan verilen kararda Manager profil bilgilerini esas alır."
+    ]
+  },
+  {
+    "title": "Admin yorumları ve günlük kota",
+    "summary": "Admin yorumu yaz düğmesiyle deneyimini paylaş. Günlük beş yeni soru hakkını Admin yorumlarım ekranından izle.",
+    "details": [
+      "Güncel Admin yetkisi ve tamamlanmış profille soru detayında Admin yorumu yaz penceresini kullan. Yorum yayımlamadan önce ayrı bir Yorumlayacağım adımı gerekmez; mevcut arayüz doğrudan yorum akışını kullanır.",
+      "Her Admin bir soruda tek Admin yorumuna sahiptir. Birden fazla Admin aynı soruya ayrı yorumlar verebilir. Manager soruları kişilere dağıtmaz.",
+      "Günlük kota ilk kez Admin yorumu yayımlanan beş farklı sorudur. Türkiye saatiyle yeni günde yenilenir. Mevcut yorumu düzenlemek yeni hak tüketmez; kaldırmak veya geri yüklemek kullanılmış hakkı iade etmez.",
+      "Hesabım → Admin yorumlarım kalan hakkı ve yorum geçmişini gösterir. Kapsama göre filtreleyebilir, üniversitenin veya bölümünün sorularına gidebilirsin. Topluluk yorumların ayrı akışta tutulur.",
+      "Adminler kendi sorularını da oluşturup yönetebilir. Yetki kaldırıldığında yeni Admin yorumu verilemez; eski katkılar geçmişte korunur. Güncel Admin yetkisi olmadan eski Admin yorumunu geri yüklemek mümkün değildir."
+    ]
+  },
+  {
+    "title": "Manager: başvuru, kullanıcı ve içerik",
+    "summary": "Ayrı yönetim panelinden başvuruları incele, hesap durumunu yönet ve gerekçeli içerik moderasyonu yap.",
+    "details": [
+      "Manager menüsünde Özet, Grafikler, Başvurular, Kullanıcılar, Sorular ve Yorumlar, Üniversiteler ve Bölümler, Tagler, İşlem Geçmişi ve Hesabım bulunur. Mobilde Menü düğmesi gezinmeyi açar.",
+      "Başvurular durumuna göre filtrelenir. Detayda gönderilmiş bilgiler, özel PDF önizlemesi ve başvuru geçmişi birlikte görünür. Ret gerekçe ister; Admin yetkisi başvuru onayıyla verilir.",
+      "Kullanıcı detayında eğitim, hesap durumu, doğrulama ve katkı sayıları incelenir. Başvuru geçmişine ve kullanıcıya göre filtrelenmiş içeriklere geçilebilir. Yeni içerik filtresi uygulanırken seçilen kullanıcı korunur.",
+      "Hesap pasifleştirme oturumları kapatır, Admin yetkisini kaldırır ve bekleyen başvuruları reddeder. Hesabı geri açmak eski oturumu veya Admin yetkisini geri getirmez. Bu işlemler gerekçeli onay ister.",
+      "Soru incelemesi soru ve iki yorum türünü birlikte gösterir. İçerik gizleme/geri açma gerekçelidir. Soruyu düzenle penceresinde başlık, açıklama, kapsam ve tagler gerekçeyle güncellenir. Yorum metinleri değiştirilmez; soru yazarı, ilk yayın ve gizleme/arşiv durumu korunur. Sahibinin kaldırması ve Manager gizlemesi ayrı durumlardır.",
+      "Manager soru veya yorum yayımlayamaz, beğenemez ve Admin başvurusu yapamaz. Yönetim hesabım eğitimden bağımsız kimlik ve şifre işlemlerini içerir. Profil fotoğrafına tıklayınca fotoğraf yükleme/kaldırma penceresi açılır."
+    ]
+  },
+  {
+    "title": "Manager: katalog, grafikler ve işlem geçmişi",
+    "summary": "Katalogları gerekçeyle yönet; tarih aralıklı grafiklerden hareketliliği, işlem geçmişinden yönetim kararlarını takip et.",
+    "details": [
+      "Üniversiteler ve Bölümler ekranında bağımsız üniversite ve bölüm kayıtlarını ara ve yönet. Tagler ayrı menüdedir. Ekleme, ad değişikliği ve durum işlemleri gerekçe ister.",
+      "Pasifleştirme veya geri açma öncesinde bağlı profil ve soru sayılarını incele, gerekçeyi yaz ve onayla. Pasif kayıtlar geçmiş bağlantıları korur; yeni seçimlerde kullanılmaz.",
+      "Toplu katalog ekle alanına üniversite ve bölüm adlarını ayrı satırlar halinde ve bir gerekçeyle gir. Mevcut adlar yinelenmez; geçersiz veri varsa işlem bütünüyle geri alınır.",
+      "Özet kartları ilgili listelere, beğeni ve görüntülenme kartları Grafikler’e götürür. Grafikler’de son 7, 30 veya 90 gün seçilebilir; özel aralık en fazla 366 gündür. Gün sınırları Türkiye saatine göredir.",
+      "Dört grafik kullanıcı, içerik, etkileşim ve başvuru hareketliliğini gösterir. Veri olmayan günler sıfırdır; tek gün de gösterilir. Günlük veri tablosu metrikleri sayısal incelemeyi sağlar.",
+      "Grafikler dönem içinde oluşan olayları anlatır; sonradan gizlenen içerik veya geri alınan etkileşim geçmiş olayları silmez. Bu nedenle grafik toplamları mevcut görünür içerik sayaçlarından farklı olabilir.",
+      "İşlem Geçmişi’nde kişi, gerekçe, işlem, hedef türü ve tarih aralığıyla ara. İşlem detayı aktörü, zamanı, hedefi ve gerekçeyi gösterir; uygun hedeflerde ilgili detay sayfasına bağlantı vardır."
+    ]
+  },
+  {
+    "title": "Sürüm farkları, saklama ve yardım",
+    "summary": "Hata mesajındaki yönlendirmeyi izle ve bağlantıyı Sistem durumu sayfasından kontrol et.",
+    "details": [
+      "Profil fotoğrafı yükleme şu anda kapalıdır ve profil fotoğraf şartı olmadan tamamlanabilir. Admin başvurusu isteğe bağlı PDF belgeyle gönderilebilir.",
+      "İçerik kaldırma veya katalog pasifleştirme verinin tüm geçmişten fiziksel silinmesi demek değildir. Geçmiş ilişkiler, başvurular ve yönetim kararları korunur. Panelde genel veritabanı sıfırlama işlemi bulunmaz.",
+      "Bağlantı sorunu yaşarsan Sistem durumu sayfasını aç. İşlem sırasında hata aldıysan kaydın güncel durumunu kontrol et; ekrandaki Tekrar dene veya Güncel kaydı yükle yönlendirmesini izle. Kaydetmediğin metni korumadan sayfayı yenileme.",
+      "Pencereler kapat düğmesi veya Escape ile kapanır. Dar ekranlarda alanlar alt alta geçebilir. Sayfaların başlıkları ve durum mesajları klavye ve ekran okuyucu kullanımını destekler.",
+      "Özel mesajlaşma, ücretli danışmanlık, birebir görüşme ve belirli kişiye özel soru bu sürümün özellikleri değildir. Sorun bildirirken sayfayı, rolünü, adımlarını ve gördüğün sonucu belirt; şifre, oturum bilgisi veya doğrulama bağlantısını paylaşma."
+    ]
+  }
+]

@@ -6,7 +6,7 @@ import { actionParamsSchema, verifySchema } from './schemas';
 export function VerifyScreen() {
   const params = actionParamsSchema.safeParse(useLocalSearchParams());
   const token = params.success ? params.data.token ?? '' : '';
-  return <AuthForm key={token} title="E-postanı doğrula"
+  return <AuthForm surface key={token} title="E-postanı doğrula"
     description={params.success ? 'E-postandaki doğrulama kodunu yapıştır.' : 'Bağlantıdaki kod geçersiz. E-postandaki kodu aşağıya yapıştır.'}
     schema={verifySchema} defaults={{ token }}
     fields={[{ name: 'token', label: 'Doğrulama kodu', kind: 'token', testID: 'verify-token' }]}

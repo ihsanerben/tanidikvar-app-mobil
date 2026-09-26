@@ -4,6 +4,7 @@ import { nextPage } from "@/lib/query/pagination";
 import { queryClient } from "@/lib/query/query-client";
 import type { Schema } from "@/lib/api/types";
 import { randomUUID } from "expo-crypto";
+import { tokenManager } from '@/lib/auth/token-manager';
 export const questionKeys = {
   all: ["questions"] as const,
   detail: (id: string) => ["questions", "detail", id] as const,
@@ -14,18 +15,26 @@ export const questionList = (
     universityId?: string;
     departmentId?: string;
     sort?: string;
+    scope?: '' | 'GENERAL' | 'UNIVERSITY' | 'UNIVERSITY_DEPARTMENT';
+    tagId?: string;
+    city?: string;
+    answered?: '' | 'true' | 'false';
+    verifiedAnswer?: '' | 'true' | 'false';
+    period?: '' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'ALL_TIME';
   } = {},
 ) =>
   infiniteQueryOptions({
     queryKey: [...questionKeys.all, "list", filters],
     initialPageParam: 0,
     staleTime: 30_000,
-    queryFn: ({ pageParam, signal }) =>
-      api.call("get", "/api/questions", {
-        query: { ...filters, page: pageParam, size: 20 },
+    queryFn: ({ pageParam, signal }) => {
+      const query = { q: filters.q, universityId: filters.universityId, departmentId: filters.departmentId, tagId: filters.tagId, city: filters.city || undefined, scope: filters.scope || undefined, answered: filters.answered ? filters.answered === 'true' : undefined, verifiedAnswer: filters.verifiedAnswer ? filters.verifiedAnswer === 'true' : undefined, page: pageParam, size: 20 };
+      return filters.period && filters.period !== 'ALL_TIME' ? api.call('get', '/api/popular', { query: { ...query, period: filters.period }, signal }) : api.call("get", "/api/questions", {
+        query: { ...query, sort: filters.period === 'ALL_TIME' ? 'MOST_VIEWED' : filters.sort },
         signal,
-        authenticated: true,
-      }),
+        authenticated: false,
+      });
+    },
     getNextPageParam: nextPage,
   });
 export const questionDetail = (id: string) =>
@@ -36,7 +45,7 @@ export const questionDetail = (id: string) =>
       api.call("get", "/api/questions/{id}", {
         params: { id },
         signal,
-        authenticated: true,
+        authenticated: false,
       }),
   });
 export const answerList = (id: string) =>
@@ -49,7 +58,7 @@ export const answerList = (id: string) =>
         params: { id },
         query: { page: pageParam, size: 20 },
         signal,
-        authenticated: true,
+        authenticated: false,
       }),
     getNextPageParam: nextPage,
   });
@@ -63,7 +72,7 @@ export const tanidikAnswers = (id: string) =>
         params: { id },
         query: { page: pageParam, size: 20 },
         signal,
-        authenticated: true,
+        authenticated: false,
       }),
     getNextPageParam: nextPage,
   });
@@ -77,7 +86,7 @@ export const commentList = (id: string) =>
         params: { id },
         query: { page: pageParam, size: 20 },
         signal,
-        authenticated: true,
+        authenticated: false,
       }),
     getNextPageParam: nextPage,
   });
@@ -125,7 +134,7 @@ export const questionsApi = {
     api.call("post", "/api/questions/{id}/views", {
       params: { id },
       body: { openingEventId },
-      authenticated: true,
+      authenticated: !!tokenManager.getAccessToken(),
     }),
   likeState: (id: string) =>
     api.call("get", "/api/questions/{id}/like", {
@@ -232,5 +241,6 @@ export const questionsApi = {
       body: { body, version },
       authenticated: true,
     }),
+  reportComment: (id: string, reason: string) => api.call('post', '/api/answer-comments/{id}/reports', { params: { id }, body: { reason }, authenticated: true }),
 };
 export const newRequestId = randomUUID;

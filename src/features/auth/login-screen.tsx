@@ -10,9 +10,9 @@ export function LoginScreen() {
   const params = useLocalSearchParams();
   const destination = returnToSchema.safeParse(params.returnTo);
   if (status === 'authenticated') return <Redirect href={destinationHref(destination.success ? destination.data : '/')} />;
-  return <AuthForm title="TanıdıkVar'a giriş yap" description="Üniversite deneyimlerini paylaşan topluluğa katıl."
+  return <AuthForm title="Oturum aç" description=""
     schema={loginSchema} defaults={{ email: '', password: '' }}
-    fields={[{ name: 'email', label: 'E-posta', kind: 'email', testID: 'login-email' }, { name: 'password', label: 'Şifre', kind: 'password', testID: 'login-password' }]}
-    submitLabel="Giriş yap" testID="login-submit" submit={authApi.login}
-    links={[{ href: '/register', label: 'Hesap oluştur' }, { href: '/forgot-password', label: 'Şifremi unuttum' }, { href: '/verify-email', label: 'E-postamı doğrula' }]} />;
+    fields={[{ name: 'email', label: 'E-posta', kind: 'email', testID: 'login-email' }, { name: 'password', label: 'Parola', kind: 'password', testID: 'login-password' }]}
+    submitLabel="Oturum aç" testID="login-submit" submit={authApi.login}
+    links={[{ href: '/register', label: 'Hesabın yok mu? Hesap oluştur' }, { href: '/forgot-password', label: 'Şifremi unuttum' }]} />;
 }

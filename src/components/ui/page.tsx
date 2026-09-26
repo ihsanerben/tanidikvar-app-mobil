@@ -5,31 +5,44 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
+  Pressable,
 } from "react-native";
 import { router } from "expo-router";
 import { Screen } from "./screen";
 import { Text } from "./text";
-import { Button } from "./button";
 import { OfflineBanner } from "./states";
+import { Help } from "./help";
+import { AppFooter } from "./app-footer";
 export function PageHeader({
   title,
   back = true,
+  help,
+  action,
 }: {
   title: string;
   back?: boolean;
+  help?: string;
+  action?: React.ReactNode;
 }) {
   return (
     <View className="gap-3 pb-4">
       {back && (
-        <Button
-          label="Geri"
-          variant="secondary"
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel="Önceki sayfaya dön"
+          className="min-h-11 self-start justify-center"
           onPress={() =>
             router.canGoBack() ? router.back() : router.replace("/")
           }
-        />
+        ><Text variant="muted" className="text-primary underline">← Geri</Text></Pressable>
       )}
-      <Text variant="title">{title}</Text>
+      <View className="flex-row flex-wrap items-center justify-between gap-2">
+        <View className="min-w-0 flex-1 flex-row items-center gap-1">
+          <Text variant="title" className="shrink">{title}</Text>
+          {help && <Help title={title} description={help} />}
+        </View>
+        {action}
+      </View>
       <OfflineBanner />
     </View>
   );
@@ -40,11 +53,13 @@ export function Page({
   back = true,
   refresh,
   refreshing = false,
+  help,
 }: PropsWithChildren<{
   title: string;
   back?: boolean;
   refresh?: () => void;
   refreshing?: boolean;
+  help?: string;
 }>) {
   return (
     <Screen>
@@ -61,8 +76,9 @@ export function Page({
             ) : undefined
           }
         >
-          <PageHeader title={title} back={back} />
+          <PageHeader title={title} back={back} help={help} />
           {children}
+          <AppFooter />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

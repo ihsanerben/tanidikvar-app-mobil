@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Alert, View } from "react-native";
+import { View } from "react-native";
 import { Button } from "./button";
+import { BottomSheet } from "./bottom-sheet";
+import { Text } from "./text";
 import { ErrorState, useOffline } from "./states";
 export function ActionButton({
   label,
@@ -18,19 +21,17 @@ export function ActionButton({
   testID?: string;
 }) {
   const offline = useOffline();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const mutation = useMutation({
     mutationFn: action,
     retry: 0,
     onSuccess: async () => {
+      setConfirmOpen(false);
       await after?.();
     },
   });
   function press() {
-    if (confirm)
-      Alert.alert(label, confirm, [
-        { text: "Vazgeç", style: "cancel" },
-        { text: "Onayla", onPress: () => mutation.mutate() },
-      ]);
+    if (confirm) setConfirmOpen(true);
     else mutation.mutate();
   }
   return (
@@ -43,6 +44,14 @@ export function ActionButton({
         pending={mutation.isPending}
         onPress={press}
       />
+      <BottomSheet visible={confirmOpen} title={label} close={() => { if (!mutation.isPending) setConfirmOpen(false); }}>
+        <Text>{confirm}</Text>
+        <View className="flex-row flex-wrap gap-2">
+          <Button label="Vazgeç" variant="secondary" disabled={mutation.isPending} onPress={() => setConfirmOpen(false)} />
+          <Button label="Onayla" variant="danger" pending={mutation.isPending} onPress={() => mutation.mutate()} />
+        </View>
+        {mutation.isError && <ErrorState error={mutation.error} />}
+      </BottomSheet>
       {mutation.isError && (
         <ErrorState
           error={mutation.error}

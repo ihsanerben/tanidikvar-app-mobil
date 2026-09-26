@@ -1,0 +1,88 @@
+import { useEffect, useState } from "react";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { router, useLocalSearchParams } from "expo-router";
+import { Pressable, View } from "react-native";
+import { z } from "zod";
+import { Card } from "@/components/ui/card";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { Button } from "@/components/ui/button";
+import { Choice } from "@/components/ui/choice";
+import { FeatureForm } from "@/components/ui/feature-form";
+import { PageHeader } from "@/components/ui/page";
+import { PagedList } from "@/components/ui/paged-list";
+import { Screen } from "@/components/ui/screen";
+import { ErrorState } from "@/components/ui/states";
+import { Text } from "@/components/ui/text";
+import { api } from "@/lib/api/client";
+import { nextPage } from "@/lib/query/pagination";
+
+const params = z.object({
+  kind: z.enum(["tanidik", "community", "anonymous"]).default("tanidik"),
+  scope: z.enum(["GENERAL", "UNIVERSITY", "UNIVERSITY_DEPARTMENT"]).optional(),
+});
+type Comment = { id?: string; questionId?: string; questionTitle?: string; body?: string; publishedAt?: string; anonymous?: boolean; deletedAt?: string; version?: number };
+const editSchema = z.object({ body: z.string().trim().min(1).max(5000) });
+
+export function MyCommentsScreen() {
+  const parsed = params.safeParse(useLocalSearchParams());
+  if (!parsed.success) return <Screen><ErrorState error={null} retry={() => router.replace("/my-comments")} /></Screen>;
+  return <MyComments filters={parsed.data} />;
+}
+
+function MyComments({ filters }: { filters: z.infer<typeof params> }) {
+  const tanidik = useInfiniteQuery({
+    queryKey: ["my-comments", "tanidik-source", filters.kind, filters.scope], initialPageParam: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      const page = await api.call("get", "/api/me/admin-answers", { query: { scope: filters.scope, page: pageParam, size: 20 }, authenticated: true, signal });
+      return { ...page, items: (page.items ?? []).filter(item => filters.kind === "anonymous" ? item.anonymous : !item.anonymous) as Comment[] };
+    }, getNextPageParam: nextPage, enabled: filters.kind !== "community",
+  });
+  const community = useInfiniteQuery({
+    queryKey: ["my-comments", "community", filters.scope], initialPageParam: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      const page = await api.call("get", "/api/me/answers", { query: { scope: filters.scope, page: pageParam, size: 20 }, authenticated: true, signal });
+      return { ...page, items: (page.items ?? []).map(row => ({ ...row.answer, questionTitle: row.questionTitle })) as Comment[] };
+    }, getNextPageParam: nextPage, enabled: filters.kind === "community",
+  });
+  const selected = filters.kind === "community" ? community : tanidik;
+  const anonymousCount = tanidik.data?.pages.reduce((sum, page) => sum + (page.items?.length ?? 0), 0) ?? 0;
+  useEffect(() => { if (filters.kind === "anonymous" && tanidik.data && anonymousCount === 0 && tanidik.hasNextPage && !tanidik.isFetching) void tanidik.fetchNextPage(); }, [filters.kind, tanidik, anonymousCount]);
+  return <Screen><PagedList query={selected} renderItem={({ item }) => <CommentCard item={item} kind={filters.kind} />} header={<View className="gap-4 pb-5">
+    <PageHeader title="Yorumlarım" />
+    <Choice label="Yorum türü" value={filters.kind} options={[
+      { value: "tanidik", label: "Tanıdık yorumları" }, { value: "community", label: "Topluluk yorumları" }, { value: "anonymous", label: "Anonim" },
+    ]} onChange={kind => router.setParams({ kind, scope: filters.scope })} />
+    <Choice label="Kapsam" value={filters.scope ?? ""} options={[
+      { value: "", label: "Tümü" }, { value: "GENERAL", label: "Genel" }, { value: "UNIVERSITY", label: "Üniversite" }, { value: "UNIVERSITY_DEPARTMENT", label: "Üniversite + Bölüm" },
+    ]} onChange={scope => router.setParams({ kind: filters.kind, scope })} />
+  </View>} /></Screen>;
+}
+
+function CommentCard({ item, kind }: { item: Comment; kind: "tanidik" | "community" | "anonymous" }) {
+  const [dialog, setDialog] = useState<"edit" | "status" | null>(null);
+  const client = useQueryClient();
+  const tanidik = kind !== "community";
+  const edit = useMutation({ mutationFn: (body: { body: string }) => tanidik
+    ? api.call("put", "/api/admin-answers/{id}", { params: { id: item.id! }, body: { ...body, version: item.version ?? 0 }, authenticated: true })
+    : api.call("put", "/api/answers/{id}", { params: { id: item.id! }, body: { ...body, version: item.version ?? 0 }, authenticated: true }),
+    onSuccess: async () => { setDialog(null); await client.invalidateQueries({ queryKey: ["my-comments"] }); } });
+  const status = useMutation({ mutationFn: () => tanidik
+    ? api.call("put", "/api/admin-answers/{id}/status", { params: { id: item.id! }, body: { deleted: !item.deletedAt, version: item.version ?? 0 }, authenticated: true })
+    : api.call("put", "/api/answers/{id}/status", { params: { id: item.id! }, body: { deleted: !item.deletedAt, version: item.version ?? 0 }, authenticated: true }),
+    onSuccess: async () => { setDialog(null); await client.invalidateQueries({ queryKey: ["my-comments"] }); } });
+  return <Card>
+    <Text variant="muted">{item.anonymous ? "Anonim Tanıdık yorumu" : "Yorumun"}</Text>
+    <Text variant="heading">{item.questionTitle || "Soru artık görüntülenemiyor"}</Text>
+    <Text>{item.deletedAt ? "Bu yorum kaldırıldı." : item.body}</Text>
+    <View className="flex-row items-center justify-between gap-2">
+      <Text variant="muted">{item.publishedAt ? new Date(item.publishedAt).toLocaleString("tr-TR") : ""}</Text>
+      {item.questionId && <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: "/questions/[id]", params: { id: item.questionId! } })} className="min-h-11 justify-center"><Text className="text-primary underline">Soru detayı</Text></Pressable>}
+    </View>
+    {item.id && <View className="flex-row flex-wrap gap-2">{!item.deletedAt && <Button label="Düzenle" variant="secondary" onPress={() => setDialog("edit")} />}<Button label={item.deletedAt ? "Geri getir" : "Kaldır"} variant="secondary" onPress={() => setDialog("status")} /></View>}
+    <BottomSheet visible={!!dialog} title={dialog === "edit" ? "Yorumu düzenle" : item.deletedAt ? "Yorumu geri getir" : "Yorumu kaldır"} close={() => { if (!edit.isPending && !status.isPending) setDialog(null); }}>
+      {dialog === "edit" ? <FeatureForm key={item.version} schema={editSchema} defaults={{ body: item.body ?? "" }} fields={[{ name: "body", label: "Yorum", multiline: true }]} label="Kaydet" submit={body => edit.mutateAsync(body)} />
+        : <><Text>{item.deletedAt ? "Yorum yeniden görünür olacak." : "Yorum görünür listelerden kaldırılacak."}</Text><Button label={item.deletedAt ? "Geri getir" : "Kaldır"} variant={item.deletedAt ? "primary" : "danger"} pending={status.isPending} onPress={() => status.mutate()} /></>}
+      {edit.isError && <ErrorState error={edit.error} />}{status.isError && <ErrorState error={status.error} />}
+    </BottomSheet>
+  </Card>;
+}

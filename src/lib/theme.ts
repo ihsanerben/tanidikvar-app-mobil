@@ -1,1 +1,1 @@
-export const theme = { primary: '#5B5BD6', text: '#111827', muted: '#667085', surface: '#FFFFFF' } as const;
+export const theme = { primary: '#163F36', text: '#21372F', muted: '#626D63', surface: '#FFFFFF' } as const;

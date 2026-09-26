@@ -15,7 +15,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   }
 
   const variant = variants[requestedVariant as AppVariant];
-  const projectId = process.env.EAS_PROJECT_ID || undefined;
+  const projectId = process.env.EAS_PROJECT_ID || '0ccbc744-7c80-44b0-879e-9249eff10d42';
   if (projectId && !/^[0-9a-f-]{36}$/i.test(projectId)) throw new Error('EAS_PROJECT_ID UUID olmalıdır.');
   const linkHost = process.env.APP_LINK_HOST || (requestedVariant === 'production' ? 'tanidikvar.com.tr' : undefined);
   if (linkHost && !/^[a-z0-9]+(?:[.-][a-z0-9]+)*\.[a-z]{2,}$/i.test(linkHost)) throw new Error('APP_LINK_HOST yalnız hostname olmalıdır.');
@@ -29,6 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: variant.name,
     slug: 'tanidikvar-app',
+    owner: 'ihsanerben',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
@@ -39,22 +40,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     runtimeVersion: { policy: 'fingerprint' },
     ios: {
       bundleIdentifier: variant.identifier,
-      icon: './assets/expo.icon',
+      icon: './assets/images/icon.png',
       supportsTablet: true,
       associatedDomains: linkHost ? [`applinks:${linkHost}`] : [],
       infoPlist: { ITSAppUsesNonExemptEncryption: false },
     },
     android: {
       package: variant.identifier,
-      blockedPermissions: ['android.permission.RECORD_AUDIO', 'android.permission.READ_CONTACTS', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION'],
+      blockedPermissions: ['android.permission.RECORD_AUDIO', 'android.permission.READ_CONTACTS', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION', 'android.permission.READ_EXTERNAL_STORAGE', 'android.permission.WRITE_EXTERNAL_STORAGE', ...(requestedVariant === 'development' ? [] : ['android.permission.SYSTEM_ALERT_WINDOW'])],
       ...(process.env.GOOGLE_SERVICES_JSON ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON } : {}),
       intentFilters: linkHost ? [{ action: 'VIEW', autoVerify: true, category: ['BROWSABLE', 'DEFAULT'],
         data: ['/soru/', '/universite/', '/program/', '/profiles/'].map(pathPrefix => ({ scheme: 'https', host: linkHost, pathPrefix })),
       }] : [],
       adaptiveIcon: {
-        backgroundColor: '#EEEEFF',
+        backgroundColor: '#163F36',
         foregroundImage: './assets/images/android-icon-foreground.png',
-        backgroundImage: './assets/images/android-icon-background.png',
         monochromeImage: './assets/images/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: true,
@@ -62,7 +62,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     web: { bundler: 'metro', output: 'static', favicon: './assets/images/favicon.png' },
     plugins: [
       'expo-router',
-      'expo-secure-store',
+      ['expo-secure-store', { faceIDPermission: false }],
+      ['./plugins/with-local-network-permission', { development: requestedVariant === 'development' }],
       'expo-notifications',
       ['@sentry/react-native/expo', { organization: process.env.SENTRY_ORG, project: process.env.SENTRY_PROJECT }],
       [

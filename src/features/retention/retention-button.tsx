@@ -5,6 +5,8 @@ import { ErrorState, useOffline } from "@/components/ui/states";
 import { Text } from "@/components/ui/text";
 import { refreshRetention, retentionState, setRetention } from "./api";
 import type { CollectionKind } from "./schemas";
+import { useAuth } from '@/lib/auth/auth-context';
+import { useLoginAction } from '@/features/auth/use-login-action';
 export function RetentionButton({
   kind,
   id,
@@ -15,9 +17,13 @@ export function RetentionButton({
   initialActive?: boolean;
 }) {
   const client = useQueryClient();
+  const { status } = useAuth();
+  const loggedIn = status === 'authenticated';
+  const loginAction = useLoginAction();
   const state = useQuery({
     ...retentionState(kind, id),
     initialData: initialActive,
+    enabled: loggedIn,
   });
   const offline = useOffline();
   const mutation = useMutation({
@@ -31,7 +37,7 @@ export function RetentionButton({
       <Button
         testID={kind === "follows" ? "follow-toggle" : "save-toggle"}
         label={
-          state.isPending
+          !loggedIn ? (kind === 'follows' ? 'Üniversiteyi takip et' : 'Soruyu kaydet') : state.isPending
             ? "Durum yükleniyor…"
             : kind === "follows"
               ? state.data
@@ -43,8 +49,8 @@ export function RetentionButton({
         }
         variant="secondary"
         pending={mutation.isPending}
-        disabled={!state.isSuccess || offline}
-        onPress={() => mutation.mutate(!state.data)}
+        disabled={loggedIn && (!state.isSuccess || offline)}
+        onPress={() => loginAction(() => mutation.mutate(!state.data))}
       />
       {offline && (
         <Text variant="muted">Değiştirmek için internete bağlan.</Text>

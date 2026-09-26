@@ -7,6 +7,7 @@ import type {
 } from "@tanstack/react-query";
 import { ErrorState, EmptyState, Skeleton, useOffline } from "./states";
 import { Button } from "./button";
+import { AppFooter } from "./app-footer";
 type Page<T> = {
   items?: T[];
   page?: number;
@@ -87,11 +88,12 @@ export function PagedList<T extends { id?: string }>({
               />
             )
           )}
+          <AppFooter />
         </View>
       }
     />
   );
 }
 function Separator() {
-  return <View className="h-3" />;
+  return <View className="h-list-gap" />;
 }

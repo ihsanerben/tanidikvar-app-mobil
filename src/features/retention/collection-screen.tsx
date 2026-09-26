@@ -15,6 +15,7 @@ import type { Schema } from "@/lib/api/types";
 import { collectionParams, type CollectionKind } from "./schemas";
 import { collectionList } from "./api";
 import { RetentionButton } from "./retention-button";
+import { QuestionCard } from "@/features/questions/question-card";
 export function CollectionScreen() {
   const p = collectionParams.safeParse(useLocalSearchParams());
   return (
@@ -34,7 +35,7 @@ function Collection({ kind }: { kind: CollectionKind }) {
       query={query}
       header={
         <View className="gap-4 pb-5">
-          <PageHeader title="Takip ve kayıtlarım" />
+          <PageHeader title={kind === "follows" ? "Takipler" : "Kaydedilenler"} />
           <Choice
             label="Liste"
             value={kind}
@@ -114,14 +115,7 @@ function Saved({ id }: { id: string }) {
         />
       ) : (
         <>
-          <Text variant="heading">{query.data.title}</Text>
-          <Text variant="muted">{query.data.universityName || "Genel"}</Text>
-          <Button
-            label="Soruyu aç"
-            onPress={() =>
-              router.push({ pathname: "/questions/[id]", params: { id } })
-            }
-          />
+          <QuestionCard item={query.data} />
           <RetentionButton kind="saved" id={id} initialActive={true} />
         </>
       )}

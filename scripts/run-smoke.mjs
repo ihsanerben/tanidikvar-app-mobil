@@ -15,7 +15,8 @@ if(spawnSync('maestro',['--version'],{stdio:'ignore'}).status!==0) throw new Err
 async function request(origin,path,method='GET',body,access) {
   const response=await fetch(origin+path,{method,headers:{'Content-Type':'application/json',...(access?{Authorization:'Bearer '+access}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(10000)});
   if(!response.ok) throw new Error(`Test service failed: ${method} ${path.split('?')[0]} (${response.status})`);
-  return response.status===204?undefined:response.json();
+  const text=await response.text();
+  return text?JSON.parse(text):undefined;
 }
 const email=`mobile-smoke-${randomUUID()}@example.test`;
 const password=`Smoke-${randomUUID()}!`;

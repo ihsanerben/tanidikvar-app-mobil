@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { View, Switch, Share } from "react-native";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { authApi, authKeys } from "@/features/auth/api";
+import { useCurrentUser } from '@/features/auth/use-current-user';
+import { useLoginAction } from '@/features/auth/use-login-action';
 import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
 import { Card } from "@/components/ui/card";
@@ -28,6 +29,10 @@ import {
   questionKeys,
 } from "./api";
 import { bodySchema, reportSchema } from "./schemas";
+import { QuestionContext } from './question-context';
+import { Avatar } from '@/components/ui/avatar';
+import { api } from '@/lib/api/client';
+import { ActionsMenu } from '@/components/ui/actions-menu';
 export function QuestionDetailScreen() {
   const parsed = idParams.safeParse(useLocalSearchParams());
   return (
@@ -45,15 +50,13 @@ export function QuestionDetailScreen() {
 }
 function Detail({ id }: { id: string }) {
   const query = useQuery(questionDetail(id));
-  const user = useQuery({
-    queryKey: authKeys.me(),
-    queryFn: ({ signal }) => authApi.me(signal),
-    staleTime: 30_000,
-  });
+  const user = useCurrentUser();
+  const loginAction = useLoginAction();
   const like = useQuery({
     queryKey: [...questionKeys.detail(id), "like"],
     queryFn: () => questionsApi.likeState(id),
     staleTime: 30_000,
+    enabled: !!user.data,
   });
   const ownCommunity = useQuery({
     queryKey: [...questionKeys.detail(id), "own-community"],
@@ -69,6 +72,7 @@ function Detail({ id }: { id: string }) {
     enabled: !!user.data && user.data.role !== "MANAGER",
     retry: false,
   });
+  const quota = useQuery({ queryKey: ['questions', 'quota'], queryFn: () => api.call('get', '/api/me/admin-quota', { authenticated: true }), staleTime: 30_000, enabled: user.data?.role === 'TANIDIK' });
   const [tab, setTab] = useState<"community" | "tanidik">("community");
   const [compose, setCompose] = useState(false);
   const [report, setReport] = useState(false);
@@ -95,13 +99,13 @@ function Detail({ id }: { id: string }) {
     );
   const question = query.data;
   const owner = !!user.data?.id && question.authorId === user.data.id;
-  const canWrite = user.data?.role !== "MANAGER" && !question.archivedAt;
+  const canWrite = !!user.data && user.data.role !== "MANAGER" && !question.archivedAt;
   const header = (
     <View className="gap-4 pb-5">
       <PageHeader title="Soru" />
       <RetentionButton kind="saved" id={id} />
       <Card>
-        <Badge label={question.universityName || "Genel"} />
+        <QuestionContext question={question} />
         <Text variant="title">{question.title}</Text>
         <Text>{question.body}</Text>
         <Text variant="muted">
@@ -122,9 +126,9 @@ function Detail({ id }: { id: string }) {
             }
           />
         )}
-        {question.archivedAt && <Badge label="Arşivlenmiş soru" />}
+        {question.archivedAt && <><Badge label="Arşivlenmiş soru" /><Text variant="muted">Bu soru okunabilir; arşivde olduğu için yeni katkı kabul etmiyor.</Text></>}
         <Text variant="muted">
-          {question.statistics?.totalAnswerCount ?? 0} cevap ·{" "}
+          {question.statistics?.viewCount ?? 0} görüntülenme · {question.statistics?.totalAnswerCount ?? 0} cevap ·{" "}
           {question.statistics?.likeCount ?? 0} beğeni
         </Text>
         <ActionButton
@@ -135,19 +139,21 @@ function Detail({ id }: { id: string }) {
           }
           after={() => refreshQuestions(id)}
         />
+        {!user.data && <Button label="Faydalı oy vermek için giriş yap" variant="secondary" onPress={() => loginAction(() => undefined)} />}
         <ActionButton
           label="Paylaş"
           action={() =>
             Share.share({ message: sharePath("sorular", id, question.title) })
           }
         />
-        {canWrite && (
+        {!question.archivedAt && user.data?.role !== 'MANAGER' && (
           <Button
             label="Cevap yaz"
             testID="write-answer"
-            onPress={() => setCompose(true)}
+            onPress={() => loginAction(() => setCompose(true))}
           />
         )}
+        <ActionsMenu title="Soru işlemleri">
         {owner && (
           <>
             <Button
@@ -177,8 +183,9 @@ function Detail({ id }: { id: string }) {
         <Button
           label="Soruyu bildir"
           variant="secondary"
-          onPress={() => setReport(true)}
+          onPress={() => loginAction(() => setReport(true))}
         />
+        </ActionsMenu>
       </Card>
       {ownCommunity.data?.deletedAt && (
         <AnswerCard
@@ -205,8 +212,8 @@ function Detail({ id }: { id: string }) {
         value={tab}
         onChange={setTab}
         options={[
-          { value: "community", label: "Topluluk" },
-          { value: "tanidik", label: "Tanıdıklar" },
+          { value: "community", label: `Topluluk (${question.statistics?.communityAnswerCount ?? 0})` },
+          { value: "tanidik", label: `Tanıdıklar (${question.statistics?.adminAnswerCount ?? 0})` },
         ]}
       />
       <BottomSheet
@@ -214,6 +221,7 @@ function Detail({ id }: { id: string }) {
         title="Cevabını paylaş"
         close={() => setCompose(false)}
       >
+        {quota.data && <Text variant="muted">Bugün {quota.data.used ?? 0}/{quota.data.limit ?? 0} Tanıdık cevabı · {quota.data.remaining ?? 0} hakkın kaldı.</Text>}
         {user.data?.role === "TANIDIK" && (
           <Choice
             label="Cevap türü"
@@ -347,11 +355,12 @@ function AnswerCard({
   const [editing, setEditing] = useState(false);
   const [editSource, setEditSource] = useState(answer);
   const [reporting, setReporting] = useState(false);
+  const loginAction = useLoginAction();
   const helpful = useQuery({
     queryKey: [...questionKeys.detail(question.id!), "helpful", answer.id],
     queryFn: () => questionsApi.helpfulState(answer.id!),
     staleTime: 30_000,
-    enabled: !!answer.id,
+    enabled: !!answer.id && !!userId,
   });
   const owner = isOwn || (!!userId && userId === answer.authorId);
   const unavailable =
@@ -360,7 +369,9 @@ function AnswerCard({
     <Card>
       {tanidik && <Badge label="Tanıdık cevabı" />}
       {question.bestAnswerId === answer.id && <Badge label="En İyi Cevap" />}
+      <Avatar name={answer.authorName || 'Anonim Tanıdık'} educationStatus={answer.educationStatus} tanidik={tanidik || answer.activeAdmin} />
       <Text variant="label">{answer.authorName || "Anonim Tanıdık"}</Text>
+      <Text variant="muted">{[answer.universityName, answer.departmentName].filter(Boolean).join(' · ')}</Text>
       {answer.authorId && (
         <Button
           label="Profili gör"
@@ -374,6 +385,7 @@ function AnswerCard({
         />
       )}
       <Text>{answer.body}</Text>
+      <Text variant="muted">{answer.publishedAt ? new Date(answer.publishedAt).toLocaleString('tr-TR') : ''}{answer.editedAt ? ` · Düzenlendi: ${new Date(answer.editedAt).toLocaleString('tr-TR')}` : ''}</Text>
       <Text variant="muted">
         {answer.editedAt ? "Düzenlendi · " : ""}
         {helpful.data?.likeCount ?? answer.likeCount ?? 0} kişi faydalı buldu
@@ -384,6 +396,7 @@ function AnswerCard({
         action={() => questionsApi.helpful(answer.id!, !helpful.data?.liked)}
         after={() => refreshQuestions(question.id)}
       />
+      {!userId && <Button label="Faydalı oy vermek için giriş yap" variant="secondary" onPress={() => loginAction(() => undefined)} />}
       {question.authorId === userId && !unavailable && (
         <ActionButton
           label="En İyi Cevap seç"
@@ -401,6 +414,7 @@ function AnswerCard({
           })
         }
       />
+      <ActionsMenu title="Cevap işlemleri">
       {owner && (
         <>
           <Button
@@ -429,8 +443,9 @@ function AnswerCard({
       <Button
         label="Cevabı bildir"
         variant="secondary"
-        onPress={() => setReporting(true)}
+        onPress={() => loginAction(() => setReporting(true))}
       />
+      </ActionsMenu>
       <BottomSheet
         visible={editing}
         title="Cevabı düzenle"
@@ -438,6 +453,9 @@ function AnswerCard({
       >
         <FeatureForm
           key={String(editSource.version)}
+          reload={() => {
+            void (tanidik ? questionsApi.ownTanidikAnswer(question.id!).then(result => result.answer) : questionsApi.ownAnswer(question.id!)).then(latest => { if (latest) setEditSource(latest); });
+          }}
           schema={bodySchema}
           defaults={{ body: editSource.body ?? "" }}
           fields={[{ name: "body", label: "Cevabın", multiline: true }]}

@@ -3,21 +3,23 @@ import { useMutation } from '@tanstack/react-query';
 import { Link, type Href } from 'expo-router';
 import { useNetworkState } from 'expo-network';
 import { Controller, useForm, type DefaultValues, type FieldValues, type Path } from 'react-hook-form';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { z } from 'zod';
 
 import { ApiError } from '../../../packages/api-client/errors';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Screen } from '@/components/ui/screen';
+import { AppFooter } from '@/components/ui/app-footer';
+import { Text } from '@/components/ui/text';
 
 type Field<T extends FieldValues> = { name: Path<T>; label: string; kind?: 'email' | 'password' | 'new-password' | 'token'; testID: string };
 type Props<T extends FieldValues> = {
   title: string; description: string; schema: z.ZodType<T, T>; defaults: DefaultValues<T>;
   fields: Field<T>[]; submitLabel: string; submit: (values: T) => Promise<unknown>;
-  successMessage?: string; onSuccess?: () => void; links?: { href: Href; label: string }[]; testID: string;
+  successMessage?: string; successTitle?: string; onSuccess?: () => void; links?: { href: Href; label: string }[]; testID: string; surface?: boolean;
 };
-export function AuthForm<T extends FieldValues>({ title, description, schema, defaults, fields, submitLabel, submit, successMessage, onSuccess, links, testID }: Props<T>) {
+export function AuthForm<T extends FieldValues>({ title, description, schema, defaults, fields, submitLabel, submit, successMessage, successTitle, onSuccess, links, testID, surface = false }: Props<T>) {
   const form = useForm<T>({ resolver: zodResolver(schema), defaultValues: defaults });
   const network = useNetworkState();
   const offline = network.isConnected === false || network.isInternetReachable === false;
@@ -37,9 +39,11 @@ export function AuthForm<T extends FieldValues>({ title, description, schema, de
     <Screen>
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* A short, bounded form scrolls for the keyboard and large accessibility fonts; this is not a data list. */}
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="grow justify-center gap-5 pb-8">
-          <Text className="text-3xl font-bold text-text">{title}</Text>
-          <Text className="text-base leading-6 text-muted">{description}</Text>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="gap-4 pb-8 pt-page-top">
+          <View className={surface ? 'gap-4 rounded-surface border border-border bg-surface p-5' : 'gap-4'}>
+          {mutation.isSuccess && successTitle ? <View accessibilityRole="alert" className="gap-2 rounded-card bg-primary-soft p-5"><Text variant="heading">{successTitle}</Text><Text>{successMessage}</Text></View> : <>
+          <Text variant="title">{title}</Text>
+          {description ? <Text className="text-base leading-6 text-muted">{description}</Text> : null}
           {fields.map(field => (
             <Controller key={field.name} control={form.control} name={field.name}
               render={({ field: input, fieldState }) => (
@@ -60,9 +64,13 @@ export function AuthForm<T extends FieldValues>({ title, description, schema, de
           </View> : null}
           {mutation.isSuccess && successMessage ? <Text accessibilityRole="alert" className="text-success">{successMessage}</Text> : null}
           <Button label={mutation.isPending ? 'İşlem yapılıyor…' : submitLabel} testID={testID}
+            fullWidth
             disabled={offline || mutation.isPending || form.formState.isSubmitting}
             onPress={form.handleSubmit(values => { Keyboard.dismiss(); return mutation.mutateAsync(values).catch(() => undefined); })} />
-          {links?.map(link => <Link key={link.label} href={link.href} className="py-3 text-base font-semibold text-primary">{link.label}</Link>)}
+          {links?.map(link => <Link key={link.label} href={link.href} className="min-h-11 py-3 text-sm font-semibold text-primary">{link.label}</Link>)}
+          </>}
+          </View>
+          <AppFooter />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

@@ -1,4 +1,5 @@
 import { TagPicker } from "./tag-picker";
+import { TemplatePicker } from './template-picker';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -135,6 +136,7 @@ function Editor({
     >
       {(form) => (
         <View className="gap-4">
+          {!initial.id && <TemplatePicker choose={template => { form.setValue('title', template.title ?? '', { shouldValidate: true }); form.setValue('body', template.body ?? '', { shouldValidate: true }); }} />}
           <Choice
             label="Sorunun kapsamı"
             value={form.watch("scope")}

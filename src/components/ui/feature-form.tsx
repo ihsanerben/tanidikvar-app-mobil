@@ -100,6 +100,7 @@ export function FeatureForm<T extends FieldValues>({
         <Text className="text-warning">Göndermek için internete bağlan.</Text>
       )}
       <Button
+        size="large"
         label={label}
         pending={mutation.isPending}
         disabled={offline || form.formState.isSubmitting}

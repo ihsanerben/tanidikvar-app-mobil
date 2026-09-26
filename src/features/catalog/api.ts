@@ -74,14 +74,14 @@ export const universityStats = (id: string) =>
         signal,
       }),
   });
-export function peopleList(universityId: string, departmentId?: string) {
+export function peopleList(universityId?: string, departmentId?: string, q?: string) {
   return infiniteQueryOptions({
-    queryKey: [...catalogKeys.all, "people", universityId, departmentId],
+    queryKey: [...catalogKeys.all, "people", universityId, departmentId, q],
     staleTime: 30_000,
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       api.call("get", "/api/tanidiklar", {
-        query: { universityId, departmentId, page: pageParam, size: 20 },
+        query: { universityId, departmentId, q, page: pageParam, size: 20 },
         signal,
       }),
     getNextPageParam: nextPage,

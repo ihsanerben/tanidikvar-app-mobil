@@ -1,17 +1,18 @@
 import { universityDetail } from "@/features/catalog/api";
 import { useQuery } from "@tanstack/react-query";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { FlashList } from "@shopify/flash-list";
 import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
-import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Choice } from "@/components/ui/choice";
 import { ErrorState, Skeleton, EmptyState } from "@/components/ui/states";
 import { CatalogPicker } from "@/features/catalog/catalog-picker";
 import { numberText } from "@/lib/navigation/params";
+import { Avatar } from "@/components/ui/avatar";
+import { AppFooter } from "@/components/ui/app-footer";
 import { leaderboardParams, type LeaderboardFilters } from "./schemas";
 import { leaderboardQuery } from "./api";
 export function LeaderboardScreen() {
@@ -42,7 +43,7 @@ function Leaderboard({ filters }: { filters: LeaderboardFilters }) {
       }}
       ListHeaderComponent={
         <View className="gap-4 pb-5">
-          <PageHeader title="Tanıdık sıralaması" />
+          <PageHeader title="Katkı sıralaması" help="Katkı sıralaması doğrulanmış ve faydalı topluluk katkılarının puanlarına göre oluşur. Dönemler İstanbul saatine göre hesaplanır." />
           <Choice
             label="Dönem"
             value={filters.period}
@@ -116,27 +117,20 @@ function Leaderboard({ filters }: { filters: LeaderboardFilters }) {
           />
         )
       }
+      ListFooterComponent={<AppFooter />}
       renderItem={({ item, index }) => (
         <View className="pb-3">
-          <Card>
-            <Text variant="heading">
-              {index + 1}. {item.displayName}
-            </Text>
-            <Text>
-              {numberText(item.points)} puan · {item.title}
-            </Text>
-            <Text variant="muted">{item.badges?.join(" · ")}</Text>
-            <Button
-              label="Profili gör"
-              variant="secondary"
-              onPress={() =>
+          <Pressable accessibilityRole="link" accessibilityLabel={`${index + 1}. ${item.displayName}, ${numberText(item.points)} puan`} onPress={() =>
                 router.push({
                   pathname: "/profiles/[id]",
                   params: { id: item.userId! },
                 })
-              }
-            />
-          </Card>
+              } className="min-h-12 flex-row items-center gap-2.5 rounded-card border border-border bg-surface p-3 active:opacity-80">
+            <Text className="w-6 text-center text-caption font-bold text-primary">{index + 1}</Text>
+            <Avatar name={item.displayName} size="small" />
+            <View className="min-w-0 flex-1"><Text className="text-caption font-semibold text-primary">{item.displayName}</Text><Text variant="muted">{item.title} · {numberText(item.eventCount)} katkı</Text></View>
+            <View className="max-w-24 items-end"><Text className="text-caption font-bold text-primary">{numberText(item.points)} puan</Text>{!!item.badges?.length && <Text numberOfLines={2} variant="muted">{item.badges.join(" · ")}</Text>}</View>
+          </Pressable>
         </View>
       )}
     />

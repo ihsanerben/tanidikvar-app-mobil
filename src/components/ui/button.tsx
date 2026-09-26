@@ -1,18 +1,28 @@
-import { Pressable, Text } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { cva } from "class-variance-authority";
 const styles = cva(
-  "min-h-12 items-center justify-center rounded-control px-5 py-3 active:opacity-80 disabled:opacity-50",
+  "items-center justify-center rounded-control border px-2.5 py-1.5",
   {
     variants: {
       variant: {
-        primary: "bg-primary",
-        secondary: "bg-primary-soft",
-        danger: "bg-danger",
+        primary: "border-primary bg-primary",
+        secondary: "border-secondary-border bg-surface",
+        danger: "border-danger-border bg-danger-soft",
       },
+      size: { compact: 'min-h-control-compact', large: 'min-h-control-large px-3 py-2' },
     },
-    defaultVariants: { variant: "primary" },
+    defaultVariants: { variant: "primary", size: 'compact' },
   },
 );
+const target = cva('justify-center active:opacity-80', { variants: {
+  fullWidth: { true: 'self-stretch', false: 'self-start' },
+  disabled: { true: 'opacity-50', false: '' },
+  platform: { ios: 'min-h-touch-ios min-w-touch-ios', android: 'min-h-touch-android min-w-touch-android' },
+} });
+const labelStyle = cva('text-center font-semibold', { variants: {
+  variant: { primary: 'text-primary-foreground', secondary: 'text-primary', danger: 'text-danger-text' },
+  size: { compact: 'text-metadata', large: 'text-caption' },
+} });
 export function Button({
   label,
   onPress,
@@ -20,6 +30,8 @@ export function Button({
   testID,
   variant = "primary",
   pending = false,
+  size = 'compact',
+  fullWidth = false,
 }: {
   label: string;
   onPress: () => void;
@@ -27,26 +39,24 @@ export function Button({
   testID?: string;
   variant?: "primary" | "secondary" | "danger";
   pending?: boolean;
+  size?: 'compact' | 'large';
+  fullWidth?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: disabled || pending, busy: pending }}
-      className={styles({ variant })}
+      className={target({ fullWidth, disabled: disabled || pending, platform: Platform.OS === 'android' ? 'android' : 'ios' })}
       disabled={disabled || pending}
       onPress={onPress}
       testID={testID}
     >
-      <Text
-        className={
-          variant === "secondary"
-            ? "text-base font-semibold text-primary"
-            : "text-base font-semibold text-primary-foreground"
-        }
-      >
+      <View pointerEvents="none" className={styles({ variant, size })}>
+      <Text className={labelStyle({ variant, size })}>
         {pending ? "İşlem yapılıyor…" : label}
       </Text>
+      </View>
     </Pressable>
   );
 }

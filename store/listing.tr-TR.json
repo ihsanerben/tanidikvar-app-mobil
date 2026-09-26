@@ -1,0 +1,10 @@
+{
+  "status": "draft",
+  "locale": "tr-TR",
+  "name": "TanıdıkVar",
+  "subtitle": "Üniversiteyi yaşayanlara sor",
+  "shortDescription": "Üniversiteleri keşfet, sorularını paylaş ve öğrenci deneyimlerini öğren.",
+  "description": "Üniversite ve bölüm seçerken merak ettiklerini TanıdıkVar topluluğuna sor. Üniversiteleri ve programları keşfet, öğrencilerin deneyimlerini oku ve kendi deneyimlerini paylaş.\n\nKEŞFET\nÜniversite ve programları ara, filtrele ve ayrıntılarını incele. Programların sunulan yıllara ait puan, sıralama ve kontenjan bilgilerine göz at.\n\nSOR VE PAYLAŞ\nGenel konularda, bir üniversite veya program hakkında soru sor. Cevapları ve yorumları oku, yararlı katkıları değerlendir.\n\nTAKİP ET VE KAYDET\nİlgilendiğin üniversiteleri takip et, tekrar okumak istediğin soruları kaydet. Bildirimlerini uygulama içinden takip et.\n\nTOPLULUĞA KATIL\nProfilini ve eğitim bilgilerini düzenle. Katkılarınla puan ve rozet kazan, topluluk sıralamalarını incele.\n\nTanıdıkVar bir topluluk platformudur; üniversitelerin veya resmî yerleştirme kurumlarının uygulaması değildir. Tercih kararlarını güncel resmî kaynaklardan doğrula.",
+  "keywords": "üniversite,bölüm,tercih,öğrenci,kampüs,soru,cevap",
+  "releaseNotes": "İlk sürüm: üniversite ve program keşfi, soru-cevap, profil, takip, kaydetme ve uygulama içi bildirimler."
+}

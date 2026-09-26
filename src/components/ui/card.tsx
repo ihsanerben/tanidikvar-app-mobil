@@ -4,7 +4,7 @@ export function Card({ className = "", ...props }: ViewProps) {
     <View
       {...props}
       className={
-        "gap-3 rounded-card border border-border bg-surface p-4 " + className
+        "gap-3 rounded-card border border-border bg-surface p-card-inset " + className
       }
     />
   );

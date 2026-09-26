@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { authApi, authKeys } from "@/features/auth/api";
+import { useCurrentUser } from '@/features/auth/use-current-user';
+import { useLoginAction } from '@/features/auth/use-login-action';
 import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
 import { PagedList } from "@/components/ui/paged-list";
@@ -15,7 +16,7 @@ import { ErrorState } from "@/components/ui/states";
 import { idParams } from "@/lib/navigation/params";
 import type { Schema } from "@/lib/api/types";
 import { commentList, questionsApi } from "./api";
-import { commentSchema } from "./schemas";
+import { commentSchema, reportSchema } from "./schemas";
 export function CommentsScreen() {
   const p = idParams.safeParse(useLocalSearchParams());
   return (
@@ -26,11 +27,9 @@ export function CommentsScreen() {
 }
 function Comments({ id }: { id: string }) {
   const query = useInfiniteQuery(commentList(id));
-  const me = useQuery({
-    queryKey: authKeys.me(),
-    queryFn: ({ signal }) => authApi.me(signal),
-    staleTime: 30_000,
-  });
+  const me = useCurrentUser();
+  const loginAction = useLoginAction();
+  const [reportId, setReportId] = useState<string | null>(null);
   const [edit, setEdit] = useState<Schema["AnswerCommentResponse"] | null>(
     null,
   );
@@ -40,6 +39,8 @@ function Comments({ id }: { id: string }) {
       <Card>
         <Text variant="label">{item.authorName}</Text>
         <Text>{item.body}</Text>
+        <Text variant="muted">{item.createdAt ? new Date(item.createdAt).toLocaleString('tr-TR') : ''}</Text>
+        <Button label="Yorumu bildir" variant="secondary" onPress={() => loginAction(() => setReportId(item.id!))} />
         {item.authorId === me.data?.id && (
           <Button
             label="Yorumunu düzenle"
@@ -53,7 +54,10 @@ function Comments({ id }: { id: string }) {
   const header = (
     <View className="gap-4 pb-5">
       <PageHeader title="Alt yorumlar" />
-      <Button label="Yorum yaz" onPress={() => setCompose(true)} />
+      <Button label="Yorum yaz" onPress={() => loginAction(() => setCompose(true))} />
+      <BottomSheet visible={!!reportId} title="Yorumu bildir" close={() => setReportId(null)}>
+        <FeatureForm schema={reportSchema} defaults={{ reason: '' }} fields={[{ name: 'reason', label: 'Bildirim gerekçesi', multiline: true }]} label="Bildir" submit={values => questionsApi.reportComment(reportId!, values.reason)} onSuccess={() => setReportId(null)} />
+      </BottomSheet>
       <BottomSheet
         visible={compose || !!edit}
         title={edit ? "Yorumu düzenle" : "Yorum yaz"}

@@ -11,12 +11,14 @@ export function CatalogPicker({
   universityId,
   universityName,
   programName,
+  showProgram = true,
   onUniversity,
   onProgram,
 }: {
   universityId?: string;
   universityName?: string;
   programName?: string;
+  showProgram?: boolean;
   onUniversity: (item: Schema["UniversityResponse"]) => void;
   onProgram: (item: Schema["ProgramSummaryResponse"]) => void;
 }) {
@@ -28,12 +30,12 @@ export function CatalogPicker({
         label={universityName || "Üniversite seç"}
         onPress={() => setKind("university")}
       />
-      <Button
+      {showProgram && <Button
         variant="secondary"
         label={programName || "Program seç"}
         disabled={!universityId}
         onPress={() => setKind("program")}
-      />
+      />}
       <BottomSheet
         scroll={false}
         visible={kind !== null}

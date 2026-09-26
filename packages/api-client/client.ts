@@ -50,7 +50,8 @@ export function createApiClient(baseUrl: string, session: SessionAdapter, fetche
   }
   return {
     async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-      if (!path.startsWith('/api/') || path.includes('://') || /[\\#]/.test(path) || /(?:^|\/)\.\.?(?:\/|$)/.test(path) || /%2e|%2f|%5c/i.test(path)) throw new ApiError(0, 'INVALID_REQUEST');
+      const pathname = path.split('?')[0];
+      if (!path.startsWith('/api/') || /[\\#]/.test(path) || pathname.includes('://') || /(?:^|\/)\.\.?(?:\/|$)/.test(pathname) || /%2e|%2f|%5c/i.test(pathname)) throw new ApiError(0, 'INVALID_REQUEST');
       const token = options.authenticated ? session.getAccessToken() : null;
       const generation = session.getGeneration?.();
       const checkSession = () => {

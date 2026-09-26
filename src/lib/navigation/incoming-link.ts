@@ -6,7 +6,7 @@ const actionSchema = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/).o
 const hosts = new Set(['tanidikvar.com.tr', 'www.tanidikvar.com.tr']);
 
 /** Normalize trusted web URLs and native schemes before Router sees external parameters. */
-export function incomingLink(input: unknown, trustedHost?: string): string | null {
+export function incomingLink(input: unknown, trustedHost?: string, expoGo = false): string | null {
   const parsed = inputSchema.safeParse(input);
   if (!parsed.success || /[\\\u0000-\u0020]/.test(parsed.data) || /(?:^|\/)\.\.?(?:\/|$)/.test(parsed.data) || /%2e|%2f|%5c/i.test(parsed.data)) return null;
   let path = parsed.data;
@@ -16,8 +16,15 @@ export function incomingLink(input: unknown, trustedHost?: string): string | nul
       if (url.username || url.password || url.hash) return null;
       if (['tanidikvar:', 'tanidikvar-dev:', 'tanidikvar-preview:'].includes(url.protocol)) {
         if (url.port) return null;
-        path = url.host ? '/' + url.host + url.pathname : url.pathname;
+        path = url.host ? '/' + url.host + url.pathname : (url.pathname || '/');
         if (path.endsWith('/') && path !== '/') path = path.slice(0, -1);
+        path += url.search;
+      } else if (expoGo && ['exp:', 'exps:'].includes(url.protocol)) {
+        // Expo Go QR launches use exp://host:port/--/route, or just the host.
+        if (!url.hostname) return null;
+        if (!url.pathname || url.pathname === '/') path = '/';
+        else if (url.pathname.startsWith('/--/')) path = url.pathname.slice(3);
+        else return null;
         path += url.search;
       } else {
         if (url.protocol !== 'https:' || !(hosts.has(url.hostname) || (trustedHost && url.hostname === trustedHost)) || url.port) return null;

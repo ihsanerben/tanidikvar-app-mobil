@@ -202,3 +202,8 @@ it('rejects successful private responses arriving after a session change', async
 it.each(['/api/../outside','/api/%2e%2e/outside','/api/me#fragment','/api/..\\outside'])('rejects escaping API path %s', async path => {
   const { api, fetcher } = setup(); await expect(api.request(path)).rejects.toMatchObject({code:'INVALID_REQUEST'}); expect(fetcher).not.toHaveBeenCalled();
 });
+
+it('allows encoded slashes and URL text in valid search values', async () => {
+  const { api, fetcher }=setup();fetcher.mockResolvedValue(response(200,{}));
+  await expect(api.request('/api/questions?q='+encodeURIComponent('https://example.test/a/b'))).resolves.toEqual({});
+});

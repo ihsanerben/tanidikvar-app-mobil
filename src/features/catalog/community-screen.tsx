@@ -10,7 +10,6 @@ import { PagedList } from "@/components/ui/paged-list";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Card } from "@/components/ui/card";
-import { Avatar } from "@/components/ui/avatar";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { FeatureForm } from "@/components/ui/feature-form";
 import { ErrorState } from "@/components/ui/states";
@@ -20,6 +19,8 @@ import type { Schema } from "@/lib/api/types";
 import { questionList } from "@/features/questions/api";
 import { QuestionCard } from "@/features/questions/question-card";
 import { peopleList, evaluationList } from "./api";
+import { Person } from "./people-screen";
+import { useLoginAction } from '@/features/auth/use-login-action';
 const evaluationSchema = z.object({
   rating: z.string().regex(/^[1-5]$/, "1 ile 5 arasında puan ver."),
   body: z.string().max(2000),
@@ -77,26 +78,8 @@ function People({ params }: { params: Params }) {
     </Screen>
   );
 }
-function Person({ item }: { item: Schema["PublicTanidikProfileResponse"] }) {
-  return (
-    <Card>
-      <Avatar name={item.name} />
-      <Text variant="heading">{item.name}</Text>
-      <Text>{item.departmentName}</Text>
-      <Text variant="muted">
-        {item.tanidikAnswerCount ?? 0} Tanıdık cevabı ·{" "}
-        {item.helpfulVoteCount ?? 0} faydalı oy
-      </Text>
-      <Button
-        label="Profili gör"
-        onPress={() =>
-          router.push({ pathname: "/profiles/[id]", params: { id: item.id! } })
-        }
-      />
-    </Card>
-  );
-}
 function Evaluations({ params }: { params: Params }) {
+  const loginAction = useLoginAction();
   const query = useInfiniteQuery(
     evaluationList(params.universityId, params.programId),
   );
@@ -104,7 +87,7 @@ function Evaluations({ params }: { params: Params }) {
   const header = (
     <View className="gap-4 pb-4">
       <PageHeader title="Değerlendirmeler" />
-      <Button label="Deneyimini değerlendir" onPress={() => setOpen(true)} />
+      <Button label="Deneyimini değerlendir" onPress={() => loginAction(() => setOpen(true))} />
       <BottomSheet
         visible={open}
         title="Değerlendir"

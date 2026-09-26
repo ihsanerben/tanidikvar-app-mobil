@@ -28,6 +28,10 @@ export function isSafeDestination(value: string) {
   if (path === "/") return questionParams.strict().safeParse(query).success;
   if (path === "/kesfet")
     return catalogParams.strict().safeParse(query).success;
+  if (path === '/search') return z.object({ q: z.string().max(150).optional(), kind: z.enum(['questions','universities','programs','people']).optional() }).strict().safeParse(query).success;
+  if (path === '/people') return z.object({ q: z.string().max(150).optional(), universityId: z.uuid().optional(), departmentId: z.uuid().optional() }).strict().safeParse(query).success;
+  if (path === '/my-questions') return z.object({ status: z.enum(['ACTIVE','ARCHIVED']).optional() }).strict().safeParse(query).success;
+  if (path === '/my-comments') return z.object({ kind: z.enum(['tanidik','community','anonymous']).optional(), scope: z.enum(['GENERAL','UNIVERSITY','UNIVERSITY_DEPARTMENT']).optional() }).strict().safeParse(query).success;
   if (path === "/community")
     return communityParams.strict().safeParse(query).success;
   if (path === "/questions/new")
@@ -56,6 +60,10 @@ export function isSafeDestination(value: string) {
       "/profile/preferences",
       "/profile/privacy",
       "/close-account",
+      '/about',
+      '/status',
+      '/compare',
+      '/statistics',
     ].includes(path)
   )
     return true;

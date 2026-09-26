@@ -14,7 +14,13 @@ export const questionParams = z.object({
   q: z.string().max(150).default(""),
   universityId: z.uuid().optional(),
   departmentId: z.uuid().optional(),
-  sort: z.enum(["NEWEST", "MOST_LIKED"]).default("NEWEST"),
+  scope: z.enum(['', 'GENERAL', 'UNIVERSITY', 'UNIVERSITY_DEPARTMENT']).default(''),
+  tagId: z.uuid().optional(),
+  city: z.string().max(100).default(''),
+  answered: z.enum(['', 'true', 'false']).default(''),
+  verifiedAnswer: z.enum(['', 'true', 'false']).default(''),
+  sort: z.enum(["NEWEST", "OLDEST", "MOST_VIEWED", "MOST_LIKED", "MOST_COMMENTED"]).default("NEWEST"),
+  period: z.enum(['', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', 'ALL_TIME']).default(''),
 });
 export const creationParams = z.object({
   universityId: z.uuid().optional(),
