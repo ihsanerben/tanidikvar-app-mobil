@@ -2,7 +2,7 @@ import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { nextPage } from "@/lib/query/pagination";
 import type { z } from "zod";
-import { catalogParams } from "@/lib/navigation/params";
+import { catalogParams, numericFilter } from "@/lib/navigation/params";
 export const catalogKeys = {
   all: ["catalog"] as const,
   university: (id: string) => ["catalog", "university", id] as const,
@@ -42,6 +42,13 @@ export function programList(filters: Partial<z.infer<typeof catalogParams>>) {
           universityId: filters.universityId,
           institutionType: filters.institutionType,
           scoreType: filters.scoreType,
+          programName: filters.programName,
+          universityName: filters.universityName,
+          rankFrom: numericFilter(filters.rankFrom),
+          rankTo: numericFilter(filters.rankTo),
+          scoreFrom: numericFilter(filters.scoreFrom),
+          scoreTo: numericFilter(filters.scoreTo),
+          year: numericFilter(filters.year),
           degreeLevel: filters.degreeLevel,
           sort: filters.sort,
           page: pageParam,
@@ -59,6 +66,11 @@ export const universityDetail = (id: string) =>
     queryFn: ({ signal }) =>
       api.call("get", "/api/universities/{id}", { params: { id }, signal }),
   });
+export const catalogCities = () => queryOptions({
+  queryKey: [...catalogKeys.all, 'cities'],
+  staleTime: 300_000,
+  queryFn: ({ signal }) => api.call('get', '/api/statistics/cities', { signal }),
+});
 export const programDetail = (id: string) =>
   queryOptions({
     queryKey: catalogKeys.program(id),

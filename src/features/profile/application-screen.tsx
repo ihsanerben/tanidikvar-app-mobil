@@ -61,7 +61,7 @@ export function ApplicationScreen() {
 }
 function Application({ item }: { item: Schema["ApplicationResponse"] }) {
   return <Card>
-    <Badge label={statuses[item.status ?? ""] ?? "Başvuru"} />
+    <Badge tone={item.status === "APPROVED" ? "success" : item.status === "REJECTED" ? "danger" : item.status === "PENDING" ? "warning" : "neutral"} label={statuses[item.status ?? ""] ?? "Başvuru"} />
     <Text variant="heading">{[item.firstName, item.lastName].filter(Boolean).join(" ")}</Text>
     {(item.universityName || item.departmentName) && <Text>{[item.universityName, item.departmentName].filter(Boolean).join(" · ")}</Text>}
     <Text>{educationLabel(item.educationStatus, item.graduationYear)}</Text>

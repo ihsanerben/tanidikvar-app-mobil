@@ -50,7 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       blockedPermissions: ['android.permission.RECORD_AUDIO', 'android.permission.READ_CONTACTS', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION', 'android.permission.READ_EXTERNAL_STORAGE', 'android.permission.WRITE_EXTERNAL_STORAGE', ...(requestedVariant === 'development' ? [] : ['android.permission.SYSTEM_ALERT_WINDOW'])],
       ...(process.env.GOOGLE_SERVICES_JSON ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON } : {}),
       intentFilters: linkHost ? [{ action: 'VIEW', autoVerify: true, category: ['BROWSABLE', 'DEFAULT'],
-        data: ['/soru/', '/universite/', '/program/', '/profiles/'].map(pathPrefix => ({ scheme: 'https', host: linkHost, pathPrefix })),
+        data: [...['/soru/', '/universite/', '/program/', '/profiles/', '/tanidik/', '/sehir/'].map(pathPrefix => ({ scheme: 'https', host: linkHost, pathPrefix })), ...['/verify-email', '/reset-password', '/e-posta-dogrula', '/parola-yenile', '/karsilastir', '/sorular', '/populer', '/universiteler', '/programlar', '/tanidiklar', '/arama', '/siralama', '/istatistikler', '/hakkimizda', '/durum', '/soru-sor'].map(path => ({ scheme: 'https', host: linkHost, path }))],
       }] : [],
       adaptiveIcon: {
         backgroundColor: '#163F36',

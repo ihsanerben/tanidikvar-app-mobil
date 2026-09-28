@@ -12,9 +12,10 @@ import { Screen } from "./screen";
 import { Text } from "./text";
 import { OfflineBanner } from "./states";
 import { Help } from "./help";
-import { AppFooter } from "./app-footer";
+import { BrandFooter } from "./brand-footer";
 export function PageHeader({
   title,
+  eyebrow,
   back = true,
   help,
   action,
@@ -22,6 +23,7 @@ export function PageHeader({
   backLabel = "Geri",
 }: {
   title: string;
+  eyebrow?: string;
   back?: boolean;
   help?: string;
   action?: React.ReactNode;
@@ -29,17 +31,18 @@ export function PageHeader({
   backLabel?: string;
 }) {
   return (
-    <View className="gap-3 pb-4">
+    <View className="gap-2 pb-1">
       {back && (
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={backLabel === "Geri" ? "Önceki sayfaya dön" : backLabel}
-          className="min-h-11 self-start justify-center"
+          className={Platform.OS === "android" ? "min-h-touch-android min-w-touch-android self-start justify-center" : "min-h-touch-ios min-w-touch-ios self-start justify-center"}
           onPress={() =>
             backHref ? router.push(backHref) : router.canGoBack() ? router.back() : router.replace("/")
           }
         ><Text variant="muted" className="text-primary underline">← {backLabel}</Text></Pressable>
       )}
+      {eyebrow && <Text variant="unstyled" className="text-metadata font-semibold uppercase tracking-widest text-muted">{eyebrow}</Text>}
       {!!(title || action || help) && <View className="flex-row flex-wrap items-center justify-between gap-2">
         <View className="min-w-0 flex-1 flex-row items-center gap-1">
           <Text variant="title" className="shrink">{title}</Text>
@@ -53,6 +56,7 @@ export function PageHeader({
 }
 export function Page({
   title,
+  eyebrow,
   children,
   back = true,
   refresh,
@@ -63,6 +67,7 @@ export function Page({
   scrollRef,
 }: PropsWithChildren<{
   title: string;
+  eyebrow?: string;
   back?: boolean;
   refresh?: () => void;
   refreshing?: boolean;
@@ -87,9 +92,9 @@ export function Page({
             ) : undefined
           }
         >
-          <PageHeader title={title} back={back} help={help} backHref={backHref} backLabel={backLabel} />
+          <PageHeader title={title} eyebrow={eyebrow} back={back} help={help} backHref={backHref} backLabel={backLabel} />
           {children}
-          <AppFooter />
+          <BrandFooter />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

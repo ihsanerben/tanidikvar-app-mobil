@@ -31,10 +31,13 @@ function Report({ id, year }: { id: string; year: number }) {
   return (
     <Page
       title="Tanıdık Karnesi"
+      backHref={{ pathname: "/profiles/[id]", params: { id } }}
+      backLabel="Tanıdık profili"
       refresh={() => {
         void query.refetch();
+        void profile.refetch();
       }}
-      refreshing={query.isRefetching}
+      refreshing={query.isRefetching || profile.isRefetching}
     >
       <Select
         label="Yıl"
@@ -45,8 +48,8 @@ function Report({ id, year }: { id: string; year: number }) {
           label: String(current - index),
         }))}
       />
-      {query.isPending ? (
-        <Skeleton />
+      {query.isPending || profile.isPending ? (
+        <Skeleton variant="profile" />
       ) : query.isError && !query.data ? (
         <ErrorState
           error={query.error}
@@ -54,9 +57,11 @@ function Report({ id, year }: { id: string; year: number }) {
             void query.refetch();
           }}
         />
+      ) : profile.isError && !profile.data ? (
+        <ErrorState error={profile.error} retry={() => { void profile.refetch(); }} />
       ) : (
         <>
-          <Card className="gap-4 border-primary p-5">
+          <Card className="border-primary bg-primary-soft">
             <Text variant="muted">{year} Tanıdık Karnesi</Text>
             <Text variant="title">{profile.data?.name || "Tanıdık"}</Text>
             <Text variant="heading">{numberText(query.data.points)} Tanıdık Puanı</Text>
@@ -64,10 +69,10 @@ function Report({ id, year }: { id: string; year: number }) {
               <Metric value={query.data.answers} label="cevap" /><Metric value={query.data.usefulVotes} label="faydalı oy" />
               <Metric value={query.data.bestAnswers} label="En İyi Cevap" /><Metric value={query.data.experiences} label="deneyim" />
             </View>
-            <Text>Topluluğun %{numberText(query.data.percentile)} diliminde</Text>
+            <Text>Topluluğun %{query.data.percentile?.toLocaleString("tr-TR", { maximumFractionDigits: 1 }) ?? "—"} diliminde</Text>
             <Text variant="muted">Gerçek deneyimlerle birbirimize yardımcı oluyoruz · TanıdıkVar</Text>
           </Card>
-          <Button label="Karneyi paylaş" onPress={() => { void Share.share({ message: `${profile.data?.name || 'Tanıdık'} ${year} Tanıdık Karnesi · https://tanidikvar.com.tr/tanidik/${id}/karne` }); }} />
+          <Button label="Karneyi paylaş" onPress={() => { void Share.share({ message: `${profile.data?.name || 'Tanıdık'} ${year} Tanıdık Karnesi · https://tanidikvar.com.tr/tanidik/${id}/karne?year=${year}` }); }} />
           <Text variant="muted">{numberText(query.data.pointEvents)} puan olayı · {numberText(query.data.evaluations)} değerlendirme</Text>
           {query.isError && (
             <ErrorState
@@ -77,6 +82,7 @@ function Report({ id, year }: { id: string; year: number }) {
               }}
             />
           )}
+          {profile.isError && <ErrorState error={profile.error} retry={() => { void profile.refetch(); }} />}
         </>
       )}
     </Page>

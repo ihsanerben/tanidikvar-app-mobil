@@ -9,6 +9,7 @@ function scan(dir) {
     if(!/\.(?:js|hbc|json|html|map)$/.test(path)) continue;
     const data=readFileSync(path);count++;bytes+=data.length;
     if(patterns.some(pattern=>pattern.test(data.toString('utf8')))) { process.stderr.write(`Potential credential in ${path} (value suppressed)\n`);failed=true; }
+    if(data.includes(Buffer.from('/api/manager'))) { process.stderr.write(`Web-only Manager API included in mobile bundle: ${path}\n`);failed=true; }
   }
 }
 scan(root);

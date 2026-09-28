@@ -1,2 +1,1 @@
-import { ManagerContentScreen } from "@/features/manager/content-screen";
-export default ManagerContentScreen;
+export { ManagerLegacyRoute as default } from "@/features/manager/manager-shell";

@@ -22,7 +22,7 @@ export function ProfileEditScreen() {
     <Page title="Profilim" backHref="/profil" backLabel="Hesabıma dön">
       {saved && <Text accessibilityRole="alert" className="text-success">Profilin kaydedildi.</Text>}
       {query.isPending ? (
-        <Skeleton />
+        <Skeleton variant="form" />
       ) : query.isError && !query.data ? (
         <ErrorState
           error={query.error}
@@ -116,8 +116,8 @@ function Editor({
         <View className="gap-4">
           <View className="gap-3 rounded-card border border-border bg-surface p-card-inset">
             <Text variant="heading">Temel bilgiler</Text>
-            <View className="gap-3">
-              {([ ["firstName", "Ad"], ["lastName", "Soyad"] ] as const).map(([name, label]) => <View key={name}><Controller control={form.control} name={name} render={({ field, fieldState }) => <FormField label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} />} /></View>)}
+            <View className="flex-row gap-2">
+              {([ ["firstName", "Ad"], ["lastName", "Soyad"] ] as const).map(([name, label]) => <View key={name} className="min-w-0 flex-1"><Controller control={form.control} name={name} render={({ field, fieldState }) => <FormField ref={field.ref} label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} />} /></View>)}
             </View>
           <Select
             label="Eğitim durumu"
@@ -155,6 +155,8 @@ function Editor({
               name="classYear"
               render={({ field, fieldState }) => (
                 <FormField
+                  ref={field.ref}
+                  onBlur={field.onBlur}
                   label="Sınıf (1–8, isteğe bağlı)"
                   value={field.value}
                   onChangeText={field.onChange}
@@ -170,6 +172,8 @@ function Editor({
               name="graduationYear"
               render={({ field, fieldState }) => (
                 <FormField
+                  ref={field.ref}
+                  onBlur={field.onBlur}
                   label="Mezuniyet yılı"
                   value={field.value}
                   onChangeText={field.onChange}
@@ -182,7 +186,7 @@ function Editor({
           </View>
           <View className="gap-3 rounded-card border border-border bg-surface p-card-inset">
             <Text variant="heading">İsteğe bağlı bilgiler</Text>
-            {([ ["biography", "Kısa biyografi", true], ["occupation", "Meslek", false], ["company", "Şirket", false], ["linkedinUrl", "LinkedIn bağlantısı", false], ["portfolioUrl", "Portfolyo sitesi", false] ] as const).map(([name, label, multiline]) => <Controller key={name} control={form.control} name={name} render={({ field, fieldState }) => <FormField label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} multiline={multiline} />} />)}
+            {([ ["biography", "Kısa biyografi", true], ["occupation", "Meslek", false], ["company", "Şirket", false], ["linkedinUrl", "LinkedIn bağlantısı", false], ["portfolioUrl", "Portfolyo sitesi", false] ] as const).map(([name, label, multiline]) => <Controller key={name} control={form.control} name={name} render={({ field, fieldState }) => <FormField ref={field.ref} label={label} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} multiline={multiline} />} />)}
             <Text variant="muted">Bu bağlantılar profilinde herkese açık görünür.</Text>
           </View>
         </View>

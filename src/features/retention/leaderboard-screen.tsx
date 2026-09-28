@@ -1,20 +1,27 @@
-import { universityDetail } from "@/features/catalog/api";
+import { cva } from "class-variance-authority";
 import { useQuery } from "@tanstack/react-query";
 import { Pressable, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { FlashList } from "@shopify/flash-list";
+import { FlashList, type ListRenderItemInfo } from "@shopify/flash-list";
 import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
 import { Text } from "@/components/ui/text";
-import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
 import { ErrorState, Skeleton, EmptyState } from "@/components/ui/states";
-import { CatalogPicker } from "@/features/catalog/catalog-picker";
 import { numberText } from "@/lib/navigation/params";
 import { Avatar } from "@/components/ui/avatar";
-import { AppFooter } from "@/components/ui/app-footer";
 import { leaderboardParams, type LeaderboardFilters } from "./schemas";
 import { leaderboardQuery } from "./api";
+import type { Schema } from "@/lib/api/types";
+import { publicProfile, publicTanidikProfile } from "@/features/profile/api";
+
+const rankingHelp = "Yalnız yayında kalan, özgün katkılar puana dönüşür.\n\nSoru sormak: 5 puan\nYorum yazmak: 10 puan\nFaydalı oyu almak: 3 puan\nEn iyi cevap seçilmek: 15 puan\nDeneyim paylaşmak: 12 puan\nDeğerlendirme yapmak: 8 puan\n\nDönemler İstanbul saatine göre hesaplanır.";
+const rankSurface = cva("min-h-8 min-w-8 items-center justify-center rounded-full px-1", {
+  variants: { place: { first: "bg-rank-first", second: "bg-rank-second", third: "bg-rank-third", other: "bg-rank-default" } },
+});
+const rankText = cva("text-caption font-semibold", {
+  variants: { place: { first: "text-rank-first-text", second: "text-rank-second-text", third: "text-rank-third-text", other: "text-rank-default-text" } },
+});
 export function LeaderboardScreen() {
   const p = leaderboardParams.safeParse(useLocalSearchParams());
   return (
@@ -29,10 +36,6 @@ export function LeaderboardScreen() {
 }
 function Leaderboard({ filters }: { filters: LeaderboardFilters }) {
   const query = useQuery(leaderboardQuery(filters));
-  const university = useQuery({
-    ...universityDetail(filters.universityId ?? ""),
-    enabled: !!filters.universityId,
-  });
   return (
     <FlashList
       data={query.data ?? []}
@@ -43,52 +46,18 @@ function Leaderboard({ filters }: { filters: LeaderboardFilters }) {
       }}
       ListHeaderComponent={
         <View className="gap-4 pb-5">
-          <PageHeader title="Katkı sıralaması" help="Katkı sıralaması doğrulanmış ve faydalı topluluk katkılarının puanlarına göre oluşur. Dönemler İstanbul saatine göre hesaplanır." />
-          <Tabs
+          <PageHeader back={false} eyebrow="Kaliteli katkı" title="Katkı sıralaması" help={rankingHelp} />
+          <Tabs compact
             label="Dönem"
             value={filters.period}
             options={[
-              { value: "ALL_TIME", label: "Tüm zamanlar" },
               { value: "DAILY", label: "Bugün" },
               { value: "WEEKLY", label: "Bu hafta" },
               { value: "MONTHLY", label: "Bu ay" },
               { value: "YEARLY", label: "Bu yıl" },
+              { value: "ALL_TIME", label: "Tüm zamanlar" },
             ]}
             onChange={(period) => router.setParams({ period })}
-          />
-          <Text variant="muted">
-            {filters.departmentId
-              ? "Seçilen üniversite ve bölüm"
-              : filters.universityId
-                ? "Seçilen üniversite"
-                : "Türkiye geneli"}{" "}
-            · İlk 100 katkıcı
-          </Text>
-          <CatalogPicker
-            universityId={filters.universityId}
-            universityName={university.data?.name}
-            onUniversity={(item) =>
-              router.setParams({
-                universityId: item.id,
-                departmentId: undefined,
-              })
-            }
-            onProgram={(item) =>
-              router.setParams({ departmentId: item.departmentId })
-            }
-          />
-          <Text variant="muted">
-            Program seçtiğinde bağlı olduğu bölümdeki katkıcılar listelenir.
-          </Text>
-          <Button
-            label="Türkiye geneline dön"
-            variant="secondary"
-            onPress={() =>
-              router.setParams({
-                universityId: undefined,
-                departmentId: undefined,
-              })
-            }
           />
           {query.isError && !!query.data && (
             <ErrorState
@@ -112,27 +81,40 @@ function Leaderboard({ filters }: { filters: LeaderboardFilters }) {
           />
         ) : (
           <EmptyState
-            title="Henüz sıralama yok"
-            description="Bu dönem ve kapsamda puan kazanan katkıcı bulunmuyor."
+            title="Bu dönemde henüz sıralama oluşmadı"
+            description="Doğrulanmış katkılar geldikçe burada görünür."
           />
         )
       }
-      ListFooterComponent={<AppFooter />}
-      renderItem={({ item, index }) => (
-        <View className="pb-3">
-          <Pressable accessibilityRole="link" accessibilityLabel={`${index + 1}. ${item.displayName}, ${numberText(item.points)} puan`} onPress={() =>
-                router.push({
-                  pathname: "/profiles/[id]",
-                  params: { id: item.userId! },
-                })
-              } className="min-h-12 flex-row items-center gap-2.5 rounded-card border border-border bg-surface p-3 active:opacity-80">
-            <Text className="w-6 text-center text-caption font-bold text-primary">{index + 1}</Text>
-            <Avatar name={item.displayName} size="small" />
-            <View className="min-w-0 flex-1"><Text className="text-caption font-semibold text-primary">{item.displayName}</Text><Text variant="muted">{item.title} · {numberText(item.eventCount)} katkı</Text></View>
-            <View className="max-w-24 items-end"><Text className="text-caption font-bold text-primary">{numberText(item.points)} puan</Text>{!!item.badges?.length && <Text numberOfLines={2} variant="muted">{item.badges.join(" · ")}</Text>}</View>
-          </Pressable>
-        </View>
-      )}
+
+      renderItem={LeaderboardRow}
     />
   );
+}
+
+function LeaderboardRow({ item, index }: ListRenderItemInfo<Schema["LeaderboardEntryResponse"]>) {
+  return <RankedPerson item={item} index={index} />;
+}
+
+export function RankedPerson({ item, index }: { item: Schema["LeaderboardEntryResponse"]; index: number }) {
+  // Read only mounted rows; recycling changes the query key with the person.
+  const profile = useQuery({ ...publicProfile(item.userId ?? ""), enabled: !!item.userId });
+  const tanidik = useQuery({ ...publicTanidikProfile(item.userId ?? ""), enabled: !!item.userId && profile.data?.role === "TANIDIK" });
+  const place = index === 0 ? "first" : index === 1 ? "second" : index === 2 ? "third" : "other";
+  return <View className="pb-2">
+    <Pressable accessibilityRole="link"
+      accessibilityLabel={`${index + 1}. ${item.displayName}, ${item.title}, ${numberText(item.eventCount)} katkı, ${numberText(item.points)} puan${item.badges?.length ? `, ${item.badges.join(", ")}` : ""}`}
+      onPress={() => router.push({ pathname: "/profiles/[id]", params: { id: item.userId! } })}
+      className="min-h-16 flex-row items-center gap-2 rounded-control border border-border bg-surface p-2.5 active:opacity-80">
+      <View className={rankSurface({ place })}><Text className={rankText({ place })}>{index + 1}</Text></View>
+      <Avatar name={item.displayName} size="ranking" educationStatus={profile.data?.educationStatus} tanidik={profile.data?.role === "TANIDIK" && tanidik.data?.activeTanidik === true} />
+      <View className="min-w-0 flex-1 gap-1">
+        <Text className="font-semibold text-primary">{item.displayName}</Text>
+        <Text variant="muted">{item.title} · {numberText(item.eventCount)} katkı</Text>
+      </View>
+      <View className="max-w-[120px] items-end gap-1"><Text variant="unstyled" className="text-caption font-bold text-primary">{numberText(item.points)} puan</Text>{!!item.badges?.length && <Text variant="muted" className="text-right">{item.badges.join(" · ")}</Text>}</View>
+    </Pressable>
+    {profile.isError && <ErrorState error={profile.error} retry={() => { void profile.refetch(); }} />}
+    {profile.data?.role === "TANIDIK" && tanidik.isError && <ErrorState error={tanidik.error} retry={() => { void tanidik.refetch(); }} />}
+  </View>;
 }

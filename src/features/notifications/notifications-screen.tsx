@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { Switch } from "@/components/ui/switch";
+import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Switch, View } from 'react-native';
+import { View } from 'react-native';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { Screen } from '@/components/ui/screen';
 import { PageHeader } from '@/components/ui/page';
@@ -25,10 +26,8 @@ export function NotificationsScreen() {
   const [filter, setFilter] = useState({ type: '', unread: false });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const query = useInfiniteQuery({ queryKey: [...notificationKeys.list(), filter], staleTime: 30_000, initialPageParam: 0,
-    queryFn: async ({ pageParam, signal }) => { const page = await api.call('get', '/api/me/notifications', { authenticated: true, query: { page: pageParam, size: 20 }, signal }); return { ...page, items: (page.items ?? []).filter(item => (!filter.type || item.targetType === filter.type) && (!filter.unread || !item.readAt)) }; },
+    queryFn: ({ pageParam, signal }) => api.call('get', '/api/me/notifications', { authenticated: true, query: { page: pageParam, size: 20, targetType:filter.type||undefined,unread:filter.unread }, signal }),
     getNextPageParam: nextPage, refetchInterval: 60_000, refetchIntervalInBackground: false });
-  const visibleCount = query.data?.pages.reduce((count, page) => count + (page.items?.length ?? 0), 0) ?? 0;
-  useEffect(() => { if (query.data && visibleCount === 0 && query.hasNextPage && !query.isFetching) void query.fetchNextPage(); }, [query, visibleCount]);
   return <Screen><View testID="notifications-screen" className="flex-1">
     <PagedList query={query} renderItem={renderNotification}
       footer={<PushPermissionCard />}
@@ -36,7 +35,7 @@ export function NotificationsScreen() {
       header={<View className="gap-3 pb-5">
       <PageHeader title="Bildirimler" backHref="/profil" backLabel="Hesabıma dön" help="Hesabın, başvuruların, soruların, yorumların ve takiplerinle ilgili bildirimleri burada yönetebilirsin." />
       <Card className="gap-2 p-3">
-      <Select label="Bildirim türü" value={draftType} options={[{ value: '', label: 'Tümü' }, { value: 'QUESTION', label: 'Sorular' }, { value: 'ANSWER', label: 'Yorumlar' }, { value: 'APPLICATION', label: 'Başvurular' }, { value: 'ACCOUNT', label: 'Hesap' }]} onChange={setDraftType} />
+      <Select label="Bildirim türü" value={draftType} options={[{ value: '', label: 'Tümü' }, { value: 'QUESTION', label: 'Sorular' }, { value: 'ANSWER', label: 'Yorumlar' }, {value:'ANSWER_COMMENT',label:'Yanıtlar'},{value:'POLL',label:'Anketler'},{value:'EVALUATION',label:'Değerlendirmeler'},{value:'EXPERIENCE',label:'Deneyimler'},{value:'METRIC',label:'Ölçümler'},{value:'ACHIEVEMENT',label:'Rozetler'},{ value: 'APPLICATION', label: 'Başvurular' }, { value: 'ACCOUNT', label: 'Hesap' }]} onChange={setDraftType} />
       <View className="flex-row items-center justify-between"><Text>Yalnız okunmamışlar</Text><Switch value={draftUnread} onValueChange={setDraftUnread} accessibilityLabel="Yalnız okunmamışlar" /></View>
       <View className="flex-row flex-wrap gap-2"><Button label="Filtrele" onPress={() => setFilter({ type: draftType, unread: draftUnread })} /><Button label="Temizle" variant="secondary" onPress={() => { setDraftType(''); setDraftUnread(false); setFilter({ type: '', unread: false }); }} /></View>
       <Button label="Bildirim ayarları" variant="secondary" onPress={() => setSettingsOpen(true)} />

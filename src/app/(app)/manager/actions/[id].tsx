@@ -1,2 +1,1 @@
-import { ManagerActionDetailScreen } from "@/features/manager/actions-screen";
-export default ManagerActionDetailScreen;
+export { ManagerLegacyRoute as default } from "@/features/manager/manager-shell";

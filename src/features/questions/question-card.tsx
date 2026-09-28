@@ -9,12 +9,12 @@ import { QuestionContext } from './question-context';
 import { Pressable } from 'react-native';
 export function QuestionCard({ item, actions }: { item: Schema["QuestionResponse"]; actions?:ReactNode }) {
   return (
-    <Card>
+    <Card compact className="gap-1">
       {actions}
-      <QuestionContext question={item} />
-      <Pressable accessibilityRole="link" accessibilityLabel={item.title} className="min-h-11 justify-center" onPress={() => item.id && router.push({ pathname: '/questions/[id]', params: { id: item.id } })}><Text variant="heading">{item.title}</Text></Pressable>
-      {!!item.body && <Text numberOfLines={2} className="text-excerpt text-muted">{item.body}</Text>}
-      <QuestionByline question={item} />
+      <QuestionContext question={item} compact />
+      <Pressable accessibilityRole="link" accessibilityLabel={item.title} hitSlop={{ top: 8, bottom: 8 }} className="min-h-7 justify-center" onPress={() => item.id && router.push({ pathname: '/questions/[id]', params: { id: item.id } })}><Text variant="heading" numberOfLines={2}>{item.title}</Text></Pressable>
+      {!!item.body && <Text numberOfLines={1} className="text-excerpt text-muted">{item.body}</Text>}
+      <QuestionByline question={item} compact />
       {item.archivedAt && <Badge label="Arşivlenmiş soru" />}
 
     </Card>

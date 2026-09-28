@@ -12,6 +12,7 @@ export function ActionButton({
   disabled,
   confirm,
   testID,
+  size = "compact",
 }: {
   label: string;
   action: () => Promise<unknown>;
@@ -19,6 +20,7 @@ export function ActionButton({
   disabled?: boolean;
   confirm?: string;
   testID?: string;
+  size?: "small" | "compact";
 }) {
   const offline = useOffline();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -37,6 +39,7 @@ export function ActionButton({
   return (
     <View className="gap-2">
       <Button
+        size={size}
         label={label}
         testID={testID}
         variant="secondary"

@@ -28,7 +28,7 @@ export function Choice<T extends string>({
             className={Platform.OS === 'android' ? 'min-h-touch-android min-w-touch-android justify-center active:opacity-80' : 'min-h-touch-ios min-w-touch-ios justify-center active:opacity-80'}
           >
             <View className={surface({ selected: option.value === value })}>
-            <Text className={labelStyle({ selected: option.value === value })}>
+            <Text variant="unstyled" className={labelStyle({ selected: option.value === value })}>
               {option.label}
             </Text>
             </View>

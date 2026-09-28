@@ -6,7 +6,7 @@ import { actionParamsSchema, resetSchema } from './schemas';
 export function ResetScreen() {
   const params = actionParamsSchema.safeParse(useLocalSearchParams());
   const token = params.success ? params.data.token ?? '' : '';
-  return <AuthForm surface key={token} title="Yeni parola belirle"
+  return <AuthForm eyebrow="Hesap güvenliği" surface key={token} title="Yeni parola belirle"
     description="Yeni şifreni belirle. E-postadaki bağlantıda bulunan güvenlik bilgisi arka planda otomatik olarak kullanılır."
     schema={resetSchema} defaults={{ token, password: '' }}
     fields={[{ name: 'token', label: 'Yenileme kodu', kind: 'token', testID: 'reset-token' }, { name: 'password', label: 'Yeni şifre', kind: 'new-password', testID: 'reset-password' }]}

@@ -1,6 +1,8 @@
+import { z } from "zod";
+import { api } from "@/lib/api/client";
 import { useState } from "react";
 import { View } from "react-native";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useCurrentUser } from '@/features/auth/use-current-user';
 import { useLoginAction } from '@/features/auth/use-login-action';
@@ -14,20 +16,22 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FeatureForm } from "@/components/ui/feature-form";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
-import { ErrorState } from "@/components/ui/states";
+import { ErrorState, Skeleton } from "@/components/ui/states";
 import { idParams } from "@/lib/navigation/params";
 import type { Schema } from "@/lib/api/types";
+import { orderDiscussion } from "./discussion-order";
 import { commentList, questionsApi } from "./api";
 import { commentSchema, reportSchema } from "./schemas";
 export function CommentsScreen() {
-  const p = idParams.safeParse(useLocalSearchParams());
+  const p = idParams.extend({commentId:z.uuid().optional()}).safeParse(useLocalSearchParams());
   return (
     <Screen>
-      {p.success ? <Comments id={p.data.id} /> : <ErrorState error={null} />}
+      {p.success ? <Comments key={`${p.data.id}:${p.data.commentId ?? ""}`} id={p.data.id} commentId={p.data.commentId} /> : <ErrorState error={null} />}
     </Screen>
   );
 }
-function Comments({ id }: { id: string }) {
+function Comments({ id, commentId }: { id: string; commentId?:string }) {
+  const focused=useQuery({queryKey:["comments","detail",id,commentId],enabled:!!commentId,queryFn:({signal})=>api.call("get","/api/answers/{answer}/comments/{comment}",{params:{answer:id,comment:commentId!},signal})});
   const query = useInfiniteQuery(commentList(id));
   const me = useCurrentUser();
   const loginAction = useLoginAction();
@@ -35,12 +39,15 @@ function Comments({ id }: { id: string }) {
   const [edit, setEdit] = useState<Schema["AnswerCommentResponse"] | null>(
     null,
   );
+  const [reply,setReply]=useState<Schema["AnswerCommentResponse"]>();
+  const [created,setCreated]=useState<Schema["AnswerCommentResponse"][]>([]);
   const [compose, setCompose] = useState(false);
   function render({ item }: { item: Schema["AnswerCommentResponse"] }) {
     return (
-      <Card>
+      <Card className={item.replyToId ? "ml-3 border-l-2 border-primary" : ""}>
         <View className="flex-row items-center gap-2"><Avatar name={item.authorName} size="small" /><Text variant="label">{item.authorName}</Text></View>
         <Text>{item.body}</Text>
+        <Button label="Yanıtla" variant="secondary" onPress={()=>loginAction(()=>{setReply(item);setCompose(true);})}/>
         <Text variant="muted">{item.createdAt ? new Date(item.createdAt).toLocaleString('tr-TR') : ''}</Text>
         <ActionsMenu title="Alt yorum işlemleri"><Button label="Yorumu bildir" variant="secondary" onPress={() => loginAction(() => setReportId(item.id!))} />
         {item.authorId === me.data?.id && (
@@ -56,13 +63,14 @@ function Comments({ id }: { id: string }) {
   const header = (
     <View className="gap-4 pb-5">
       <PageHeader title="Alt yorumlar" />
-      <Button label="Yorum yaz" onPress={() => loginAction(() => setCompose(true))} />
+      {commentId && <View className="gap-2 rounded-card border-2 border-primary p-2"><Text variant="label">Bildirimdeki yanıt</Text>{focused.isPending ? <Skeleton /> : focused.data ? render({item:focused.data}) : <ErrorState error={focused.error} retry={()=>void focused.refetch()} />}</View>}
+      <Button label="Yorum yaz" onPress={() => loginAction(() => {setReply(undefined);setCompose(true);})} />
       <BottomSheet visible={!!reportId} title="Yorumu bildir" close={() => setReportId(null)}>
         <FeatureForm schema={reportSchema} defaults={{ reason: '' }} fields={[{ name: 'reason', label: 'Bildirim gerekçesi', multiline: true }]} label="Bildir" submit={values => questionsApi.reportComment(reportId!, values.reason)} onSuccess={() => setReportId(null)} />
       </BottomSheet>
       <BottomSheet
         visible={compose || !!edit}
-        title={edit ? "Yorumu düzenle" : "Yorum yaz"}
+        title={edit ? "Yorumu düzenle" : reply ? `${reply.authorName} kişisine yanıt` : "Yorum yaz"}
         close={() => {
           setCompose(false);
           setEdit(null);
@@ -90,7 +98,10 @@ function Comments({ id }: { id: string }) {
                   values.body,
                   edit.version!,
                 )
-              : questionsApi.comment(id, values.body)
+              : questionsApi.comment(id, values.body, reply?.id).then(result => {
+                  setCreated(items => [...items, result]);
+                  return result;
+                })
           }
           onSuccess={() => {
             setCompose(false);
@@ -101,5 +112,5 @@ function Comments({ id }: { id: string }) {
       </BottomSheet>
     </View>
   );
-  return <PagedList query={query} renderItem={render} header={header} />;
+  return <PagedList query={query} renderItem={render} header={header} mapItems={items=>orderDiscussion(items,created)} />;
 }

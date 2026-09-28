@@ -1,6 +1,7 @@
 import { z } from "zod";
 export const collectionParams = z.object({
   kind: z.enum(["follows", "saved"]).default("follows"),
+  targetType:z.enum(["UNIVERSITY","PROGRAM"]).default("UNIVERSITY"),
 });
 export const leaderboardParams = z
   .object({

@@ -5,7 +5,7 @@ const fingerprint = Array(32).fill('AB').join(':');
 const env = { EXPO_PUBLIC_API_URL: 'https://api.example.org', APP_LINK_HOST: 'preview.example.org', MOBILE_APPLE_TEAM_ID: 'A123456789', MOBILE_ANDROID_SHA256: fingerprint };
 const bodies = {
   '/api/health': { status: 'ok', database: 'up' },
-  '/.well-known/apple-app-site-association': { applinks: { details: [{ appID: 'A123456789.com.tanidikvar.app.preview', paths: ['/soru/*', '/universite/*', '/program/*', '/profiles/*'] }] } },
+  '/.well-known/apple-app-site-association': { applinks: { details: [{ appID: 'A123456789.com.tanidikvar.app.preview', paths: ['/soru/*', '/universite/*', '/program/*', '/profiles/*', '/sehir/*', '/tanidik/*', '/tanidik/*/karne', '/universite/*/*', '/verify-email', '/reset-password', '/e-posta-dogrula', '/parola-yenile', '/karsilastir', '/sorular', '/populer', '/universiteler', '/programlar', '/tanidiklar', '/arama', '/siralama', '/istatistikler', '/hakkimizda', '/durum', '/soru-sor'] }] } },
   '/.well-known/assetlinks.json': [{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: 'com.tanidikvar.app.preview', sha256_cert_fingerprints: [fingerprint] } }],
 };
 const request = async (url, options) => {

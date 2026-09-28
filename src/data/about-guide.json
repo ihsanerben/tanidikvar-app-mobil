@@ -126,11 +126,11 @@
   },
   {
     "title": "Sürüm farkları, saklama ve yardım",
-    "summary": "Hata mesajındaki yönlendirmeyi izle ve bağlantıyı Sistem durumu sayfasından kontrol et.",
+    "summary": "Hata mesajındaki yönlendirmeyi izle ve internet bağlantını kontrol et.",
     "details": [
       "Profil fotoğrafı yükleme şu anda kapalıdır ve profil fotoğraf şartı olmadan tamamlanabilir. Admin başvurusu isteğe bağlı PDF belgeyle gönderilebilir.",
       "İçerik kaldırma veya katalog pasifleştirme verinin tüm geçmişten fiziksel silinmesi demek değildir. Geçmiş ilişkiler, başvurular ve yönetim kararları korunur. Panelde genel veritabanı sıfırlama işlemi bulunmaz.",
-      "Bağlantı sorunu yaşarsan Sistem durumu sayfasını aç. İşlem sırasında hata aldıysan kaydın güncel durumunu kontrol et; ekrandaki Tekrar dene veya Güncel kaydı yükle yönlendirmesini izle. Kaydetmediğin metni korumadan sayfayı yenileme.",
+      "Bağlantı sorunu yaşarsan internet bağlantını kontrol edip yeniden dene. İşlem sırasında hata aldıysan kaydın güncel durumunu kontrol et; ekrandaki Tekrar dene veya Güncel kaydı yükle yönlendirmesini izle. Kaydetmediğin metni korumadan sayfayı yenileme.",
       "Pencereler kapat düğmesi veya Escape ile kapanır. Dar ekranlarda alanlar alt alta geçebilir. Sayfaların başlıkları ve durum mesajları klavye ve ekran okuyucu kullanımını destekler.",
       "Özel mesajlaşma, ücretli danışmanlık, birebir görüşme ve belirli kişiye özel soru bu sürümün özellikleri değildir. Sorun bildirirken sayfayı, rolünü, adımlarını ve gördüğün sonucu belirt; şifre, oturum bilgisi veya doğrulama bağlantısını paylaşma."
     ]

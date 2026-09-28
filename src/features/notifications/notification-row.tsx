@@ -12,6 +12,9 @@ const row = cva('rounded-card border border-notification-border', {
   variants: { unread: { true: 'border-notification-unread-border border-l-4 bg-notification-unread', false: 'bg-surface' } },
 });
 export function NotificationRow({ item }: { item: Notification }) {
+  return <NotificationContent key={item.id} item={item} />;
+}
+function NotificationContent({ item }: { item: Notification }) {
   const client = useQueryClient();
   const target = notificationDestination(item);
   const offline = useOffline();
@@ -21,10 +24,13 @@ export function NotificationRow({ item }: { item: Notification }) {
     <Pressable accessibilityRole={target ? 'link' : 'button'}
       accessibilityLabel={`${item.readAt ? '' : 'Okunmamış: '}${item.title ?? 'Bildirim'}`}
       testID={`notification-open-${item.id}`} className="min-h-touch-android flex-row items-center gap-2.5 p-3 active:opacity-80"
-      disabled={!target && (!!item.readAt || read.isPending || offline || !item.id)}
-      onPress={() => {
-        if (!item.readAt && item.id && !offline && !read.isPending) read.mutate();
-        if (target) router.push(destinationHref(target));
+      disabled={read.isPending || offline || !item.id || (!target && !!item.readAt)}
+      onPress={async () => {
+        if (offline || read.isPending || !item.id) return;
+        try {
+          if (!item.readAt) await read.mutateAsync();
+          if (target) router.push(destinationHref(target));
+        } catch { /* The mutation error is displayed below the card. */ }
       }}>
       <View accessible={false} className={`h-2.5 w-2.5 rounded-full border-2 ${item.readAt ? 'border-border' : 'border-notification-indicator bg-notification-indicator'}`} />
       <View className="min-w-0 flex-1 gap-1">

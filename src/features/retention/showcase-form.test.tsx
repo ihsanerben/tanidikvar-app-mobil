@@ -6,7 +6,6 @@ import { setShowcase } from "./api";
 import { Button } from "@/components/ui/button";
 
 jest.mock("./api", () => ({ setShowcase: jest.fn(), retentionKeys: { achievements: (id: string) => ["achievements", id], score: (id: string) => ["score", id] } }));
-jest.mock("@/components/ui/app-footer", () => ({ AppFooter: () => null }));
 jest.mock("@shopify/flash-list", () => ({
   FlashList: ({ data, renderItem, ListHeaderComponent, ListFooterComponent }: {
     data: Schema["AchievementResponse"][];

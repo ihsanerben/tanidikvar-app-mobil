@@ -3,7 +3,7 @@ import { authApi } from './api';
 import { emailSchema } from './schemas';
 
 export function ForgotScreen() {
-  return <AuthForm surface title="Şifreni yenile" description="Hesabına bağlı e-posta adresini yaz. Şifreni güvenle yenileyebilmen için sana bir bağlantı göndereceğiz."
+  return <AuthForm eyebrow="Hesap güvenliği" surface title="Şifreni yenile" description="Hesabına bağlı e-posta adresini yaz. Şifreni güvenle yenileyebilmen için sana bir bağlantı göndereceğiz."
     schema={emailSchema} defaults={{ email: '' }}
     fields={[{ name: 'email', label: 'E-posta', kind: 'email', testID: 'forgot-email' }]}
     submitLabel="Yenileme bağlantısı gönder" testID="forgot-submit" submit={authApi.forgot}

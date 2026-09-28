@@ -1,2 +1,1 @@
-import { ManagerCatalogScreen } from "@/features/manager/catalog-screen";
-export default ManagerCatalogScreen;
+export { ManagerLegacyRoute as default } from "@/features/manager/manager-shell";

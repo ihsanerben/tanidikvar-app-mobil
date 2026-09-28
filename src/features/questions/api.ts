@@ -14,6 +14,7 @@ export const questionList = (
     q?: string;
     universityId?: string;
     departmentId?: string;
+    programId?: string;
     sort?: string;
     scope?: '' | 'GENERAL' | 'UNIVERSITY' | 'UNIVERSITY_DEPARTMENT';
     tagId?: string;
@@ -30,7 +31,7 @@ export const questionList = (
     queryFn: ({ pageParam, signal }) => {
       const query = { q: filters.q, universityId: filters.universityId, departmentId: filters.departmentId, tagId: filters.tagId, city: filters.city || undefined, scope: filters.scope || undefined, answered: filters.answered ? filters.answered === 'true' : undefined, verifiedAnswer: filters.verifiedAnswer ? filters.verifiedAnswer === 'true' : undefined, page: pageParam, size: 20 };
       return filters.period && filters.period !== 'ALL_TIME' ? api.call('get', '/api/popular', { query: { ...query, period: filters.period }, signal }) : api.call("get", "/api/questions", {
-        query: { ...query, sort: filters.period === 'ALL_TIME' ? 'MOST_VIEWED' : filters.sort },
+        query: { ...query, programId:filters.programId, sort: filters.period === 'ALL_TIME' ? 'MOST_VIEWED' : filters.sort },
         signal,
         authenticated: false,
       });
@@ -58,7 +59,7 @@ export const answerList = (id: string) =>
         params: { id },
         query: { page: pageParam, size: 20 },
         signal,
-        authenticated: false,
+        authenticated: !!tokenManager.getAccessToken(),
       }),
     getNextPageParam: nextPage,
   });
@@ -72,7 +73,7 @@ export const tanidikAnswers = (id: string) =>
         params: { id },
         query: { page: pageParam, size: 20 },
         signal,
-        authenticated: false,
+        authenticated: !!tokenManager.getAccessToken(),
       }),
     getNextPageParam: nextPage,
   });
@@ -224,10 +225,10 @@ export const questionsApi = {
           body: { reason },
           authenticated: true,
         }),
-  comment: (id: string, body: string) =>
+  comment: (id: string, body: string, replyToId?:string) =>
     api.call("post", "/api/answers/{id}/comments", {
       params: { id },
-      body: { body },
+      body: { body, replyToId },
       authenticated: true,
     }),
   editComment: (

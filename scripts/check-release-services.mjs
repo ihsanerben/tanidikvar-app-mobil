@@ -18,7 +18,7 @@ export async function checkReleaseServices(env, mode = 'preview', platform = 'al
   if (platform !== 'android') probes.push({
     check: 'apple-association', url: host + '/.well-known/apple-app-site-association',
     validate: body => body.applinks?.details?.some(detail => detail.appID === `${env.MOBILE_APPLE_TEAM_ID}.${bundle}`
-      && ['/soru/*', '/universite/*', '/program/*', '/profiles/*'].every(path => detail.paths?.includes(path))),
+      && ['/soru/*', '/universite/*', '/program/*', '/profiles/*', '/sehir/*', '/tanidik/*', '/tanidik/*/karne', '/universite/*/*', '/verify-email', '/reset-password', '/e-posta-dogrula', '/parola-yenile', '/karsilastir', '/sorular', '/populer', '/universiteler', '/programlar', '/tanidiklar', '/arama', '/siralama', '/istatistikler', '/hakkimizda', '/durum', '/soru-sor'].every(path => detail.paths?.includes(path))),
   });
   if (platform !== 'ios') probes.push({
     check: 'android-association', url: host + '/.well-known/assetlinks.json',

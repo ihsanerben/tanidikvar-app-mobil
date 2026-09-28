@@ -1,2 +1,1 @@
-import { ManagerAccountScreen } from "@/features/manager/account-screen";
-export default ManagerAccountScreen;
+export { ManagerLegacyRoute as default } from "@/features/manager/manager-shell";

@@ -2,7 +2,7 @@ import { Platform, Pressable, View } from "react-native";
 import { Text } from "./text";
 import { cva } from "class-variance-authority";
 const styles = cva(
-  "items-center justify-center rounded-control border px-2.5 py-1.5",
+  "items-center justify-center rounded-control border",
   {
     variants: {
       variant: {
@@ -10,7 +10,7 @@ const styles = cva(
         secondary: "border-secondary-border bg-surface",
         danger: "border-danger-border bg-danger-soft",
       },
-      size: { compact: 'min-h-control-compact', standard: 'min-h-control-standard', large: 'min-h-control-large px-3 py-2' },
+      size: { small: 'min-h-control-small px-2 py-1', compact: 'min-h-control-compact px-2.5 py-1.5', standard: 'min-h-control-standard px-2.5 py-1.5', large: 'min-h-control-large px-3 py-2' },
     },
     defaultVariants: { variant: "primary", size: 'compact' },
   },
@@ -22,7 +22,7 @@ const target = cva('justify-center active:opacity-80', { variants: {
 } });
 const labelStyle = cva('text-center font-semibold', { variants: {
   variant: { primary: 'text-primary-foreground', secondary: 'text-primary', danger: 'text-danger-text' },
-  size: { compact: 'text-metadata', standard: 'text-metadata', large: 'text-caption' },
+  size: { small: 'text-metadata', compact: 'text-metadata', standard: 'text-metadata', large: 'text-caption' },
 } });
 export function Button({
   label,
@@ -40,7 +40,7 @@ export function Button({
   testID?: string;
   variant?: "primary" | "secondary" | "danger";
   pending?: boolean;
-  size?: 'compact' | 'standard' | 'large';
+  size?: 'small' | 'compact' | 'standard' | 'large';
   fullWidth?: boolean;
 }) {
   return (
@@ -54,7 +54,7 @@ export function Button({
       testID={testID}
     >
       <View pointerEvents="none" className={styles({ variant, size })}>
-      <Text className={labelStyle({ variant, size })}>
+      <Text variant="unstyled" className={labelStyle({ variant, size })}>
         {pending ? "İşlem yapılıyor…" : label}
       </Text>
       </View>

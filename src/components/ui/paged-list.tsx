@@ -7,7 +7,7 @@ import type {
 } from "@tanstack/react-query";
 import { ErrorState, EmptyState, Skeleton, useOffline } from "./states";
 import { Button } from "./button";
-import { AppFooter } from "./app-footer";
+import { BrandFooter } from "./brand-footer";
 type Page<T> = {
   items?: T[];
   page?: number;
@@ -20,21 +20,25 @@ export function PagedList<T extends { id?: string }>({
   header,
   empty,
   footer,
-  publicFooter = true,
+  maintainPosition = true,
+  mapItems,
 }: {
   query: UseInfiniteQueryResult<InfiniteData<Page<T>>, Error>;
   renderItem: ListRenderItem<T>;
   header?: ReactElement;
   empty?: ReactElement;
   footer?: ReactElement;
-  publicFooter?:boolean;
+  maintainPosition?: boolean;
+  mapItems?: (items: T[]) => T[];
 }) {
   const offline = useOffline();
-  const data = query.data?.pages.flatMap((page) => page.items ?? []) ?? [];
+  const loaded = query.data?.pages.flatMap((page) => page.items ?? []) ?? [];
+  const data = mapItems ? mapItems(loaded) : loaded;
   // v2 measures rows automatically; estimatedItemSize is a removed v1 prop.
   return (
     <FlashList
       data={data}
+      maintainVisibleContentPosition={{ disabled: !maintainPosition }}
       renderItem={renderItem}
       keyExtractor={(item) => item.id!}
       ListHeaderComponent={header}
@@ -95,7 +99,7 @@ export function PagedList<T extends { id?: string }>({
             )
           )}
           {footer}
-          {publicFooter && <AppFooter />}
+          {!query.hasNextPage && <BrandFooter />}
         </View>
       }
     />

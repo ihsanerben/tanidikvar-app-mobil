@@ -2,6 +2,31 @@ import { incomingLink } from './incoming-link';
 import { sharePath } from './params';
 const id = '123e4567-e89b-42d3-a456-426614174000';
 describe('external links', () => {
+  it.each([
+    ['/verify-email', '/verify-email'], ['/e-posta-dogrula', '/verify-email'],
+    ['/reset-password', '/reset-password'], ['/parola-yenile', '/reset-password'],
+  ])('accepts the actual mail token fragment on %s', (path, target) => {
+    const token = 'a'.repeat(43);
+    expect(incomingLink(`https://tanidikvar.com.tr${path}#token=${token}`)).toBe(`${target}?token=${token}`);
+    expect(incomingLink(`${path}#token=${token}`)).toBe(`${target}?token=${token}`);
+  });
+  it('rejects ambiguous, malformed and foreign mail fragments', () => {
+    const token = 'a'.repeat(43);
+    for (const input of [
+      `https://evil.test/verify-email#token=${token}`,
+      `/profil#token=${token}`, `/verify-email?token=${token}#token=${token}`,
+      `/verify-email#token=${token}&token=${token}`, `/verify-email#token=${token}&returnTo=/profil`,
+      `/verify-email#token=${token}#extra`, '/verify-email#token=short', '/verify-email#',
+    ]) expect(incomingLink(input)).toBeNull();
+  });
+  it('preserves the selected year in a shared annual report and opens Tanıdık profiles', () => {
+    expect(incomingLink(`https://tanidikvar.com.tr/tanidik/${id}/karne?year=2024`)).toBe(`/annual-report/${id}?year=2024`);
+    expect(incomingLink(`https://tanidikvar.com.tr/tanidik/${id}/karne`)).toBe(`/annual-report/${id}`);
+    expect(incomingLink(`https://tanidikvar.com.tr/tanidik/${id}`)).toBe(`/profiles/${id}`);
+  });
+  it.each(['year=2019', 'year=9999', 'year=bad', 'year=2024&year=2025', 'year=2024&id=other', 'unexpected=1'])('rejects invalid report parameters: %s', search => {
+    expect(incomingLink(`https://tanidikvar.com.tr/tanidik/${id}/karne?${search}`)).toBeNull();
+  });
   it.each(['exp://192.168.1.10:8081', 'exp://192.168.1.10:8081/', 'exp://192.168.1.10:8081/--/', 'exps://project.exp.direct'])('opens Expo Go QR at the root: %s', url => {
     expect(incomingLink(url, undefined, true)).toBe('/');
     expect(incomingLink(url)).toBeNull();
@@ -31,5 +56,19 @@ describe('external links', () => {
     expect(incomingLink(`tanidikvar://reset-password?token=${token}`)).toBe(`/reset-password?token=${token}`);
     expect(incomingLink(`/reset-password?token=${token}&token=${token}`)).toBeNull();
     expect(incomingLink('/verify-email?token=bad')).toBeNull();
+  });
+});
+
+describe('city and owner-edit web destinations', () => {
+  it('preserves a Turkish city name in a validated native destination', () => {
+    expect(incomingLink('https://tanidikvar.com.tr/sehir/%C4%B0stanbul')).toBe('/city/%C4%B0stanbul');
+  });
+  it('maps an owner-edit link without bypassing the authenticated route', () => {
+    const id='123e4567-e89b-42d3-a456-426614174000';
+    expect(incomingLink(`https://tanidikvar.com.tr/soru/soru-basligi-${id}/duzenle`)).toBe(`/questions/${id}/edit`);
+    expect(incomingLink(`https://tanidikvar.com.tr/program/${id}/duzenle`)).toBeNull();
+  });
+  it.each(['/sehir/Ankara/extra','/sehir/%2FAnkara','/sehir/%00Ankara','/sehir/%ZZ','/sehir/Ankara?admin=true'])('rejects invalid city input %s', path => {
+    expect(incomingLink(path)).toBeNull();
   });
 });

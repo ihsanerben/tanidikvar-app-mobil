@@ -1,5 +1,6 @@
 import type { Href } from "expo-router";
 import { z } from "zod";
+import { comparisonParams } from '@/features/catalog/comparison-model';
 import {
   peopleParams,
   catalogParams,
@@ -21,7 +22,12 @@ export function isSafeDestination(value: string) {
   )
     return false;
   const [path, search = ""] = value.split("?");
-  if (value.split("?").length > 2 || path.includes("%")) return false;
+  if (value.split("?").length > 2) return false;
+  if (path.startsWith('/city/') && !search) {
+    try { return z.string().min(1).max(100).regex(/^[\p{L}\p{M}\p{N} '-]+$/u).safeParse(decodeURIComponent(path.slice(6))).success; }
+    catch { return false; }
+  }
+  if (path.includes("%")) return false;
   const entries = [...new URLSearchParams(search).entries()];
   if (new Set(entries.map(([key]) => key)).size !== entries.length)
     return false;
@@ -30,9 +36,10 @@ export function isSafeDestination(value: string) {
   if (path === "/kesfet")
     return catalogParams.strict().safeParse(query).success;
   if (path === '/search') return z.object({ q: z.string().max(150).optional(), kind: z.enum(['questions','universities','programs','people']).optional() }).strict().safeParse(query).success;
+  if (path === '/compare') return comparisonParams.safeParse(query).success;
   if (path === '/people') return peopleParams.strict().safeParse(query).success;
   if (path === '/my-questions') return z.object({ status: z.enum(['ACTIVE','ARCHIVED']).optional() }).strict().safeParse(query).success;
-  if (path === '/my-comments') return z.object({ kind: z.enum(['tanidik','community','anonymous']).optional(), scope: z.enum(['GENERAL','UNIVERSITY','UNIVERSITY_DEPARTMENT']).optional() }).strict().safeParse(query).success;
+  if (path === '/my-comments') return z.object({ kind: z.enum(['tanidik','community','anonymous']).optional(), anonymous: z.enum(['true','false']).optional(), scope: z.enum(['GENERAL','UNIVERSITY','UNIVERSITY_DEPARTMENT']).optional() }).strict().safeParse(query).success;
   if (path === "/department") return z.object({ universityId:z.uuid(),departmentId:z.uuid() }).strict().safeParse(query).success;
   if (path === "/community")
     return communityParams.strict().safeParse(query).success;
@@ -52,6 +59,12 @@ export function isSafeDestination(value: string) {
   if (achievements)
     return !search && z.uuid().safeParse(achievements[1]).success;
   if(path === "/about")return z.object({section:z.enum(["contact"]).optional()}).strict().safeParse(query).success;
+  const focusedQuestion = path.match(/^\/questions\/([^/]+)$/);
+  if (focusedQuestion) return z.uuid().safeParse(focusedQuestion[1]).success && z.object({answerId:z.uuid().optional()}).strict().safeParse(query).success;
+  const focusedComments = path.match(/^\/answers\/([^/]+)\/comments$/);
+  if (focusedComments) return z.uuid().safeParse(focusedComments[1]).success && z.object({commentId:z.uuid().optional()}).strict().safeParse(query).success;
+  const focusedUniversity = path.match(/^\/universities\/([^/]+)$/);
+  if (focusedUniversity) return z.uuid().safeParse(focusedUniversity[1]).success && z.object({tab:z.enum(['general','questions','programs','statistics','evaluations','polls','experiences','metrics','people']).optional(),contentId:z.uuid().optional(),metricKey:z.string().regex(/^[A-Z_]+$/).max(80).optional()}).strict().safeParse(query).success;
   if (search) return false;
   if (
     [

@@ -1,5 +1,8 @@
 import { z } from "zod";
 export const idParams = z.object({ id: z.uuid() });
+export const numericFilter = (value?: string) => value ? Number(value.replace(',', '.')) : undefined;
+const rankFilter = z.string().regex(/^(?:[1-9]\d{0,9})?$/, 'Pozitif bir sıra gir.').refine(value => !value || Number(value) <= 2147483647, 'Sıra çok büyük.').default('');
+const scoreFilter = z.string().regex(/^(?:\d{1,6}(?:[.,]\d{1,3})?)?$/, 'Geçerli bir puan gir.').default('');
 export const catalogParams = z.object({
   kind: z.enum(["universities", "programs"]).default("universities"),
   q: z.string().max(150).default(""),
@@ -9,8 +12,20 @@ export const catalogParams = z.object({
     .default(""),
   universityId: z.uuid().optional(),
   degreeLevel: z.enum(["", "LISANS", "ONLISANS"]).default(""),
-  sort: z.enum(["NAME", "RANK"]).default("RANK"),
+  programName: z.string().trim().max(100).default(''),
+  universityName: z.string().trim().max(100).default(''),
+  rankFrom: rankFilter,
+  rankTo: rankFilter,
+  scoreFrom: scoreFilter,
+  scoreTo: scoreFilter,
+  year: z.string().regex(/^(?:\d{4})?$/).refine(value => !value || (Number(value) >= 2015 && Number(value) <= new Date().getFullYear()), 'Geçerli bir yıl seç.').default(''),
+  sort: z.enum(["NAME", "RANK", "SCORE", "QUOTA"]).default("RANK"),
   scoreType: z.enum(["", "SAY", "EA", "SÖZ", "DİL", "TYT"]).default(""),
+}).superRefine((value, ctx) => {
+  for (const [from, to] of [['rankFrom', 'rankTo'], ['scoreFrom', 'scoreTo']] as const) {
+    if (value[from] && value[to] && numericFilter(value[from])! > numericFilter(value[to])!)
+      ctx.addIssue({ code: 'custom', path: [to], message: 'Üst sınır alt sınırdan küçük olamaz.' });
+  }
 });
 export const questionParams = z.object({
   q: z.string().max(150).default(""),

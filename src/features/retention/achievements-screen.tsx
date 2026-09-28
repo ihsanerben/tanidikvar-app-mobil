@@ -5,7 +5,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
-import { AppFooter } from "@/components/ui/app-footer";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +14,8 @@ import { Skeleton, ErrorState, EmptyState } from "@/components/ui/states";
 import { useCurrentUser } from "@/features/auth/use-current-user";
 import { idParams } from "@/lib/navigation/params";
 import type { Schema } from "@/lib/api/types";
-import { achievementsQuery } from "./api";
+import {AchievementMedallion} from "./achievement-medallion";
+import { achievementsQuery, achievementCatalogQuery } from "./api";
 
 type Achievement = Schema["AchievementResponse"];
 const help = "Rozetler, platformdaki faydalı katkıların ve belirli alanlardaki başarıların sonucunda kazanılır. Kazandığın rozetlerden en fazla üçünü seçerek Tanıdık profilinde öne çıkarabilirsin.";
@@ -26,6 +26,7 @@ export function AchievementsScreen() {
 }
 function Achievements({ id }: { id: string }) {
   const query = useQuery(achievementsQuery(id));
+  const catalog = useQuery(achievementCatalogQuery());
   const me = useCurrentUser();
   const [saved, setSaved] = useState(false);
   const owner = me.data?.id === id;
@@ -33,15 +34,17 @@ function Achievements({ id }: { id: string }) {
     <PageHeader title={owner ? "Rozet vitrini" : "Rozetler"} help={help}
       backHref={owner ? "/profil" : undefined} backLabel={owner ? "Hesabıma dön" : "Geri"} />
     {saved && <Text accessibilityRole="alert" className="text-success">Profil vitrinin güncellendi.</Text>}
+    {catalog.isError && <ErrorState error={catalog.error} retry={() => { void catalog.refetch(); }} />}
+    {catalog.isPending && <Skeleton />}
     {query.isError && query.data && <ErrorState error={query.error} retry={() => { void query.refetch(); }} />}
   </View>;
-  if (owner && query.data?.length) return <ShowcaseForm key={id} id={id} items={query.data}
+  if (owner && query.data && catalog.data) return <ShowcaseForm key={id} id={id} items={query.data} catalog={catalog.data}
     header={header} refreshing={query.isRefetching} refresh={() => { void query.refetch(); }}
     onSaved={() => setSaved(true)} onChange={() => setSaved(false)} />;
-  return <FlashList data={query.data ?? []} keyExtractor={item => item.id!} renderItem={renderAchievement}
+  return <FlashList data={query.data ?? []} keyExtractor={item => item.id!} renderItem={({item})=><Card><AchievementMedallion achievement={item} definition={catalog.data?.find(d=>d.key===item.key)}/>{renderAchievement({item,index:0,target:"Cell",extraData:undefined})}</Card>}
     refreshing={query.isRefetching} onRefresh={() => { void query.refetch(); }} ItemSeparatorComponent={Separator}
     ListHeaderComponent={<View>{header}{!owner && <Button label="Yıllık Tanıdık Karnesi" onPress={() => router.push({ pathname: "/annual-report/[id]", params: { id } })} />}</View>}
-    ListFooterComponent={<AppFooter />}
+
     ListEmptyComponent={query.isPending ? <Skeleton /> : query.isError ? <ErrorState error={query.error} retry={() => { void query.refetch(); }} /> : <EmptyState title="Henüz kazanılmış rozet yok" description="Katkılarınla kazandığın rozetler burada görünecek." />} />;
 }
 const renderAchievement: ListRenderItem<Achievement> = ({ item }) => <Card>

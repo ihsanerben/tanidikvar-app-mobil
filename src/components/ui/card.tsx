@@ -1,10 +1,10 @@
 import { View, type ViewProps } from "react-native";
-export function Card({ className = "", ...props }: ViewProps) {
+export function Card({ className = "", compact = false, ...props }: ViewProps & { compact?: boolean }) {
   return (
     <View
       {...props}
       className={
-        "gap-3 rounded-card border border-border bg-surface p-card-inset " + className
+        "rounded-card border border-border bg-surface " + (compact ? "gap-1.5 p-3 " : "gap-3 p-card-inset ") + className
       }
     />
   );

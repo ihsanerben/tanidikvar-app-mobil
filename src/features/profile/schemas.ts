@@ -88,7 +88,14 @@ export const applicationSchema = z.object({
     .min(20, "En az 20 karakterle kendini tanıt.")
     .max(1000),
 });
+export const notificationCategories = {
+  UNIVERSITY: 'Üniversiteler', PROGRAM: 'Bölümler ve programlar', QUESTION: 'Yeni sorular',
+  ANSWER: 'Sorulara gelen yorumlar', REPLY: 'Yorumlara gelen yanıtlar', POLL: 'Anketler',
+  EVALUATION: 'Değerlendirmeler', EXPERIENCE: 'Deneyimler', METRIC: 'Gerçek hayat ölçümleri',
+  ACHIEVEMENT: 'Rozetler ve unvanlar', ACCOUNT: 'Hesap gelişmeleri',
+} as const;
 export const preferenceSchema = z.object({
+  categories: z.record(z.enum(Object.keys(notificationCategories) as [keyof typeof notificationCategories, ...(keyof typeof notificationCategories)[]]), z.boolean()),
   inAppEnabled: z.boolean(),
   emailEnabled: z.boolean(),
   questionRoutingEnabled: z.boolean(),

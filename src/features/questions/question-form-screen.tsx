@@ -49,7 +49,7 @@ function EditLoader({ id }: { id: string }) {
   const query = useQuery(questionDetail(id));
   const [revision, setRevision] = useState(0);
   return query.isPending ? (
-    <Skeleton />
+    <Skeleton variant="form" />
   ) : query.isError && !query.data ? (
     <ErrorState
       error={query.error}
@@ -82,6 +82,7 @@ function Editor({
     <FeatureForm
       schema={questionSchema}
       reload={reload}
+      onCancel={() => { if (router.canGoBack()) router.back(); else router.replace("/"); }}
       defaults={{
         title: initial.title ?? "",
         body: initial.body ?? "",
@@ -142,8 +143,8 @@ function Editor({
             value={form.watch("scope")}
             onChange={(value) => form.setValue("scope", value)}
             options={[
-              { value: "GENERAL", label: "Genel" },
-              { value: "UNIVERSITY", label: "Üniversite" },
+              ...(!initial.id && initial.universityId ? [] : [{ value: "GENERAL" as const, label: "Genel" }]),
+              ...(!initial.id && (initial.programId || initial.departmentId) ? [] : [{ value: "UNIVERSITY" as const, label: "Üniversite" }]),
               { value: "UNIVERSITY_DEPARTMENT", label: "Üniversite + Bölüm" },
             ]}
           />
@@ -169,6 +170,7 @@ function Editor({
           )}
           {(form.formState.errors.universityId?.message || form.formState.errors.programId?.message) && <Text accessibilityRole="alert" className="text-danger">{form.formState.errors.universityId?.message || form.formState.errors.programId?.message}</Text>}
           <TagPicker
+            selectedTags={initial.tags}
             selected={form.watch("tagIds")}
             onChange={(ids) =>
               form.setValue("tagIds", ids, { shouldValidate: true })

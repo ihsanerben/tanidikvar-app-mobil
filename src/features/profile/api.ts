@@ -24,6 +24,13 @@ export const publicProfile = (id: string) =>
     queryFn: ({ signal }) =>
       api.call("get", "/api/profiles/{id}", { params: { id }, signal }),
   });
+export const publicTanidikProfile = (id: string) =>
+  queryOptions({
+    queryKey: ["profiles", id, "tanidik-details"],
+    staleTime: 30_000,
+    queryFn: ({ signal }) =>
+      api.call("get", "/api/tanidiklar/{id}", { params: { id }, signal }),
+  });
 export const applications = () =>
   infiniteQueryOptions({
     queryKey: profileKeys.applications,

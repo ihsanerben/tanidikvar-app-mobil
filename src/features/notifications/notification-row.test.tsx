@@ -40,10 +40,10 @@ describe("compact notification row", () => {
     expect(jest.mocked(readNotification).mock.calls[0][0]).toBe(note.id);
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["notifications"] });
   });
-  it("opens cached content offline without attempting a write", async () => {
+  it("keeps unread notifications pending offline without attempting a write", async () => {
     onlineManager.setOnline(false);
     await render(); await open();
-    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push).not.toHaveBeenCalled();
     expect(readNotification).not.toHaveBeenCalled();
   });
   it("does not mark an already read notification again", async () => {
@@ -56,4 +56,16 @@ describe("compact notification row", () => {
     await render(); await open();
     expect(tree.root.findByType(ErrorState).props.retry).toEqual(expect.any(Function));
   });
+  it("does not carry a failed mutation into a recycled row", async () => {
+    jest.mocked(readNotification).mockRejectedValue(new Error("offline"));
+    await render(); await open();
+    expect(tree.root.findAllByType(ErrorState)).toHaveLength(1);
+    const next = { ...note, id: "33333333-3333-4333-8333-333333333333" };
+    await act(async () => tree.update(<QueryClientProvider client={client}><NotificationRow item={next} /></QueryClientProvider>));
+    expect(tree.root.findAllByType(ErrorState)).toHaveLength(0);
+    jest.mocked(readNotification).mockResolvedValue(undefined);
+    await act(async () => tree.root.findAllByProps({testID:`notification-open-${next.id}`})[0].props.onPress());
+    expect(readNotification).toHaveBeenLastCalledWith(next.id);
+  });
+
 });

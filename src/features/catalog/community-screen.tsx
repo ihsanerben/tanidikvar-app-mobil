@@ -38,7 +38,7 @@ export function ContextCommunity({params,header}: {params:Params;header?:React.R
 }
 type Params = z.infer<typeof communityParams>;
 function Questions({ params, header }: { params: Params; header?:React.ReactElement }) {
-  const query = useInfiniteQuery(questionList(params));
+  const query = useInfiniteQuery(questionList({...params,sort:"MOST_COMMENTED",scope:params.departmentId?"UNIVERSITY_DEPARTMENT":undefined}));
   return (
       <PagedList
         query={query}

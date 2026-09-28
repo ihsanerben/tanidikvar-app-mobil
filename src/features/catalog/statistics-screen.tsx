@@ -22,7 +22,7 @@ export function StatisticsScreen() {
     { value: "placed", label: "En çok öğrenci yerleşen 10 üniversite", items: data?.universitiesByPlaced },
     { value: "programs", label: "En fazla programı olan 10 üniversite", items: data?.universitiesByProgramCount },
   ];
-  return <Page title="Yükseköğretim istatistikleri" refresh={() => void query.refetch()} refreshing={query.isRefetching}>
+  return <Page title="Yükseköğretim istatistikleri" back={false} eyebrow="Türkiye program kataloğu" refresh={() => void query.refetch()} refreshing={query.isRefetching}>
     <Text>Üniversiteleri, programları ve son yıllardaki yerleşme verilerini tek yerde incele.</Text>
     {query.isPending ? <Skeleton /> : query.isError && !data ? <ErrorState error={query.error} retry={() => void query.refetch()} /> : data && <>
       <View className="gap-2"><View className="flex-row gap-2">
@@ -31,14 +31,14 @@ export function StatisticsScreen() {
       </View>
       <Text variant="heading">Türkiye kataloğunu keşfet</Text>
       <Text variant="muted">Bir görünüm seç; sonuçlar YÖK katalog ve yerleşen verilerinden hesaplanır.</Text>
-      <Tabs label="Görünüm" value={selected} options={datasets.map(item => ({ value: item.value, label: item.label }))} onChange={setSelected} />
+      <Tabs variant="pills" label="Görünüm" value={selected} options={datasets.map(item => ({ value: item.value, label: item.label }))} onChange={setSelected} />
       <Distribution key={selected} donut title={datasets.find(item => item.value === selected)?.label ?? datasets[0].label} items={datasets.find(item => item.value === selected)?.items} />
       <Distribution title="Üniversite türleri" items={data.institutionTypes} />
       <Distribution title="Program düzeyleri" items={data.degreeLevels} />
       <Distribution title="Puan türleri" items={data.scoreTypes} />
       <Distribution title="En çok üniversite bulunan şehirler" items={data.cities} onItem={city => router.push({ pathname: "/city/[city]", params: { city } })} />
       <Text variant="heading">Yıllara göre görünüm</Text>
-      <DataTable label="Yıllara göre kontenjan ve yerleşme istatistikleri" columns={["Yıl", "Seçenek", "Kontenjan", "Yerleşen", "Doluluk", "Tercih"]} rows={[...(data.yearly ?? [])].sort((a,b) => (b.year ?? 0) - (a.year ?? 0)).map(row => [row.year, row.programCount, row.quota, row.placed, row.fillRate == null ? "—" : `%${row.fillRate.toLocaleString("tr-TR", {maximumFractionDigits: 2})}`, row.preferences])} />
+      <DataTable label="Yıllara göre kontenjan ve yerleşme istatistikleri" columns={["Yıl", "Seçenek", "Kontenjan", "Yerleşen", "Doluluk", "Tercih"]} rows={[...(data.yearly ?? [])].sort((a,b) => (b.year ?? 0) - (a.year ?? 0)).map(row => [row.year == null ? undefined : String(row.year), row.programCount, row.quota, row.placed, row.fillRate == null ? "—" : `%${row.fillRate.toLocaleString("tr-TR", {maximumFractionDigits: 2})}`, row.preferences])} />
       <Text variant="muted">Kaynak: Resmî YÖK Atlas katalog ve yerleşme verileri{data.lastSynchronizedAt ? ` · Son aktarım ${new Date(data.lastSynchronizedAt).toLocaleDateString("tr-TR")}` : ""}.</Text>
     </>}
   </Page>;

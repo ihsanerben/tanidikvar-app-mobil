@@ -1,9 +1,14 @@
 import { z } from 'zod';
 import { isSafeDestination } from './destination';
+import { webDestination } from './web-destination';
 
 const inputSchema = z.string().min(1).max(2048);
 const actionSchema = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional() }).strict();
 const hosts = new Set(['tanidikvar.com.tr', 'www.tanidikvar.com.tr']);
+const actionPaths: Record<string, string> = {
+  '/verify-email': '/verify-email', '/e-posta-dogrula': '/verify-email',
+  '/reset-password': '/reset-password', '/parola-yenile': '/reset-password',
+};
 
 /** Normalize trusted web URLs and native schemes before Router sees external parameters. */
 export function incomingLink(input: unknown, trustedHost?: string, expoGo = false): string | null {
@@ -13,7 +18,7 @@ export function incomingLink(input: unknown, trustedHost?: string, expoGo = fals
   try {
     if (!path.startsWith('/')) {
       const url = new URL(path);
-      if (url.username || url.password || url.hash) return null;
+      if (url.username || url.password) return null;
       if (['tanidikvar:', 'tanidikvar-dev:', 'tanidikvar-preview:'].includes(url.protocol)) {
         if (url.port) return null;
         path = url.host ? '/' + url.host + url.pathname : (url.pathname || '/');
@@ -30,10 +35,38 @@ export function incomingLink(input: unknown, trustedHost?: string, expoGo = fals
         if (url.protocol !== 'https:' || !(hosts.has(url.hostname) || (trustedHost && url.hostname === trustedHost)) || url.port) return null;
         path = url.pathname + url.search;
       }
+      path += url.hash;
+    }
+    // Mail links carry a fragment. Accept exactly one action token only on
+    // the allowlisted auth routes, after validating the origin above.
+    if (path.includes('#')) {
+      if (path === '/hakkimizda#iletisim') return '/about?section=contact';
+      const [action, fragment, extra] = path.split('#');
+      if (!actionPaths[action] || extra !== undefined) return null;
+      const entries = [...new URLSearchParams(fragment)];
+      if (entries.length !== 1) return null;
+      const result = actionSchema.required().safeParse(Object.fromEntries(entries));
+      return result.success ? `${actionPaths[action]}?token=${result.data.token}` : null;
     }
     if (path.includes('#') || path.includes('\\') || path.startsWith('//')) return null;
     const [pathname, search = ''] = path.split('?');
     if (path.split('?').length > 2) return null;
+    const web = webDestination(pathname, search);
+    if (web !== undefined) return web;
+    if (pathname.startsWith('/sehir/') && !search) {
+      const destination = '/city/' + pathname.slice(7);
+      return isSafeDestination(destination) ? destination : null;
+    }
+    const report = pathname.match(/^\/tanidik\/([^/]+)\/karne$/);
+    if (report) {
+      const destination = `/annual-report/${report[1]}${search ? `?${search}` : ''}`;
+      return isSafeDestination(destination) ? destination : null;
+    }
+    const person = pathname.match(/^\/tanidik\/([^/]+)$/);
+    if (person && !search) {
+      const destination = `/profiles/${person[1]}`;
+      return isSafeDestination(destination) ? destination : null;
+    }
     const department = pathname.match(/^\/universite\/([a-z0-9-]+)\/([a-z0-9-]+)$/);
     if (department && !search) {
       const universityId=department[1].slice(-36),departmentId=department[2].slice(-36);
@@ -41,19 +74,20 @@ export function incomingLink(input: unknown, trustedHost?: string, expoGo = fals
       if([department[1],department[2]].some(segment => {const prefix=segment.slice(0,-36);return prefix && !prefix.endsWith('-');}))return null;
       return `/department?universityId=${universityId}&departmentId=${departmentId}`;
     }
-    const canonical = pathname.match(/^\/(soru|universite|program)\/([a-z0-9-]+)$/);
+    const canonical = pathname.match(/^\/(soru|universite|program)\/([a-z0-9-]+)(\/duzenle)?$/);
     if (canonical && !search) {
+      if (canonical[3] && canonical[1] !== "soru") return null;
       const id = canonical[2].slice(-36);
       if (!z.uuid().safeParse(id).success) return null;
       const prefix = canonical[2].slice(0, -36);
       if (prefix && !prefix.endsWith('-')) return null;
       const kind = { soru: 'questions', universite: 'universities', program: 'programs' }[canonical[1]];
-      return `/${kind}/${id}`;
+      return `/${kind}/${id}${canonical[3] ? "/edit" : ""}`;
     }
-    if (['/verify-email', '/reset-password'].includes(pathname)) {
+    if (actionPaths[pathname]) {
       const entries = [...new URLSearchParams(search)];
       if (new Set(entries.map(([key]) => key)).size !== entries.length) return null;
-      return actionSchema.safeParse(Object.fromEntries(entries)).success ? path : null;
+      return actionSchema.safeParse(Object.fromEntries(entries)).success ? actionPaths[pathname] + (search ? `?${search}` : '') : null;
     }
     if (['/login', '/register', '/forgot-password', '/resend-verification'].includes(pathname) && !search) return path;
     return isSafeDestination(path) ? path : null;

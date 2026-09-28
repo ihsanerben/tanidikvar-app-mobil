@@ -1,23 +1,20 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, router } from "expo-router";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { View } from "react-native";
 import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
-import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
-import { Select } from "@/components/ui/select";
+import { FilterPanel, FilterSelect, FilterRow, FilterCell } from "@/components/ui/filter-panel";
+import { universityFilterOptions, departmentFilterOptions, tagFilterOptions } from "@/features/catalog/filter-options";
 import { FormField } from "@/components/ui/form-field";
 import { PagedList } from "@/components/ui/paged-list";
 import { ErrorState } from "@/components/ui/states";
 import { questionParams } from "@/lib/navigation/params";
 import { questionList } from "./api";
 import { QuestionCard } from "./question-card";
-import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { CatalogPicker } from '@/features/catalog/catalog-picker';
-import { TagPicker } from './tag-picker';
 import { useState } from 'react';
 export function HomeScreen() {
   const parsed = questionParams.safeParse(useLocalSearchParams());
@@ -37,14 +34,14 @@ function Feed({
 }) {
   const query = useInfiniteQuery(questionList(filters));
   const [open, setOpen] = useState(false);
-  const [universityName, setUniversityName] = useState<string>();
-  const [programName, setProgramName] = useState<string>();
   const form = useForm({
     resolver: zodResolver(questionParams),
     defaultValues: filters,
   });
   const selectedUniversity = useWatch({ control: form.control, name: 'universityId' });
-  const selectedTag = useWatch({ control: form.control, name: 'tagId' });
+  const universities = useQuery({ ...universityFilterOptions(), enabled: open });
+  const departments = useQuery({ ...departmentFilterOptions(selectedUniversity ?? ''), enabled: open && !!selectedUniversity });
+  const tags = useQuery({ ...tagFilterOptions(), enabled: open });
   const header = (
     <View className="gap-4 pb-5">
       <PageHeader title={filters.period ? 'Popülerler' : 'Sorular'} back={false}
@@ -63,12 +60,12 @@ function Feed({
           })
         }
       />} />
-      {!filters.period && <Controller
+      {!filters.period && <View className="flex-row items-center gap-1.5"><View className="min-w-0 flex-1"><Controller
         control={form.control}
         name="q"
         render={({ field }) => (
           <FormField
-            label="Sorularda ara"
+            label="Soru ara" hideLabel placeholder="Soru ara" returnKeyType="search"
             value={field.value}
             onChangeText={field.onChange}
             onSubmitEditing={form.handleSubmit((values) =>
@@ -76,24 +73,35 @@ function Feed({
             )}
           />
         )}
-      />}
-      {!filters.period && <View className="flex-row gap-2">
-        <View className="min-w-0 flex-1"><Button fullWidth label="Filtrele" variant="secondary" onPress={() => setOpen(true)} /></View>
-        <View className="min-w-0 flex-1"><Button fullWidth label="Ara" onPress={form.handleSubmit(values => router.setParams(values))} /></View>
-      </View>}
-      {!!filters.period && <Tabs label="Dönem" value={filters.period} options={[{ value: 'DAILY', label: 'Bugün' }, { value: 'WEEKLY', label: 'Bu hafta' }, { value: 'MONTHLY', label: 'Bu ay' }, { value: 'YEARLY', label: 'Bu yıl' }, { value: 'ALL_TIME', label: 'Tüm zamanlar' }]} onChange={period => router.setParams({ period })} />}
-      <Text variant="muted">{query.data?.pages[0]?.totalElements ?? 0} sonuç</Text>
-      {!filters.period && <BottomSheet visible={open} title="Soruları filtrele" close={() => setOpen(false)}>
-        <Controller control={form.control} name="sort" render={({ field }) => <Select label="Sıralama" value={field.value} onChange={field.onChange} options={[{ value: 'NEWEST', label: 'En yeni' }, { value: 'MOST_COMMENTED', label: 'En çok cevaplanan' }, { value: 'MOST_LIKED', label: 'En faydalı' }, { value: 'MOST_VIEWED', label: 'En çok görüntülenen' }, { value: 'OLDEST', label: 'En eski' }]} />} />
-        <Controller control={form.control} name="scope" render={({ field }) => <Select label="Kapsam" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'GENERAL', label: 'Genel' }, { value: 'UNIVERSITY', label: 'Üniversite' }, { value: 'UNIVERSITY_DEPARTMENT', label: 'Program' }]} />} />
-        <CatalogPicker universityId={selectedUniversity} universityName={universityName} programName={programName} onUniversity={item => { form.setValue('universityId', item.id); form.setValue('departmentId', undefined); setUniversityName(item.name); setProgramName(undefined); }} onProgram={item => { form.setValue('departmentId', item.departmentId); setProgramName(item.name); }} />
-        <TagPicker selected={selectedTag ? [selectedTag] : []} onChange={ids => form.setValue('tagId', ids.at(-1))} />
-        <Controller control={form.control} name="city" render={({ field }) => <FormField label="Şehir" value={field.value} onChangeText={field.onChange} />} />
-        <Controller control={form.control} name="answered" render={({ field }) => <Select label="Cevap durumu" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Cevaplanmış' }, { value: 'false', label: 'Cevapsız' }]} />} />
-        <Controller control={form.control} name="verifiedAnswer" render={({ field }) => <Select label="Doğrulanmış kişi cevabı" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Var' }, { value: 'false', label: 'Yok' }]} />} />
-        <Button label="Filtreleri uygula" onPress={form.handleSubmit(values => { router.setParams(values); setOpen(false); })} />
-        <Button label="Tümünü temizle" variant="secondary" onPress={() => { router.replace('/'); setOpen(false); }} />
-      </BottomSheet>}
+      /></View>
+      <View className="flex-row gap-1.5">
+        <View><Button label="Filtrele" variant="secondary" onPress={() => setOpen(true)} /></View>
+        <View><Button label="Ara" onPress={form.handleSubmit(values => router.setParams(values))} /></View>
+      </View></View>}
+      {!!filters.period && <Tabs compact label="Dönem" value={filters.period} options={[{ value: 'DAILY', label: 'Bugün' }, { value: 'WEEKLY', label: 'Bu hafta' }, { value: 'MONTHLY', label: 'Bu ay' }, { value: 'YEARLY', label: 'Bu yıl' }, { value: 'ALL_TIME', label: 'Tüm zamanlar' }]} onChange={period => router.setParams({ period })} />}
+      {!filters.period && <FilterPanel visible={open} title="Soruları filtrele" close={() => setOpen(false)}>
+        <FilterRow>
+          <FilterCell><Controller control={form.control} name="scope" render={({ field }) => <FilterSelect label="Soru kapsamı" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tüm kapsamlar' }, { value: 'GENERAL', label: 'Genel' }, { value: 'UNIVERSITY', label: 'Üniversite' }, { value: 'UNIVERSITY_DEPARTMENT', label: 'Üniversite + Bölüm' }]} />} /></FilterCell>
+          <FilterCell><Controller control={form.control} name="universityId" render={({ field }) => <FilterSelect label="Üniversite" value={field.value ?? ''} onChange={value => { field.onChange(value || undefined); form.setValue('departmentId', undefined); }} options={[{ value: '', label: universities.isPending ? 'Yükleniyor…' : 'Tüm üniversiteler' }, ...(universities.data ?? [])]} />} /></FilterCell>
+        </FilterRow>
+        <FilterRow>
+          <FilterCell><Controller control={form.control} name="departmentId" render={({ field }) => <FilterSelect label="Bölüm" disabled={!selectedUniversity} value={field.value ?? ''} onChange={value => field.onChange(value || undefined)} options={[{ value: '', label: selectedUniversity && departments.isPending ? 'Yükleniyor…' : 'Tüm bölümler' }, ...(departments.data ?? [])]} />} /></FilterCell>
+          <FilterCell><Controller control={form.control} name="tagId" render={({ field }) => <FilterSelect label="Etiket" value={field.value ?? ''} onChange={value => field.onChange(value || undefined)} options={[{ value: '', label: tags.isPending ? 'Yükleniyor…' : 'Tüm etiketler' }, ...(tags.data ?? [])]} />} /></FilterCell>
+        </FilterRow>
+        <FilterRow>
+          <FilterCell><Controller control={form.control} name="city" render={({ field }) => <FormField compact label="Şehir" placeholder="Örn. İstanbul" value={field.value} onChangeText={field.onChange} />} /></FilterCell>
+          <FilterCell><Controller control={form.control} name="answered" render={({ field }) => <FilterSelect label="Cevap durumu" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Cevaplanmış' }, { value: 'false', label: 'Cevap bekliyor' }]} />} /></FilterCell>
+        </FilterRow>
+        <FilterRow>
+          <FilterCell><Controller control={form.control} name="verifiedAnswer" render={({ field }) => <FilterSelect label="Doğrulanmış kişi cevabı" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Var' }, { value: 'false', label: 'Yok' }]} />} /></FilterCell>
+          <FilterCell><Controller control={form.control} name="sort" render={({ field }) => <FilterSelect label="Sıralama" value={field.value} onChange={field.onChange} options={[{ value: 'NEWEST', label: 'En yeni' }, { value: 'MOST_COMMENTED', label: 'En çok cevaplanan' }, { value: 'MOST_LIKED', label: 'En faydalı' }, { value: 'MOST_VIEWED', label: 'En çok görüntülenen' }, { value: 'OLDEST', label: 'En eski' }]} />} /></FilterCell>
+        </FilterRow>
+        {[universities, tags, ...(selectedUniversity ? [departments] : [])].filter(result => result.isError).map((result, index) => <ErrorState key={index} error={result.error} retry={() => { void result.refetch(); }} />)}
+        <View className="flex-row justify-between gap-2">
+          <Button label="Tümünü temizle" variant="secondary" onPress={() => { router.replace('/'); setOpen(false); }} />
+          <Button label="Ara" onPress={form.handleSubmit(values => { router.setParams(values); setOpen(false); })} />
+        </View>
+      </FilterPanel>}
       {filters.universityId && (
         <Button
           label="Tüm sorular"

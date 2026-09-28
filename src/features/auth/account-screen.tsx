@@ -12,7 +12,7 @@ export function AccountScreen() {
   const logoutAll = useMutation({ mutationFn: authApi.logoutAll, retry: 0 });
   const offline = useOffline();
   const busy = logout.isPending || logoutAll.isPending;
-  return <Page title="Hesabım">
+  return <Page title="Hesap ve güvenlik" backHref="/profil" backLabel="Hesabıma dön">
     {user.isPending ? <Skeleton /> : user.isError ? <ErrorState error={user.error} retry={() => { void user.refetch(); }} /> : <Text>{user.data.email}</Text>}
     {user.data?.role === 'MANAGER' && <Text variant="muted">Yönetim işlemleri web uygulamasından yapılır.</Text>}
     <Button label="Verilerin ve gizlilik" testID="privacy-open" variant="secondary" onPress={() => router.push('/profile/privacy')} />

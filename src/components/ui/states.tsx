@@ -59,8 +59,7 @@ export function OfflineBanner() {
   return useOffline() ? (
     <View testID="offline-banner" className="rounded-control bg-surface p-3">
       <Text accessibilityRole="alert" className="text-warning">
-        Bağlantı yok. Son görülen içerik gösteriliyor; işlemler için yeniden
-        bağlan.
+        Bağlantı yok. Daha önce yüklenen içerik varsa görüntüleyebilirsin. Yeni içerik ve işlemler için yeniden bağlan.
       </Text>
     </View>
   ) : null;

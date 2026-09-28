@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { FormField } from "@/components/ui/form-field";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { SelectionField } from "@/components/ui/selection-field";
 import { Button } from "@/components/ui/button";
 import { PagedList } from "@/components/ui/paged-list";
 import { universityList, programList, universityDetail } from "./api";
@@ -27,17 +28,8 @@ export function CatalogPicker({
   const [kind, setKind] = useState<"university" | "program" | null>(null);
   return (
     <View className="gap-3">
-      <Button
-        variant="secondary"
-        label={universityName || university.data?.name || "Üniversite seç"}
-        onPress={() => setKind("university")}
-      />
-      {showProgram && <Button
-        variant="secondary"
-        label={programName || pickedProgram || "Program seç"}
-        disabled={!universityId}
-        onPress={() => setKind("program")}
-      />}
+      <SelectionField label="Üniversite" value={universityName || university.data?.name || "Üniversite seç"} onPress={() => setKind("university")} expanded={kind==='university'} />
+      {showProgram && <SelectionField label="Program" value={programName || pickedProgram || "Program seç"} disabled={!universityId} onPress={() => setKind("program")} expanded={kind==='program'} />}
       <BottomSheet
         scroll={false}
         visible={kind !== null}
@@ -107,7 +99,7 @@ function Picker({
   return (
     <View className="h-96 gap-3">
       <FormField
-        label="Katalogda ara"
+        hideLabel placeholder="Katalogda ara" label="Katalogda ara"
         value={draft}
         onChangeText={setDraft}
         onSubmitEditing={() => setQ(draft)}

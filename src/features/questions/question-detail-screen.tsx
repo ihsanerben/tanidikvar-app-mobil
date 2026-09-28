@@ -1,7 +1,9 @@
+import { z } from "zod";
+import { Switch } from "@/components/ui/switch";
 import { RetentionButton } from "@/features/retention/retention-button";
 import { useEffect, useRef, useState } from "react";
-import { View, Switch, Share } from "react-native";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { View, Share, Pressable } from "react-native";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCurrentUser } from '@/features/auth/use-current-user';
 import { useLoginAction } from '@/features/auth/use-login-action';
@@ -31,15 +33,18 @@ import {
 } from "./api";
 import { bodySchema, reportSchema } from "./schemas";
 import { QuestionContext } from './question-context';
+import { StatAction } from "@/components/ui/stat-action";
+import { Icon } from "@/components/ui/icon";
+import { AnswerDiscussion } from "./answer-discussion";
 import { Avatar } from '@/components/ui/avatar';
 import { api } from '@/lib/api/client';
 import { ActionsMenu } from '@/components/ui/actions-menu';
 export function QuestionDetailScreen() {
-  const parsed = idParams.safeParse(useLocalSearchParams());
+  const parsed = idParams.extend({answerId:z.uuid().optional()}).safeParse(useLocalSearchParams());
   return (
     <Screen>
       {parsed.success ? (
-        <Detail id={parsed.data.id} />
+        <Detail key={`${parsed.data.id}:${parsed.data.answerId ?? ""}`} id={parsed.data.id} answerId={parsed.data.answerId} />
       ) : (
         <>
           <PageHeader title="Soru" />
@@ -49,7 +54,8 @@ export function QuestionDetailScreen() {
     </Screen>
   );
 }
-function Detail({ id }: { id: string }) {
+function Detail({ id, answerId }: { id: string; answerId?: string }) {
+  const focused = useQuery({queryKey:["answers","detail",answerId],enabled:!!answerId,queryFn:({signal})=>api.call("get","/api/answers/{id}",{params:{id:answerId!},signal})});
   const query = useQuery(questionDetail(id));
   const user = useCurrentUser();
   const loginAction = useLoginAction();
@@ -74,7 +80,8 @@ function Detail({ id }: { id: string }) {
     retry: false,
   });
   const quota = useQuery({ queryKey: ['questions', 'quota'], queryFn: () => api.call('get', '/api/me/admin-quota', { authenticated: true }), staleTime: 30_000, enabled: user.data?.role === 'TANIDIK' });
-  const [tab, setTab] = useState<"community" | "tanidik">("community");
+  const [selectedTab, setTab] = useState<"community" | "tanidik">();
+  const tab = selectedTab ?? ((query.data?.statistics?.adminAnswerCount ?? 0) > 0 ? "tanidik" : "community");
   const [compose, setCompose] = useState(false);
   const [report, setReport] = useState(false);
   const [anonymous, setAnonymous] = useState(false);
@@ -103,37 +110,19 @@ function Detail({ id }: { id: string }) {
   const canWrite = !!user.data && user.data.role !== "MANAGER" && !question.archivedAt;
   const header = (
     <View className="gap-4 pb-5">
-      <PageHeader title="" />
-      <Card>
-        <QuestionContext question={question} />
-        <Text variant="title">{question.title}</Text>
+      <PageHeader title="" backHref="/" backLabel="Sorulara dön" />
+      <Card compact>
+        <QuestionContext question={question} compact />
+        <Text variant="heading">{question.title}</Text>
         <Text>{question.body}</Text>
-        <QuestionByline question={question} />
         {question.archivedAt && <><Badge label="Arşivlenmiş soru" /><Text variant="muted">Bu soru okunabilir; arşivde olduğu için yeni katkı kabul etmiyor.</Text></>}
-        <RetentionButton kind="saved" id={id} />
-        <ActionButton
-          label={like.data?.liked ? "Beğeniyi geri al" : "Beğen"}
-          disabled={!like.isSuccess || !canWrite}
-          action={() =>
-            questionsApi.like(id, !like.data?.liked, like.data?.version ?? 0)
-          }
-          after={() => refreshQuestions(id)}
-        />
-        {!user.data && <Button label="Faydalı oy vermek için giriş yap" variant="secondary" onPress={() => loginAction(() => undefined)} />}
-        <ActionButton
-          label="Paylaş"
-          action={() =>
-            Share.share({ message: sharePath("sorular", id, question.title) })
-          }
-        />
-        {!question.archivedAt && user.data?.role !== 'MANAGER' && (
-          <Button
-            label="Cevap yaz"
-            testID="write-answer"
-            onPress={() => loginAction(() => setCompose(true))}
-          />
-        )}
-        <ActionsMenu title="Soru işlemleri">
+        <QuestionByline question={question} compact actions={<>
+          <View accessible accessibilityLabel={`${question.statistics?.viewCount ?? 0} görüntülenme`} className="flex-row items-center gap-1"><Icon name="view" /><Text variant="muted">{question.statistics?.viewCount ?? 0}</Text></View>
+          <StatAction icon="heart" label="Soruyu beğen" count={question.statistics?.likeCount ?? 0} selected={like.data?.liked} disabled={!!user.data && (!like.isSuccess || !canWrite)} action={async () => { if (!user.data) { loginAction(() => undefined); return; } await questionsApi.like(id, !like.data?.liked, like.data?.version ?? 0); await refreshQuestions(id); }} />
+          <StatAction icon="comment" label="Yorum yaz" count={question.statistics?.totalAnswerCount ?? 0} disabled={!!question.archivedAt || user.data?.role === 'MANAGER'} onPress={() => loginAction(() => setCompose(true))} />
+          <ActionsMenu title="Soru işlemleri">
+            <RetentionButton size="small" kind="saved" id={id} />
+            <ActionButton size="small" label="Paylaş" action={() => Share.share({ message: sharePath("sorular", id, question.title) })} />
         {owner && (
           <>
             <Button
@@ -146,7 +135,7 @@ function Detail({ id }: { id: string }) {
                 })
               }
             />
-            <ActionButton
+            <ActionButton size="small"
               label={
                 question.archivedAt ? "Soruyu yeniden aç" : "Soruyu arşivle"
               }
@@ -165,7 +154,24 @@ function Detail({ id }: { id: string }) {
           variant="secondary"
           onPress={() => loginAction(() => setReport(true))}
         />
-        </ActionsMenu>
+      <BottomSheet
+        visible={report}
+        title="Soruyu bildir"
+        close={() => setReport(false)}
+      >
+        <FeatureForm
+          schema={reportSchema}
+          defaults={{ reason: "" }}
+          fields={[
+            { name: "reason", label: "Bildirim gerekçesi", multiline: true },
+          ]}
+          submit={(value) => questionsApi.report(id, value.reason, false)}
+          onSuccess={() => setReport(false)}
+          label="Bildir"
+        />
+      </BottomSheet>
+          </ActionsMenu>
+        </>} />
       </Card>
       {ownCommunity.data?.deletedAt && (
         <AnswerCard
@@ -177,8 +183,7 @@ function Detail({ id }: { id: string }) {
         />
       )}
       {ownTanidik.data?.answer &&
-        (ownTanidik.data.answer.anonymous ||
-          ownTanidik.data.answer.deletedAt) && (
+        ownTanidik.data.answer.deletedAt && (
           <AnswerCard
             answer={ownTanidik.data.answer}
             tanidik
@@ -187,13 +192,18 @@ function Detail({ id }: { id: string }) {
             isOwn
           />
         )}
+      {answerId && <View className="gap-2 rounded-card border-2 border-primary p-2">
+        <Text variant="label">Bildirimdeki yorum</Text>
+        {focused.isPending ? <Skeleton /> : focused.data?.questionId === id ? <AnswerCard answer={focused.data} tanidik={focused.data.answerKind === 'TANIDIK'} userId={user.data?.id} question={question} /> : <ErrorState error={focused.error} retry={()=>void focused.refetch()} />}
+      </View>}
       <Tabs
         label="Cevaplar"
+        variant="filled"
         value={tab}
         onChange={setTab}
         options={[
-          { value: "community", label: `Topluluk (${question.statistics?.communityAnswerCount ?? 0})` },
-          { value: "tanidik", label: `Tanıdıklar (${question.statistics?.adminAnswerCount ?? 0})` },
+          { value: "tanidik", label: `Tanıdık yorumları (${question.statistics?.adminAnswerCount ?? 0})` },
+          { value: "community", label: `Topluluk yorumları (${question.statistics?.communityAnswerCount ?? 0})` },
         ]}
       />
       <BottomSheet
@@ -205,6 +215,7 @@ function Detail({ id }: { id: string }) {
         {user.data?.role === "TANIDIK" && (
           <Tabs
             label="Cevap türü"
+            variant="filled"
             value={asTanidik ? "tanidik" : "community"}
             onChange={(value) => setAsTanidik(value === "tanidik")}
             options={[
@@ -213,7 +224,7 @@ function Detail({ id }: { id: string }) {
             ]}
           />
         )}
-        {asTanidik && (
+        {user.data?.role === "TANIDIK" && (
           <View className="flex-row items-center justify-between">
             <Text>Anonim yayımla</Text>
             <Switch
@@ -232,7 +243,7 @@ function Detail({ id }: { id: string }) {
           submit={(value) =>
             questionsApi.answer(
               id,
-              { body: value.body, anonymous: asTanidik && anonymous },
+              { body: value.body, anonymous: user.data?.role === "TANIDIK" && anonymous },
               asTanidik,
             )
           }
@@ -241,83 +252,21 @@ function Detail({ id }: { id: string }) {
             void refreshQuestions(id);
           }}
         />
+        {(asTanidik ? ownTanidik.data?.answer : ownCommunity.data) && <Text variant="muted" accessibilityRole="text">Bu soruda yorumun bulunuyor. Mevcut yorumunu düzenleyebilir veya yeni bir yorum ekleyebilirsin.</Text>}
       </BottomSheet>
-      <BottomSheet
-        visible={report}
-        title="Soruyu bildir"
-        close={() => setReport(false)}
-      >
-        <FeatureForm
-          schema={reportSchema}
-          defaults={{ reason: "" }}
-          fields={[
-            { name: "reason", label: "Bildirim gerekçesi", multiline: true },
-          ]}
-          submit={(value) => questionsApi.report(id, value.reason, false)}
-          onSuccess={() => setReport(false)}
-          label="Bildir"
-        />
-      </BottomSheet>
+
     </View>
   );
-  return tab === "community" ? (
-    <Community
-      id={id}
-      header={header}
-      userId={user.data?.id}
-      question={question}
-    />
-  ) : (
-    <Tanidik
-      id={id}
-      header={header}
-      userId={user.data?.id}
-      question={question}
-    />
-  );
+  return <Answers id={id} tab={tab} header={header} userId={user.data?.id} question={question} />;
 }
-function Community({
-  id,
-  header,
-  userId,
-  question,
-}: {
-  id: string;
-  header: React.ReactElement;
-  userId?: string;
-  question: Schema["QuestionResponse"];
+function Answers({ id, tab, header, userId, question }: {
+  id: string; tab: 'community' | 'tanidik'; header: React.ReactElement; userId?: string; question: Schema['QuestionResponse'];
 }) {
-  const query = useInfiniteQuery(answerList(id));
-  function render({ item }: { item: Schema["AnswerResponse"] }) {
-    return (
-      <AnswerCard
-        answer={item}
-        tanidik={false}
-        userId={userId}
-        question={question}
-      />
-    );
+  const query = useInfiniteQuery({ ...(tab === 'community' ? answerList(id) : tanidikAnswers(id)), placeholderData: keepPreviousData });
+  function render({ item }: { item: Schema['AnswerResponse'] | Schema['AdminAnswerResponse'] }) {
+    return <View pointerEvents={query.isPlaceholderData ? 'none' : 'auto'} accessibilityElementsHidden={query.isPlaceholderData}><AnswerCard key={item.id} answer={item} tanidik={tab === 'tanidik'} userId={userId} question={question} /></View>;
   }
-  return <PagedList query={query} header={header} renderItem={render} />;
-}
-function Tanidik({
-  id,
-  header,
-  userId,
-  question,
-}: {
-  id: string;
-  header: React.ReactElement;
-  userId?: string;
-  question: Schema["QuestionResponse"];
-}) {
-  const query = useInfiniteQuery(tanidikAnswers(id));
-  function render({ item }: { item: Schema["AdminAnswerResponse"] }) {
-    return (
-      <AnswerCard answer={item} tanidik userId={userId} question={question} />
-    );
-  }
-  return <PagedList query={query} header={header} renderItem={render} />;
+  return <PagedList<Schema['AnswerResponse'] | Schema['AdminAnswerResponse']> query={query} header={header} renderItem={render} maintainPosition={false} />;
 }
 function AnswerCard({
   answer,
@@ -342,59 +291,21 @@ function AnswerCard({
     staleTime: 30_000,
     enabled: !!answer.id && !!userId,
   });
-  const owner = isOwn || (!!userId && userId === answer.authorId);
+  const owner = answer.owned || isOwn || (!!userId && userId === answer.authorId);
   const unavailable =
     !!answer.deletedAt || !!answer.moderatedAt || !!question.archivedAt;
   return (
-    <Card>
-      {tanidik && <Badge label="Tanıdık cevabı" />}
-      {question.bestAnswerId === answer.id && <Badge label="En İyi Cevap" />}
-      <Avatar name={answer.authorName || 'Anonim Tanıdık'} educationStatus={answer.educationStatus} tanidik={tanidik || answer.activeAdmin} />
-      <Text variant="label">{answer.authorName || "Anonim Tanıdık"}</Text>
-      <Text variant="muted">{[answer.universityName, answer.departmentName].filter(Boolean).join(' · ')}</Text>
-      {answer.authorId && (
-        <Button
-          label="Profili gör"
-          variant="secondary"
-          onPress={() =>
-            router.push({
-              pathname: "/profiles/[id]",
-              params: { id: answer.authorId! },
-            })
-          }
-        />
-      )}
-      <Text>{answer.body}</Text>
-      <Text variant="muted">{answer.publishedAt ? new Date(answer.publishedAt).toLocaleString('tr-TR') : ''}{answer.editedAt ? ` · Düzenlendi: ${new Date(answer.editedAt).toLocaleString('tr-TR')}` : ''}</Text>
-      <Text variant="muted">
-        {answer.editedAt ? "Düzenlendi · " : ""}
-        {helpful.data?.likeCount ?? answer.likeCount ?? 0} kişi faydalı buldu
-      </Text>
-      <ActionButton
-        label={helpful.data?.liked ? "Faydalı oyunu geri al" : "Faydalı buldum"}
-        disabled={unavailable || owner || !helpful.isSuccess}
-        action={() => questionsApi.helpful(answer.id!, !helpful.data?.liked)}
-        after={() => refreshQuestions(question.id)}
-      />
-      {!userId && <Button label="Faydalı oy vermek için giriş yap" variant="secondary" onPress={() => loginAction(() => undefined)} />}
-      {question.authorId === userId && !unavailable && (
-        <ActionButton
-          label="En İyi Cevap seç"
-          action={() => questionsApi.best(question.id!, answer.id!)}
-          after={() => refreshQuestions(question.id)}
-        />
-      )}
-      <Button
-        label="Alt yorumlar"
-        variant="secondary"
-        onPress={() =>
-          router.push({
-            pathname: "/answers/[id]/comments",
-            params: { id: answer.id! },
-          })
-        }
-      />
+    <Card compact className={question.bestAnswerId === answer.id ? 'border-primary' : ''}>
+      {question.bestAnswerId === answer.id && <Badge label="✓ En iyi cevap" />}
+      <View className="flex-row items-start gap-2">
+      <Pressable accessibilityRole={answer.authorId ? 'link' : undefined} disabled={!answer.authorId} onPress={() => router.push({pathname:'/profiles/[id]',params:{id:answer.authorId!}})} className="min-h-touch-android min-w-0 flex-1 flex-row items-center gap-2">
+        <Avatar size="small" name={answer.authorName || 'Anonim Tanıdık'} educationStatus={answer.educationStatus} tanidik={answer.activeAdmin && !!answer.authorId} />
+        <View className="min-w-0 flex-1"><Text variant="label">{answer.authorName || 'Anonim Tanıdık'}</Text>{!!answer.authorId && <Text variant="muted">{[answer.universityName,answer.departmentName].filter(Boolean).join(' · ')}</Text>}</View>
+      </Pressable>
       <ActionsMenu title="Cevap işlemleri">
+      <ActionButton label="Paylaş" action={() => Share.share({ message: sharePath('sorular', question.id!, question.title) })} />
+      {question.authorId === userId && !unavailable && question.bestAnswerId !== answer.id && <ActionButton label="En iyi cevap seç" action={() => questionsApi.best(question.id!, answer.id!)} after={() => refreshQuestions(question.id)} />}
+
       {owner && (
         <>
           <Button
@@ -406,7 +317,7 @@ function AnswerCard({
               setEditing(true);
             }}
           />
-          <ActionButton
+          <ActionButton size="small"
             label={answer.deletedAt ? "Cevabı geri getir" : "Cevabı kaldır"}
             confirm="Cevabının görünürlüğünü değiştirmek istediğine emin misin?"
             action={() =>
@@ -425,7 +336,6 @@ function AnswerCard({
         variant="secondary"
         onPress={() => loginAction(() => setReporting(true))}
       />
-      </ActionsMenu>
       <BottomSheet
         visible={editing}
         title="Cevabı düzenle"
@@ -434,7 +344,7 @@ function AnswerCard({
         <FeatureForm
           key={String(editSource.version)}
           reload={() => {
-            void (tanidik ? questionsApi.ownTanidikAnswer(question.id!).then(result => result.answer) : questionsApi.ownAnswer(question.id!)).then(latest => { if (latest) setEditSource(latest); });
+            void api.call("get","/api/answers/{id}",{params:{id:answer.id!},authenticated:true}).then(setEditSource);
           }}
           schema={bodySchema}
           defaults={{ body: editSource.body ?? "" }}
@@ -470,6 +380,12 @@ function AnswerCard({
           label="Bildir"
         />
       </BottomSheet>
+      </ActionsMenu></View>
+      <Text className="py-1">{answer.body}</Text>
+      <AnswerDiscussion answerId={answer.id!} userId={userId} unavailable={unavailable}
+        metadata={`${answer.publishedAt ? new Date(answer.publishedAt).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}${answer.editedAt ? ' · düzenlendi' : ''}`}
+        likeAction={<StatAction icon="heart" label="Yorumu faydalı bul" count={helpful.data?.likeCount ?? answer.likeCount ?? 0} selected={helpful.data?.liked} disabled={unavailable || owner || (!!userId && !helpful.isSuccess)} action={async () => { if (!userId) { loginAction(() => undefined); return; } await questionsApi.helpful(answer.id!, !helpful.data?.liked); await refreshQuestions(question.id); }} />}
+      />
     </Card>
   );
 }

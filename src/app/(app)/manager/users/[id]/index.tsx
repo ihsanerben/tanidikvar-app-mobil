@@ -1,1 +1,1 @@
-export { ManagerUserDetailScreen as default } from "@/features/manager/user-detail-screen";
+export { ManagerLegacyRoute as default } from "@/features/manager/manager-shell";

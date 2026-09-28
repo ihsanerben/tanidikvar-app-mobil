@@ -1,5 +1,6 @@
+import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
-import { Switch, View } from "react-native";
+import { View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Controller } from "react-hook-form";
 import { Page } from "@/components/ui/page";
@@ -8,7 +9,7 @@ import { Select } from "@/components/ui/select";
 import { Text } from "@/components/ui/text";
 import { ErrorState, Skeleton } from "@/components/ui/states";
 import { preferences, profileApi } from "./api";
-import { preferenceSchema } from "./schemas";
+import { preferenceSchema, notificationCategories } from "./schemas";
 export function PreferencesScreen() {
   return <Page title="Bildirim tercihleri" backHref="/profil" backLabel="Hesabıma dön"><PreferencesForm /></Page>;
 }
@@ -39,6 +40,7 @@ export function PreferencesForm({ onSaved }: { onSaved?: () => void } = {}) {
             void query.refetch();
           }}
           defaults={{
+            categories: Object.fromEntries(Object.keys(notificationCategories).map(key => [key, p?.categories?.[key] ?? true])) as Record<keyof typeof notificationCategories, boolean>,
             inAppEnabled: p?.inAppEnabled ?? true,
             emailEnabled: p?.emailEnabled ?? true,
             questionRoutingEnabled: p?.questionRoutingEnabled ?? true,
@@ -56,6 +58,14 @@ export function PreferencesForm({ onSaved }: { onSaved?: () => void } = {}) {
           {(form) => (
             <View className="gap-3">
               <Text variant="muted">Hangi gelişmelerden, hangi kanalla haberdar olmak istediğini seç.</Text>
+              <View className="gap-3 rounded-card border border-border bg-account-summary p-3">
+                <Text variant="heading">Bildirim konuları</Text>
+                {(Object.keys(notificationCategories) as (keyof typeof notificationCategories)[]).map(key => <Controller key={key} control={form.control} name={`categories.${key}`}
+                  render={({ field }) => <View className="min-h-touch-android flex-row items-center justify-between gap-3">
+                    <Text className="flex-1">{notificationCategories[key]}</Text>
+                    <Switch accessibilityLabel={notificationCategories[key]} value={field.value} onValueChange={field.onChange} />
+                  </View>} />)}
+              </View>
               {([
                 { title: "Uygulama içi", items: [
                   { name: "inAppEnabled", label: "Uygulama bildirimleri", description: "Hesabın ve katkılarınla ilgili gelişmeleri Bildirimler sayfasında göster." },

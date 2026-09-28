@@ -493,7 +493,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["get_2"];
         put: operations["update_2"];
         post?: never;
         delete?: never;
@@ -542,7 +542,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["get_3"];
         put: operations["update_3"];
         post?: never;
         delete?: never;
@@ -1415,7 +1415,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_2"];
+        get: operations["get_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1561,7 +1561,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_3"];
+        get: operations["get_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1619,6 +1619,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/polls/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_6"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -1627,6 +1643,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/saved/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["saved_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1675,7 +1707,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_4"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1948,7 +1980,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_5"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2102,6 +2134,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/gamification/achievements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["achievementCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/files/{id}/download": {
         parameters: {
             query?: never;
@@ -2118,6 +2166,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/experiences/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experience_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/experience-sentiments": {
         parameters: {
             query?: never;
@@ -2126,6 +2190,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["sentiments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evaluations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2255,7 +2335,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_6"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2496,6 +2576,8 @@ export interface components {
             available?: boolean;
             /** Format: int64 */
             version?: number;
+            /** Format: uuid */
+            programId?: string;
         };
         ProfileResponse: {
             firstName?: string;
@@ -2525,6 +2607,9 @@ export interface components {
             questionRoutingEnabled?: boolean;
             /** Format: int64 */
             version?: number;
+            categories?: {
+                [key: string]: boolean;
+            };
         };
         NotificationPreferenceResponse: {
             inAppEnabled?: boolean;
@@ -2533,6 +2618,9 @@ export interface components {
             questionRoutingEnabled?: boolean;
             /** Format: int64 */
             version?: number;
+            categories?: {
+                [key: string]: boolean;
+            };
         };
         AchievementShowcaseRequest: {
             achievementIds?: string[];
@@ -2946,6 +3034,8 @@ export interface components {
             likeCount?: number;
             /** Format: int64 */
             version?: number;
+            owned?: boolean;
+            anonymous?: boolean;
         };
         AnswerStatusRequest: {
             deleted: boolean;
@@ -2978,6 +3068,8 @@ export interface components {
             createdAt?: string;
             /** Format: int64 */
             version?: number;
+            /** Format: uuid */
+            replyToId?: string;
         };
         AdminAnswerResponse: {
             /** Format: uuid */
@@ -3013,6 +3105,7 @@ export interface components {
             likeCount?: number;
             /** Format: int64 */
             version?: number;
+            owned?: boolean;
         };
         CatalogCreateRequest: {
             name: string;
@@ -3249,6 +3342,8 @@ export interface components {
         };
         AnswerCommentRequest: {
             body: string;
+            /** Format: uuid */
+            replyToId?: string;
         };
         PageResponseUniversityResponse: {
             items?: components["schemas"]["UniversityResponse"][];
@@ -3582,6 +3677,15 @@ export interface components {
             readAt?: string;
             /** Format: int64 */
             version?: number;
+            /** Format: uuid */
+            questionId?: string;
+            /** Format: uuid */
+            answerId?: string;
+            /** Format: uuid */
+            universityId?: string;
+            /** Format: uuid */
+            profileId?: string;
+            metricKey?: string;
         };
         PageResponseNotificationResponse: {
             items?: components["schemas"]["NotificationResponse"][];
@@ -3833,6 +3937,12 @@ export interface components {
             badges?: string[];
             /** Format: date-time */
             lastEventAt?: string;
+        };
+        AchievementDefinitionResponse: {
+            key?: string;
+            title?: string;
+            description?: string;
+            icon?: string;
         };
         PageResponseExperienceResponse: {
             items?: components["schemas"]["ExperienceResponse"][];
@@ -4370,6 +4480,8 @@ export interface operations {
     follows: {
         parameters: {
             query?: {
+                targetType?: string;
+                targetId?: string;
                 page?: number;
                 size?: number;
             };
@@ -4987,6 +5099,28 @@ export interface operations {
             };
         };
     };
+    get_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnswerResponse"];
+                };
+            };
+        };
+    };
     update_2: {
         parameters: {
             query?: never;
@@ -5083,6 +5217,29 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AnswerLikeResponse"];
+                };
+            };
+        };
+    };
+    get_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                answer: string;
+                comment: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnswerCommentResponse"];
                 };
             };
         };
@@ -5221,6 +5378,7 @@ export interface operations {
                 universityId?: string;
                 tagId?: string;
                 departmentId?: string;
+                programId?: string;
                 adminId?: string;
                 city?: string;
                 answered?: boolean;
@@ -6660,7 +6818,7 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -6857,7 +7015,7 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    get_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -6962,6 +7120,28 @@ export interface operations {
             };
         };
     };
+    get_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PollResponse"];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -6982,10 +7162,51 @@ export interface operations {
             };
         };
     };
+    saved_1: {
+        parameters: {
+            query?: {
+                scope?: "GENERAL" | "UNIVERSITY" | "UNIVERSITY_DEPARTMENT";
+                universityId?: string;
+                tagId?: string;
+                departmentId?: string;
+                city?: string;
+                answered?: boolean;
+                verifiedAnswer?: boolean;
+                q?: string;
+                sort?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseQuestionResponse"];
+                };
+            };
+        };
+    };
     mine_4: {
         parameters: {
             query?: {
                 status?: string;
+                scope?: "GENERAL" | "UNIVERSITY" | "UNIVERSITY_DEPARTMENT";
+                universityId?: string;
+                tagId?: string;
+                departmentId?: string;
+                city?: string;
+                answered?: boolean;
+                verifiedAnswer?: boolean;
+                q?: string;
+                sort?: string;
                 page?: number;
                 size?: number;
             };
@@ -7009,6 +7230,8 @@ export interface operations {
     notifications: {
         parameters: {
             query?: {
+                targetType?: string;
+                unread?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -7029,7 +7252,7 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -7076,6 +7299,7 @@ export interface operations {
         parameters: {
             query?: {
                 scope?: "GENERAL" | "UNIVERSITY" | "UNIVERSITY_DEPARTMENT";
+                anonymous?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -7120,6 +7344,7 @@ export interface operations {
         parameters: {
             query?: {
                 scope?: "GENERAL" | "UNIVERSITY" | "UNIVERSITY_DEPARTMENT";
+                anonymous?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -7432,7 +7657,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -7663,6 +7888,26 @@ export interface operations {
             };
         };
     };
+    achievementCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AchievementDefinitionResponse"][];
+                };
+            };
+        };
+    };
     document: {
         parameters: {
             query?: never;
@@ -7681,6 +7926,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                };
+            };
+        };
+    };
+    experience_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExperienceResponse"];
                 };
             };
         };
@@ -7704,6 +7971,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SentimentSummaryResponse"];
+                };
+            };
+        };
+    };
+    get_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EvaluationResponse"];
                 };
             };
         };
@@ -7907,7 +8196,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;

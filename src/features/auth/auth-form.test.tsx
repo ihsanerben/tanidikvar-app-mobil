@@ -11,7 +11,6 @@ import { Text } from "@/components/ui/text";
 jest.mock("expo-network", () => ({ useNetworkState: jest.fn() }));
 jest.mock("expo-router", () => ({ Link: ({ children }: { children: React.ReactNode }) => children }));
 jest.mock("@/components/ui/screen", () => ({ Screen: ({ children }: { children: React.ReactNode }) => children }));
-jest.mock("@/components/ui/app-footer", () => ({ AppFooter: () => null }));
 
 describe("auth design and email link behavior", () => {
   let tree: ReactTestRenderer;

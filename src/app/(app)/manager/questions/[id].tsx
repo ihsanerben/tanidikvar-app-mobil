@@ -1,2 +1,1 @@
-import { ManagerQuestionScreen } from "@/features/manager/question-screen";
-export default ManagerQuestionScreen;
+export { ManagerLegacyRoute as default } from "@/features/manager/manager-shell";

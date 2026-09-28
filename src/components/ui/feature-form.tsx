@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Keyboard, View } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -22,6 +22,7 @@ export function FeatureForm<T extends FieldValues>({
   fields,
   submit,
   onSuccess,
+  onCancel,
   reload,
   children,
   label = "Kaydet",
@@ -37,6 +38,7 @@ export function FeatureForm<T extends FieldValues>({
   }[];
   submit: (values: T) => Promise<unknown>;
   onSuccess?: () => void;
+  onCancel?: () => void;
   reload?: () => void;
   children?: (form: UseFormReturn<T>) => ReactNode;
   label?: string;
@@ -47,17 +49,30 @@ export function FeatureForm<T extends FieldValues>({
     defaultValues: defaults,
   });
   const offline = useOffline();
+  const pendingErrorFocus = useRef<Path<T> | undefined>(undefined);
+  const { setFocus } = form;
   const mutation = useMutation({
     mutationFn: submit,
     retry: 0,
     onSuccess,
     onError: (error) => {
-      if (error instanceof ApiError)
+      if (error instanceof ApiError) {
         for (const name of Object.keys(defaults) as Path<T>[])
           if (error.fieldErrors[name])
             form.setError(name, { message: error.fieldErrors[name] });
+        pendingErrorFocus.current = fields.find(
+          (field) => error.fieldErrors[field.name],
+        )?.name;
+      }
     },
   });
+  useEffect(() => {
+    // Wait until the inputs are editable again before restoring keyboard focus.
+    if (mutation.isPending || !pendingErrorFocus.current) return;
+    const name = pendingErrorFocus.current;
+    pendingErrorFocus.current = undefined;
+    setFocus(name);
+  }, [mutation.isPending, mutation.error, setFocus]);
   return (
     <View className="gap-4">
       {children?.(form)}
@@ -68,6 +83,7 @@ export function FeatureForm<T extends FieldValues>({
           name={item.name}
           render={({ field, fieldState }) => (
             <FormField
+              ref={field.ref}
               label={item.label}
               value={String(field.value ?? "")}
               onChangeText={field.onChange}
@@ -99,6 +115,7 @@ export function FeatureForm<T extends FieldValues>({
       {offline && (
         <Text className="text-warning">Göndermek için internete bağlan.</Text>
       )}
+      <View className="flex-row flex-wrap items-center gap-2">
       <Button
         size="large"
         label={label}
@@ -110,6 +127,8 @@ export function FeatureForm<T extends FieldValues>({
           return mutation.mutateAsync(values).catch(() => undefined);
         })}
       />
+      {onCancel && <Button label="Vazgeç" variant="secondary" disabled={mutation.isPending || form.formState.isSubmitting} onPress={onCancel} />}
+      </View>
     </View>
   );
 }

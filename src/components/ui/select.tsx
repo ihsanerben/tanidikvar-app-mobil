@@ -3,6 +3,7 @@ import { AccessibilityInfo, Platform, Pressable, View } from "react-native";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import { cva } from "class-variance-authority";
 import { BottomSheet, DialogContentContext } from "./bottom-sheet";
+import { SelectionField } from "./selection-field";
 import { Text } from "./text";
 import type { SelectionOption } from "./tabs";
 
@@ -35,7 +36,7 @@ export function Select<T extends string>({ label, value, options, onChange, disa
     setOpen(false);
   };
   const restoreFocus = () => {
-    if (trigger.current) AccessibilityInfo.sendAccessibilityEvent(trigger.current, "focus");
+    if (trigger.current) AccessibilityInfo.sendAccessibilityEvent?.(trigger.current, "focus");
   };
   const renderOption: ListRenderItem<SelectionOption<T>> = ({ item }) => <Pressable
     accessibilityRole="radio" accessibilityLabel={item.label}
@@ -47,13 +48,7 @@ export function Select<T extends string>({ label, value, options, onChange, disa
   </Pressable>;
 
   return <View className="gap-2">
-    <Text variant="muted" className="font-semibold">{label}</Text>
-    <Pressable ref={trigger} accessibilityRole="button" accessibilityLabel={`${label}: ${selected?.label ?? "Seç"}`}
-      accessibilityHint="Seçenekleri açar" accessibilityState={{ disabled, expanded: open }}
-      disabled={disabled} className={control({ platform, disabled })} onPress={() => setOpen(true)}>
-      <Text className="min-w-0 flex-1">{selected?.label ?? "Seç"}</Text>
-      <Text accessible={false} className="text-muted">⌄</Text>
-    </Pressable>
+    <SelectionField label={label} value={selected?.label ?? 'Seç'} onPress={()=>setOpen(true)} disabled={disabled} expanded={open} triggerRef={trigger} />
     {insideDialog ? open && !disabled && <View className="gap-2 rounded-control border border-border p-2">
       <Pressable accessibilityRole="button" accessibilityLabel={`${label} seçeneklerini kapat`}
         className={control({ platform })} onPress={close}><Text>Seçenekleri kapat</Text></Pressable>

@@ -13,4 +13,12 @@ if((process.env.APP_VARIANT ?? 'development') !== 'development') {
 }
 assert(config.extra.eas.projectId,'EAS project must be linked');
 assert.equal(config.runtimeVersion.policy,'fingerprint');
+if (config.extra.linkHost) {
+  const data = config.android.intentFilters.flatMap(filter => filter.data ?? []);
+  for (const path of ['/verify-email','/reset-password','/e-posta-dogrula','/parola-yenile','/karsilastir','/programlar','/populer'])
+    assert(data.some(item => item.path === path), `Missing exact app-link path: ${path}`);
+  assert(data.some(item => item.pathPrefix === '/tanidik/'));
+  assert(data.every(item => item.host === config.extra.linkHost && item.scheme === 'https'));
+  assert(!data.some(item => item.pathPrefix === '/' || (item.path ?? item.pathPrefix ?? '').startsWith('/yonetim')));
+}
 console.log('Native config passed: unused permissions blocked, linked project and fingerprint present. Final merged manifests still require build/device acceptance.');
