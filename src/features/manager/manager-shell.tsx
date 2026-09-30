@@ -17,7 +17,7 @@ export function ManagerLayout() {
   return <SafeAreaView className="flex-1 bg-page p-5" edges={["top", "bottom", "left", "right"]}><Card><Text variant="title">Yönetim paneli</Text><Text>Yönetici işlemleri web panelinden yürütülür.</Text><ActionButton label="Web panelini aç ↗" action={openManagerWebPanel} /><Button label="Ana sayfaya dön" variant="secondary" onPress={() => router.replace("/")} /></Card></SafeAreaView>;
 }
 export function ManagerPage({ title, children }: PropsWithChildren<{ title: string }>) {
-  return <ScrollView className="flex-1" contentContainerClassName="gap-4 px-gutter py-5 pb-10"><Text variant="title" className="text-manager-text">{title}</Text>{children}</ScrollView>;
+  return <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerClassName="gap-4 px-gutter py-5 pb-10"><Text variant="title" className="text-manager-text">{title}</Text>{children}</ScrollView>;
 }
 
 // The parent layout owns every legacy target and only offers web access.

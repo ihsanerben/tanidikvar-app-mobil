@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Keyboard, View } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -16,12 +16,14 @@ import { FormField } from "./form-field";
 import { ErrorState, useOffline } from "./states";
 import { Button } from "./button";
 import { Text } from "./text";
+import { BottomSheet } from "./bottom-sheet";
 export function FeatureForm<T extends FieldValues>({
   schema,
   defaults,
   fields,
   submit,
   onSuccess,
+  confirm,
   onCancel,
   reload,
   children,
@@ -35,9 +37,13 @@ export function FeatureForm<T extends FieldValues>({
     label: string;
     multiline?: boolean;
     numeric?: boolean;
+    hideLabel?: boolean;
+    placeholder?: string;
+    maxLength?: number;
   }[];
   submit: (values: T) => Promise<unknown>;
   onSuccess?: () => void;
+  confirm?: (values: T) => string | undefined;
   onCancel?: () => void;
   reload?: () => void;
   children?: (form: UseFormReturn<T>) => ReactNode;
@@ -49,6 +55,7 @@ export function FeatureForm<T extends FieldValues>({
     defaultValues: defaults,
   });
   const offline = useOffline();
+  const [confirmation, setConfirmation] = useState<{values:T;message:string}>();
   const pendingErrorFocus = useRef<Path<T> | undefined>(undefined);
   const { setFocus } = form;
   const mutation = useMutation({
@@ -90,6 +97,9 @@ export function FeatureForm<T extends FieldValues>({
               onBlur={field.onBlur}
               error={fieldState.error?.message}
               multiline={item.multiline}
+              hideLabel={item.hideLabel}
+              placeholder={item.placeholder}
+              maxLength={item.maxLength}
               keyboardType={item.numeric ? "number-pad" : "default"}
               editable={!mutation.isPending}
               testID={item.name}
@@ -124,9 +134,23 @@ export function FeatureForm<T extends FieldValues>({
         testID={testID}
         onPress={form.handleSubmit((values) => {
           Keyboard.dismiss();
+          const message = confirm?.(values);
+          if (message) { setConfirmation({values, message}); return; }
           return mutation.mutateAsync(values).catch(() => undefined);
         })}
       />
+      <BottomSheet visible={!!confirmation} title="Tanıdık statün etkilenecek" close={() => setConfirmation(undefined)}>
+        <Text>{confirmation?.message}</Text>
+        <View className="flex-row flex-wrap gap-2">
+          <Button label="Vazgeç" variant="secondary" onPress={() => setConfirmation(undefined)} />
+          <Button label="Değişikliği kaydet" variant="danger" disabled={offline || mutation.isPending} onPress={() => {
+            if (!confirmation) return;
+            const values = confirmation.values;
+            setConfirmation(undefined);
+            mutation.mutate(values);
+          }} />
+        </View>
+      </BottomSheet>
       {onCancel && <Button label="Vazgeç" variant="secondary" disabled={mutation.isPending || form.formState.isSubmitting} onPress={onCancel} />}
       </View>
     </View>

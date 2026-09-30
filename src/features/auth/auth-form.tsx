@@ -42,7 +42,7 @@ export function AuthForm<T extends FieldValues>({ title, eyebrow, description, s
     <Screen>
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* A short, bounded form scrolls for the keyboard and large accessibility fonts; this is not a data list. */}
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="gap-4 pb-8 pt-2">
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerClassName="gap-4 pb-8 pt-2">
           <View className={surface ? 'gap-4 rounded-surface border border-border bg-surface px-dialog-x py-account-inset' : 'gap-4'}>
           {eyebrow && <Text variant="unstyled" className="text-metadata font-semibold uppercase tracking-widest text-muted">{eyebrow}</Text>}
           <Text variant="title">{title}</Text>

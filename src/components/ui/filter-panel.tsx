@@ -18,14 +18,14 @@ export function FilterPanel({ visible, title, close, children }: PropsWithChildr
   const options = selection?.options.filter(option => option.label.toLocaleLowerCase('tr').includes(search.toLocaleLowerCase('tr'))) ?? [];
   return <BottomSheet visible={visible} title={selection?.label ?? title} scroll={false} close={() => { if (selection) back(); else close(); }}>
     <FilterSelectionContext.Provider value={value => { setSearch(''); setSelection(value); }}>
-      <ScrollView className={selection ? 'hidden' : 'shrink'} keyboardShouldPersistTaps="handled" contentContainerClassName="gap-2">
+      <ScrollView showsVerticalScrollIndicator={false} className={selection ? 'hidden' : 'shrink'} keyboardShouldPersistTaps="handled" contentContainerClassName="gap-2">
         {children}
       </ScrollView>
       {selection && <View className="gap-2">
         <Button label="‹ Filtrelere dön" variant="secondary" size="small" onPress={back} />
         {selection.options.length > 8 && <FormField label={`${selection.label} ara`} hideLabel compact placeholder="Ara" value={search} onChangeText={setSearch} />}
         <View className="h-select-list" accessibilityRole="radiogroup" accessibilityLabel={selection.label}>
-          <FlashList data={options} keyExtractor={item => item.value} extraData={selection.value}
+          <FlashList showsVerticalScrollIndicator={false} data={options} keyExtractor={item => item.value} extraData={selection.value}
             keyboardShouldPersistTaps="handled"
             ListEmptyComponent={<Text variant="muted">Sonuç bulunamadı.</Text>}
             renderItem={({ item }) => <Pressable accessibilityRole="radio" accessibilityLabel={item.label} accessibilityState={{ checked: item.value === selection.value }}

@@ -20,6 +20,6 @@ export function PaletteGuide({visible,close}: {visible:boolean;close:()=>void}) 
     ].map(scope=><View key={scope.label} className={`rounded-control px-2 py-1.5 ${scope.surface}`}><Text variant="unstyled" className={`text-compact-badge font-bold ${scope.tone}`}>● {scope.label}</Text></View>)}</View>
     <Text variant="muted" className="font-semibold">3 — Tanıdık rozeti</Text>
     <View className="flex-row items-center gap-3 rounded-card border border-gold bg-scope-general/40 p-3"><Avatar name="M" educationStatus="MEZUN" tanidik size="small" /><Text className="min-w-0 flex-1 text-caption text-scope-general-text">Altın çerçeve ve yıldızlar, sistemdeki Tanıdık gösterimidir.</Text></View>
-    <Button fullWidth label="Anladım, devam et" onPress={close} />
+    <Button fullWidth size="large" label="Anladım, devam et" onPress={close} />
   </BottomSheet>;
 }

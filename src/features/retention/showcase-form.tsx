@@ -1,31 +1,27 @@
-import {AchievementMedallion} from "./achievement-medallion";
-import type { ReactElement } from "react";
-import { Keyboard, Platform, Pressable, View } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { FlashList, type ListRenderItem } from "@shopify/flash-list";
-import { cva } from "class-variance-authority";
-import { Button } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
-import { ErrorState, useOffline } from "@/components/ui/states";
-import type { Schema } from "@/lib/api/types";
-import { retentionKeys, setShowcase } from "./api";
-import { showcaseSchema } from "./schemas";
+import { AchievementMedallion } from './achievement-medallion';
+import { groupAchievementEntries } from './achievement-groups';
+import type { ReactElement } from 'react';
+import { Keyboard, Pressable, View } from 'react-native';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FlashList, type ListRenderItem } from '@shopify/flash-list';
+import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import { ErrorState, useOffline } from '@/components/ui/states';
+import type { Schema } from '@/lib/api/types';
+import { retentionKeys, setShowcase } from './api';
+import { showcaseSchema } from './schemas';
 
-const row = cva("flex-row items-center gap-3 rounded-control border border-border bg-surface px-3 py-2", {
-  variants: {
-    platform: { ios: "min-h-touch-ios", android: "min-h-touch-android" },
-    disabled: { true: "opacity-50", false: "active:opacity-80" },
-  },
-});
-const check = cva("h-5 w-5 items-center justify-center rounded border", {
-  variants: { checked: { true: "border-primary bg-primary", false: "border-secondary-border bg-surface" } },
-});
+type Achievement = Schema['AchievementResponse'];
+type Definition = Schema['AchievementDefinitionResponse'];
+type Entry = { achievement?: Achievement; definition: Definition };
+type Group = { title: string; items: Entry[] };
+
 export function ShowcaseForm({ id, items, header, refreshing, refresh, onSaved, onChange, catalog=[] }: {
-  catalog?: Schema["AchievementDefinitionResponse"][];
+  catalog?: Definition[];
   id: string;
-  items: Schema["AchievementResponse"][];
+  items: Achievement[];
   header: ReactElement;
   refreshing: boolean;
   refresh: () => void;
@@ -36,7 +32,7 @@ export function ShowcaseForm({ id, items, header, refreshing, refresh, onSaved, 
   const offline = useOffline();
   const form = useForm({ resolver: zodResolver(showcaseSchema),
     defaultValues: { achievementIds: items.filter(item => item.featured && item.id).map(item => item.id!) } });
-  const selected = useWatch({ control: form.control, name: "achievementIds" });
+  const selected = useWatch({ control: form.control, name: 'achievementIds' });
   const save = useMutation({ mutationFn: (achievementIds: string[]) => setShowcase(achievementIds), retry: 0,
     onSuccess: async () => {
       onSaved();
@@ -45,39 +41,52 @@ export function ShowcaseForm({ id, items, header, refreshing, refresh, onSaved, 
         client.invalidateQueries({ queryKey: retentionKeys.score(id) }),
       ]);
     } });
-  const renderOption: ListRenderItem<Schema["AchievementResponse"]> = ({ item }) => {
-    const checked = !!item.id && selected.includes(item.id);
-    const disabled = offline || save.isPending || !item.id || (!checked && selected.length >= 3);
-    return <View className="flex-row items-center gap-3 rounded-card border border-border bg-surface p-3"><AchievementMedallion achievement={item} definition={catalog.find(d=>d.key===item.key)}/><Pressable accessibilityRole="checkbox"
-      accessibilityLabel={`${item.title ?? "Rozet"}${item.periodYear ? ` · ${item.periodYear}` : ""}`}
-      accessibilityState={{ checked, disabled }} disabled={disabled}
-      className={row({ platform: Platform.OS === "android" ? "android" : "ios", disabled })}
-      onPress={() => {
-        onChange(); save.reset();
-        form.setValue("achievementIds", checked ? selected.filter(value => value !== item.id) : [...selected, item.id!], { shouldValidate: true, shouldDirty: true });
-      }}>
-      <View accessible={false} className={check({ checked })}>
-        {checked && <Text variant="unstyled" className="text-metadata text-primary-foreground">✓</Text>}
-      </View>
-      <Text variant="unstyled" className="min-w-0 flex-1">{item.title}{item.periodYear ? ` · ${item.periodYear}` : ""}</Text>
-    </Pressable></View>;
-  };
-  return <FlashList data={items} extraData={{ selected, disabled: offline || save.isPending }}
-    renderItem={renderOption} keyExtractor={item => item.id!} ItemSeparatorComponent={Separator}
+
+  const entries: Entry[] = catalog.flatMap(definition => {
+    const earned = items.filter(item => item.key === definition.key);
+    return earned.length ? earned.map(achievement => ({ definition, achievement })) : [{ definition }];
+  });
+  for (const achievement of items.filter(item => !catalog.some(definition => definition.key === item.key))) {
+    entries.push({ achievement, definition: { key: achievement.key ?? achievement.id ?? 'OTHER', title: achievement.title ?? 'Rozet', description: 'Topluluğa yaptığın katkılar için kazanılan başarı rozeti.', icon: '★' } });
+  }
+  const groups = groupAchievementEntries(entries);
+  const renderGroup: ListRenderItem<Group> = ({ item: group }) => <View className="gap-3">
+    <Text variant="heading">{group.title}</Text>
+    <View className="flex-row flex-wrap">{group.items.map(({ definition, achievement }) => {
+      const checked = !!achievement?.id && selected.includes(achievement.id);
+      const disabled = offline || save.isPending || !achievement?.id || (!checked && selected.length >= 3);
+      return <View key={achievement?.id ?? definition.key} className="w-1/3 px-1 pb-2">
+        <View className={`flex-1 items-center gap-2 rounded-card border border-border p-2 ${achievement ? 'bg-surface' : 'bg-subtle'}`}>
+          <AchievementMedallion achievement={achievement} definition={definition} compact/>
+          <Text className="text-center text-caption font-semibold text-primary" numberOfLines={3}>{achievement?.title ?? definition.title}{achievement?.periodYear ? ` · ${achievement.periodYear}` : ''}</Text>
+          {achievement ? <Pressable accessibilityRole="checkbox" accessibilityLabel={`${achievement.title ?? 'Rozet'}${achievement.periodYear ? ` · ${achievement.periodYear}` : ''}`}
+            accessibilityState={{ checked, disabled }} disabled={disabled}
+            className={`min-h-touch-ios android:min-h-touch-android w-full items-center justify-center rounded-control border px-1 ${checked ? 'border-primary bg-primary' : 'border-secondary-border bg-surface'}`}
+            onPress={() => {
+              onChange(); save.reset();
+              form.setValue('achievementIds', checked ? selected.filter(value => value !== achievement.id) : [...selected, achievement.id!], { shouldValidate: true, shouldDirty: true });
+            }}><Text className={`text-center text-caption ${checked ? 'text-primary-foreground' : 'text-primary'}`}>{checked ? 'Seçili' : 'Seç'}</Text></Pressable>
+            : <Text variant="muted" className="text-center text-caption">Kilitli</Text>}
+        </View>
+      </View>;
+    })}</View>
+  </View>;
+
+  return <FlashList showsVerticalScrollIndicator={false} data={groups} extraData={{ selected, disabled: offline || save.isPending }}
+    renderItem={renderGroup} keyExtractor={group => group.title} ItemSeparatorComponent={Separator}
     refreshing={refreshing} onRefresh={refresh}
     ListHeaderComponent={<View className="gap-3 pb-4">{header}
-      <Text>Profilinde göstermek için en fazla üç rozet seç.</Text>
-      <Text variant="muted" accessibilityLiveRegion="polite">{selected.length}/3 rozet seçili</Text>
-    </View>}
-    ListFooterComponent={<View className="gap-3 pt-4">
-      {catalog.filter(d=>!items.some(item=>item.key===d.key)).map(definition=><View key={definition.key} className="flex-row items-center gap-3 rounded-card border border-border bg-surface p-3"><AchievementMedallion definition={definition}/><View className="min-w-0 flex-1 gap-1"><Text variant="label">{definition.title}</Text><Text variant="muted">{definition.description}</Text><Text variant="muted">Kilitli</Text></View></View>)}
-      {form.formState.errors.achievementIds && <Text accessibilityRole="alert" className="text-danger">{form.formState.errors.achievementIds.message}</Text>}
-      {save.isError && <ErrorState error={save.error} />}
-      {offline && <Text variant="unstyled" className="text-warning">Göndermek için internete bağlan.</Text>}
-      <Button label="Vitrini kaydet" testID="showcase-submit" pending={save.isPending}
-        disabled={offline || form.formState.isSubmitting}
-        onPress={form.handleSubmit(values => { Keyboard.dismiss(); return save.mutateAsync(values.achievementIds).catch(() => undefined); })} />
-
+      <Text>Benzer rozetler aynı grupta, üçlü sıralar halinde gösterilir.</Text>
+      <View className="gap-3 rounded-card border border-border bg-account-summary p-4">
+        <Text variant="muted" accessibilityLiveRegion="polite">{selected.length}/3 rozet seçili · En fazla üç rozeti profilinde göster.</Text>
+        {form.formState.errors.achievementIds && <Text accessibilityRole="alert" className="text-danger">{form.formState.errors.achievementIds.message}</Text>}
+        {save.isError && <ErrorState error={save.error} />}
+        {offline && <Text variant="unstyled" className="text-warning">Göndermek için internete bağlan.</Text>}
+        <Button label="Vitrini kaydet" testID="showcase-submit" pending={save.isPending}
+          disabled={offline || form.formState.isSubmitting}
+          onPress={form.handleSubmit(values => { Keyboard.dismiss(); return save.mutateAsync(values.achievementIds).catch(() => undefined); })} />
+      </View>
     </View>} />;
 }
+
 function Separator() { return <View className="h-list-gap" />; }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, router } from "expo-router";
 import { useForm, Controller, useWatch } from "react-hook-form";
@@ -35,17 +35,17 @@ function Explorer({ filters }: { filters: z.infer<typeof catalogParams> }) {
     defaultValues: {...filters,year:filters.year || String(new Date().getFullYear())},
   });
   const universityId = useWatch({ control: form.control, name: 'universityId' });
-  const cities = useQuery({ ...catalogCities(), enabled: open && filters.kind === "universities" });
-  const cityNames = Array.from(new Set([filters.city, ...(cities.data ?? []).map(item => item.label)].filter((value): value is string => !!value))).sort((a, b) => a.localeCompare(b, 'tr'));
+  const cities = useQuery({ ...catalogCities(), enabled: open });
+  const cityNames = Array.from(new Set([filters.city, ...(cities.data ?? []).map(item => item.label)].filter((value): value is string => !!value && value !== "Belirtilmemiş"))).sort((a, b) => a.localeCompare(b, 'tr'));
   const header = (
     <View className="gap-4 pb-5">
-      <PageHeader title={filters.kind === "programs" ? "Programlar" : "Üniversiteler"} back={false} />
+      <PageHeader title={filters.kind === "programs" ? "Programlar" : "Üniversiteler"} back={false} help={filters.kind === 'programs' ? 'Programları ad, üniversite, şehir ve puan türüne göre arayabilirsin.' : 'Üniversiteleri ad, şehir ve kurum türüne göre arayabilirsin.'} />
       <View className="flex-row items-center gap-1.5"><View className="min-w-0 flex-1"><Controller
         control={form.control}
         name="q"
         render={({ field, fieldState }) => (
           <FormField
-            hideLabel
+            compact hideLabel
             placeholder={filters.kind === "programs" ? "Program ara" : "Üniversite ara"}
             label={filters.kind === "programs" ? "Program ara" : "Üniversite ara"}
             value={field.value}
@@ -69,19 +69,22 @@ function Explorer({ filters }: { filters: z.infer<typeof catalogParams> }) {
           <FilterCell><Controller control={form.control} name="universityName" render={({ field }) => <FormField compact label="Üniversite adı" placeholder="Üniversite ara" value={field.value} onChangeText={field.onChange} />} /></FilterCell>
         </FilterRow>}
         <FilterRow>
-          <FilterCell><Controller control={form.control} name="city" render={({ field }) => filters.kind === 'programs' ? <FormField compact label="Şehir" value={field.value} onChangeText={field.onChange} /> : <FilterSelect label="Şehir" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tüm şehirler' }, ...cityNames.map(value => ({ value, label: value }))]} />} /></FilterCell>
-          <FilterCell><Controller control={form.control} name="institutionType" render={({ field }) => <FilterSelect label={filters.kind === 'programs' ? 'Kurum' : 'Kurum türü'} value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'DEVLET', label: 'Devlet' }, { value: 'VAKIF', label: 'Vakıf' }, { value: 'KKTC', label: 'KKTC' }, { value: 'YURT_DISI', label: 'Yurt dışı' }]} />} /></FilterCell>
+          <FilterCell><Controller control={form.control} name="city" render={({ field }) => <FilterSelect label="Şehir" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tüm şehirler' }, ...cityNames.map(value => ({ value, label: value }))]} />} /></FilterCell>
+          {filters.kind === 'universities' && <><FilterCell><Controller control={form.control} name="institutionType" render={({ field }) => <FilterSelect label={filters.kind === 'programs' ? 'Kurum' : 'Kurum türü'} value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'DEVLET', label: 'Devlet' }, { value: 'VAKIF', label: 'Vakıf' }, { value: 'KKTC', label: 'KKTC' }, { value: 'YURT_DISI', label: 'Yurt dışı' }]} />} /></FilterCell></>}
         </FilterRow>
-        {filters.kind === 'universities' && cities.isError && <ErrorState error={cities.error} retry={() => { void cities.refetch(); }} />}
+        {cities.isError && <ErrorState error={cities.error} retry={() => { void cities.refetch(); }} />}
         {filters.kind === 'programs' && <>
-          <FilterRow>
-            <FilterCell><Controller control={form.control} name="degreeLevel" render={({ field }) => <FilterSelect label="Düzey" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'LISANS', label: 'Lisans' }, { value: 'ONLISANS', label: 'Ön lisans' }]} />} /></FilterCell>
-            <FilterCell><Controller control={form.control} name="scoreType" render={({ field }) => <FilterSelect label="Puan türü" value={field.value} onChange={field.onChange} options={['', 'TYT', 'SAY', 'EA', 'SÖZ', 'DİL'].map(value => ({ value, label: value || 'Tümü' }))} />} /></FilterCell>
-          </FilterRow>
-          <FilterRow>
-            <FilterCell><Controller control={form.control} name="year" render={({ field }) => <FilterSelect label="Yıl" value={field.value} onChange={field.onChange} options={[...Array.from({ length: 12 }, (_, index) => { const value = String(new Date().getFullYear() - index); return { value, label: value }; })]} />} /></FilterCell>
-            <FilterCell><View className="rounded-control bg-primary-soft p-1"><Controller control={form.control} name="sort" render={({ field }) => <FilterSelect label="Sırala" value={field.value} onChange={field.onChange} options={[{ value: 'RANK', label: 'Başarı sırasına göre' }, { value: 'NAME', label: 'Ada göre' }, { value: 'SCORE', label: 'Taban puana göre' }, { value: 'QUOTA', label: 'Kontenjana göre' }]} />} /></View></FilterCell>
-          </FilterRow>
+          <ScrollView showsVerticalScrollIndicator={false} horizontal showsHorizontalScrollIndicator={false}><View className="flex-row items-end gap-2 pb-1">
+          <View className="w-20"><Controller control={form.control} name="institutionType" render={({ field }) => <FilterSelect label={filters.kind === 'programs' ? 'Kurum' : 'Kurum türü'} value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'DEVLET', label: 'Devlet' }, { value: 'VAKIF', label: 'Vakıf' }, { value: 'KKTC', label: 'KKTC' }, { value: 'YURT_DISI', label: 'Yurt dışı' }]} />} /></View>
+
+            <View className="w-20"><Controller control={form.control} name="degreeLevel" render={({ field }) => <FilterSelect label="Düzey" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'LISANS', label: 'Lisans' }, { value: 'ONLISANS', label: 'Ön lisans' }]} />} /></View>
+            <View className="w-20"><Controller control={form.control} name="scoreType" render={({ field }) => <FilterSelect label="Puan türü" value={field.value} onChange={field.onChange} options={['', 'TYT', 'SAY', 'EA', 'SÖZ', 'DİL'].map(value => ({ value, label: value || 'Tümü' }))} />} /></View>
+
+
+            <View className="w-20"><Controller control={form.control} name="year" render={({ field }) => <FilterSelect label="Yıl" value={field.value} onChange={field.onChange} options={[...Array.from({ length: 12 }, (_, index) => { const value = String(new Date().getFullYear() - index); return { value, label: value }; })]} />} /></View>
+            <View className="w-36"><Controller control={form.control} name="sort" render={({ field }) => <FilterSelect label="Sırala" value={field.value} onChange={field.onChange} options={[{ value: 'RANK', label: 'Başarı sırasına göre' }, { value: 'NAME', label: 'Ada göre' }, { value: 'SCORE', label: 'Taban puana göre' }, { value: 'QUOTA', label: 'Kontenjana göre' }]} />} /></View>
+
+          </View></ScrollView>
           {universityId && <Button label="Üniversite seçimini kaldır" variant="secondary" onPress={() => form.setValue('universityId', undefined)} />}
           {advanced && <View className="gap-2 rounded-control border border-border bg-account-summary p-2">
             {([['rankFrom', 'rankTo'], ['scoreFrom', 'scoreTo']] as const).map(([from, to]) => <FilterRow key={from}>
@@ -92,7 +95,7 @@ function Explorer({ filters }: { filters: z.infer<typeof catalogParams> }) {
         <View className="flex-row items-center justify-end gap-2">
           {filters.kind === 'programs' && <Button label={advanced ? '… Kapat' : '…'} variant="secondary" onPress={() => setAdvanced(value => !value)} />}
           <Button label="Filtrele" onPress={form.handleSubmit(values => { router.setParams(values); setOpen(false); }, () => setAdvanced(true))} />
-          <Button label="Temizle" variant="secondary" onPress={() => { router.replace({ pathname: '/kesfet', params: { kind: filters.kind } }); setOpen(false); }} />
+          <Button label="Temizle" variant="secondary" onPress={() => { form.reset({ ...catalogParams.parse({ kind: filters.kind }), year: String(new Date().getFullYear()), universityId: undefined }); setAdvanced(false); router.replace({ pathname: '/kesfet', params: { kind: filters.kind } }); setOpen(false); }} />
         </View>
       </FilterPanel>
     </View>
@@ -116,7 +119,7 @@ function Universities({
 }) {
   const query = useInfiniteQuery(universityList(filters));
   return (
-    <PagedList query={query} renderItem={UniversityCard} header={<View>{header}{query.data && <Text variant="muted" className="pb-3">{query.data.pages[0]?.totalElements?.toLocaleString("tr-TR") ?? "—"} sonuç</Text>}</View>} />
+    <PagedList query={query} numColumns={2} renderItem={({item}) => <View className="min-w-0 flex-1 px-1 pb-2"><UniversityCard item={item}/></View>} header={<View>{header}{query.data && <Text variant="muted" className="pb-3">{query.data.pages[0]?.totalElements?.toLocaleString("tr-TR") ?? "—"} sonuç</Text>}</View>} />
   );
 }
 function Programs({
@@ -127,5 +130,5 @@ function Programs({
   header: React.ReactElement;
 }) {
   const query = useInfiniteQuery(programList(filters));
-  return <PagedList query={query} renderItem={({ item }) => <ProgramCard item={item} year={filters.year || undefined} />} header={<View>{header}{query.data && <Text variant="muted" className="pb-3">{query.data.pages[0]?.totalElements?.toLocaleString("tr-TR") ?? "—"} sonuç</Text>}</View>} />;
+  return <PagedList query={query} numColumns={3} renderItem={({ item }) => <View className="flex-1 px-0.5 pb-1"><ProgramCard item={item} year={filters.year || undefined} tile /></View>} header={<View>{header}{query.data && <Text variant="muted" className="pb-3">{query.data.pages[0]?.totalElements?.toLocaleString("tr-TR") ?? "—"} sonuç</Text>}</View>} />;
 }

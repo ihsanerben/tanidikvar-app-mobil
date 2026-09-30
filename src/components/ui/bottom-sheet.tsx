@@ -56,7 +56,7 @@ export function BottomSheet({
               <View className="absolute -right-1 -top-2"><CloseButton onPress={close} /></View>
             </View>
             <DialogContentContext.Provider value={true}>
-            {scroll ? <ScrollView className="shrink" keyboardShouldPersistTaps="handled" contentContainerClassName={placement === "menu" ? "gap-1" : "gap-3"}>{children}</ScrollView> : children}
+            {scroll ? <ScrollView showsVerticalScrollIndicator={false} className="shrink" keyboardShouldPersistTaps="handled" contentContainerClassName={placement === "menu" ? "gap-1" : "gap-3"}>{children}</ScrollView> : children}
             </DialogContentContext.Provider>
           </View>
         </View>

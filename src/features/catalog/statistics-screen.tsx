@@ -22,23 +22,19 @@ export function StatisticsScreen() {
     { value: "placed", label: "En çok öğrenci yerleşen 10 üniversite", items: data?.universitiesByPlaced },
     { value: "programs", label: "En fazla programı olan 10 üniversite", items: data?.universitiesByProgramCount },
   ];
-  return <Page title="Yükseköğretim istatistikleri" back={false} eyebrow="Türkiye program kataloğu" refresh={() => void query.refetch()} refreshing={query.isRefetching}>
-    <Text>Üniversiteleri, programları ve son yıllardaki yerleşme verilerini tek yerde incele.</Text>
+  return <Page compact title="Yükseköğretim istatistikleri" back={false} help="Üniversite ve program sayılarını, kontenjanları, yerleşen öğrenci sayılarını ve yıllara göre değişimleri inceleyebilirsin. Grafiklerdeki veriler YÖK Atlas kataloğundan alınır." refresh={() => void query.refetch()} refreshing={query.isRefetching}>
+    <Text className="text-caption">Üniversiteleri, programları ve son yıllardaki yerleşme verilerini tek yerde incele.</Text>
     {query.isPending ? <Skeleton /> : query.isError && !data ? <ErrorState error={query.error} retry={() => void query.refetch()} /> : data && <>
-      <View className="gap-2"><View className="flex-row gap-2">
-        <Metric label="Üniversite" value={data.universityCount} /><Metric label="Program" value={data.programCount} />
-      </View><View className="flex-row gap-2"><Metric label="Yerleştirme seçeneği" value={data.optionCount} /><Metric label="Başarı sırası bulunan" value={data.rankedOptionCount} /></View>
-      </View>
-      <Text variant="heading">Türkiye kataloğunu keşfet</Text>
-      <Text variant="muted">Bir görünüm seç; sonuçlar YÖK katalog ve yerleşen verilerinden hesaplanır.</Text>
-      <Tabs variant="pills" label="Görünüm" value={selected} options={datasets.map(item => ({ value: item.value, label: item.label }))} onChange={setSelected} />
-      <Distribution key={selected} donut title={datasets.find(item => item.value === selected)?.label ?? datasets[0].label} items={datasets.find(item => item.value === selected)?.items} />
-      <Distribution title="Üniversite türleri" items={data.institutionTypes} />
-      <Distribution title="Program düzeyleri" items={data.degreeLevels} />
-      <Distribution title="Puan türleri" items={data.scoreTypes} />
-      <Distribution title="En çok üniversite bulunan şehirler" items={data.cities} onItem={city => router.push({ pathname: "/city/[city]", params: { city } })} />
-      <Text variant="heading">Yıllara göre görünüm</Text>
-      <DataTable label="Yıllara göre kontenjan ve yerleşme istatistikleri" columns={["Yıl", "Seçenek", "Kontenjan", "Yerleşen", "Doluluk", "Tercih"]} rows={[...(data.yearly ?? [])].sort((a,b) => (b.year ?? 0) - (a.year ?? 0)).map(row => [row.year == null ? undefined : String(row.year), row.programCount, row.quota, row.placed, row.fillRate == null ? "—" : `%${row.fillRate.toLocaleString("tr-TR", {maximumFractionDigits: 2})}`, row.preferences])} />
+      <View className="flex-row gap-1"><Metric compact label="Üniversite" value={data.universityCount} /><Metric compact label="Program" value={data.programCount} /><Metric compact label="Seçenek" value={data.optionCount} /><Metric compact label="Sıralı" value={data.rankedOptionCount} /></View>
+      <Text variant="label">Türkiye kataloğunu keşfet</Text>
+      <Text variant="muted" className="text-caption">Bir görünüm seç; sonuçlar YÖK katalog ve yerleşen verilerinden hesaplanır.</Text>
+      <Tabs compact variant="pills" label="Görünüm" value={selected} options={datasets.map(item => ({ value: item.value, label: item.label }))} onChange={setSelected} />
+      <Distribution compact key={selected} donut title={datasets.find(item => item.value === selected)?.label ?? datasets[0].label} items={datasets.find(item => item.value === selected)?.items} />
+      <View className="flex-row items-start gap-2"><View className="min-w-0 flex-1"><Distribution compact title="Üniversite türleri" items={data.institutionTypes} /></View><View className="min-w-0 flex-1"><Distribution compact title="Program düzeyleri" items={data.degreeLevels} /></View></View>
+      <Distribution compact columns={2} title="Puan türleri" items={data.scoreTypes} />
+      <Distribution compact columns={2} title="En çok üniversite bulunan şehirler" items={data.cities} onItem={city => router.push({ pathname: "/city/[city]", params: { city } })} />
+      <Text variant="label">Yıllara göre görünüm</Text>
+      <DataTable compact label="Yıllara göre kontenjan ve yerleşme istatistikleri" columns={["Yıl", "Seçenek", "Kontenjan", "Yerleşen", "Doluluk", "Tercih"]} rows={[...(data.yearly ?? [])].sort((a,b) => (b.year ?? 0) - (a.year ?? 0)).map(row => [row.year == null ? undefined : String(row.year), row.programCount, row.quota, row.placed, row.fillRate == null ? "—" : `%${row.fillRate.toLocaleString("tr-TR", {maximumFractionDigits: 2})}`, row.preferences])} />
       <Text variant="muted">Kaynak: Resmî YÖK Atlas katalog ve yerleşme verileri{data.lastSynchronizedAt ? ` · Son aktarım ${new Date(data.lastSynchronizedAt).toLocaleDateString("tr-TR")}` : ""}.</Text>
     </>}
   </Page>;

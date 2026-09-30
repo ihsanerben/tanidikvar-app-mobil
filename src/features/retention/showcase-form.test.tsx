@@ -15,7 +15,7 @@ jest.mock("@shopify/flash-list", () => ({
   }) => {
     const React = jest.requireActual<typeof import("react")>("react");
     return React.createElement(React.Fragment, null, ListHeaderComponent,
-      data.map((item, index) => React.createElement(React.Fragment, { key: item.id }, renderItem({ item, index }))), ListFooterComponent);
+      data.map((item, index) => React.createElement(React.Fragment, { key: item.id ?? item.title ?? index }, renderItem({ item, index }))), ListFooterComponent);
   },
 }));
 const items: Schema["AchievementResponse"][] = [1, 2, 3, 4].map(n => ({

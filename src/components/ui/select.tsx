@@ -53,11 +53,11 @@ export function Select<T extends string>({ label, value, options, onChange, disa
       <Pressable accessibilityRole="button" accessibilityLabel={`${label} seçeneklerini kapat`}
         className={control({ platform })} onPress={close}><Text>Seçenekleri kapat</Text></Pressable>
       <View accessibilityRole="radiogroup" accessibilityLabel={label} className="h-select-list">
-        <FlashList data={options} keyExtractor={item => item.value} renderItem={renderOption} extraData={value} />
+        <FlashList showsVerticalScrollIndicator={false} data={options} keyExtractor={item => item.value} renderItem={renderOption} extraData={value} />
       </View>
     </View> : <BottomSheet visible={open && !disabled} title={label} close={close} scroll={false} onDismiss={restoreFocus}>
       <View accessibilityRole="radiogroup" accessibilityLabel={label} className="h-select-list">
-        <FlashList data={options} keyExtractor={item => item.value} renderItem={renderOption}
+        <FlashList showsVerticalScrollIndicator={false} data={options} keyExtractor={item => item.value} renderItem={renderOption}
           extraData={value} />
       </View>
     </BottomSheet>}

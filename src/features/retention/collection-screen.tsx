@@ -41,7 +41,7 @@ function SavedQuestions() {
   return <SavedQuestionList key={JSON.stringify(parsed.data)} filters={parsed.data}/>;
 }
 function SavedQuestionList({filters}:{filters:ReturnType<typeof questionParams.parse>}) {
- const query=useInfiniteQuery({queryKey:["retention","saved","list","questions",filters],initialPageParam:0,staleTime:30_000,queryFn:({pageParam,signal})=>api.call("get","/api/me/saved/questions",{authenticated:true,signal,query:{...filters,scope:filters.scope||undefined,answered:filters.answered?filters.answered==="true":undefined,verifiedAnswer:filters.verifiedAnswer?filters.verifiedAnswer==="true":undefined,page:pageParam,size:20}}),getNextPageParam:nextPage});
+ const query=useInfiniteQuery({queryKey:["retention","saved","list","questions",filters],initialPageParam:0,staleTime:30_000,queryFn:({pageParam,signal})=>api.call("get","/api/me/saved/questions",{authenticated:true,signal,query:{...filters,scope:filters.scope||undefined,page:pageParam,size:20}}),getNextPageParam:nextPage});
  return <PagedList query={query} renderItem={QuestionCard} header={<View className="gap-4 pb-5"><PageHeader title="Kaydedilenler" backHref="/profil" backLabel="Hesabıma dön"/><QuestionFilters filters={filters} onApply={values=>router.setParams(values)}/></View>}/>;
 }
 function CollectionList({ kind,targetType }: { kind: CollectionKind;targetType:"UNIVERSITY"|"PROGRAM" }) {

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Metric } from '@/components/ui/metric';
 import { ContextInsights } from './context-insights';
 
+jest.mock('@/lib/monitoring/report-api-error', () => ({ reportApiError: jest.fn() }));
 jest.mock('@/lib/auth/token-manager', () => ({ tokenManager: {} }));
 jest.mock('@/lib/api/client', () => ({ api: { call: jest.fn() } }));
 jest.mock('@/features/auth/use-current-user', () => ({ useCurrentUser: () => ({ data: undefined }) }));
@@ -36,7 +37,7 @@ afterEach(async () => {
 async function settle() {
   await act(async () => { await new Promise(resolve => setTimeout(resolve, 10)); });
 }
-async function render(view: 'general' | 'polls') {
+async function render(view: 'general' | 'polls' | 'metrics' | 'evaluations') {
   await act(async () => { tree = create(<QueryClientProvider client={client}><ContextInsights universityId="university" view={view} header={<Text>Üniversite</Text>} /></QueryClientProvider>); });
   await settle();
 }
@@ -61,7 +62,7 @@ it('shows only counts on general and retries only the failed metrics section', a
   });
   await render('general');
   expect(tree.root.findAllByType(Text).some(node => node.props.children === 'Kampüste yaşam')).toBe(false);
-  expect(tree.root.findAllByType(Metric).find(node => node.props.label === 'deneyim')?.props.value).toBe(1);
+  expect(tree.root.findAllByType(Metric).find(node => node.props.label === 'Deneyim')?.props.value).toBe(1);
   expect(tree.root.findAllByType(ErrorState)).toHaveLength(1);
   call.mockClear();
   call.mockResolvedValue([]);
@@ -69,4 +70,20 @@ it('shows only counts on general and retries only the failed metrics section', a
   await settle();
   expect(call.mock.calls.map(args => args[1])).toEqual(['/api/context-metrics']);
   expect(tree.root.findAllByType(ErrorState)).toHaveLength(0);
+});
+
+it('shows all ten measurement topics before anyone contributes', async () => {
+  call.mockResolvedValue([]);
+  await render('metrics');
+  expect(call.mock.calls.map(args=>args[1])).toEqual(['/api/context-metrics']);
+  const titles=tree.root.findAllByType(Text).map(node=>node.props.children);
+  for(const title of ['Haftalık çalışma','Devam zorunluluğu','Proje yoğunluğu','Sınav yoğunluğu','İngilizce kullanımı','Grup çalışması','Kampüste geçirilen süre','Aylık barınma','Aylık ulaşım','Aylık yemek'])expect(titles).toContain(title);
+  expect(tree.root.findAllByType(Button).some(node=>node.props.label==='Ölçüm ekle')).toBe(false);
+});
+it('shows public criteria with zero votes without an add dialog', async () => {
+  call.mockImplementation(async (_method,path)=>path==='/api/evaluations/criteria'?[{criterionKey:'GENERAL',label:'Genel memnuniyet',averageRating:0,voteCount:0,distribution:[0,0,0,0,0]}]:{evaluationCount:0,averageRating:0});
+  await render('evaluations');
+  expect(call.mock.calls.map(args=>args[1]).sort()).toEqual(['/api/evaluations/criteria','/api/evaluations/summary']);
+  expect(tree.root.findAllByType(Text).some(node=>node.props.children==='Genel memnuniyet')).toBe(true);
+  expect(tree.root.findAllByType(Button).some(node=>node.props.label==='Değerlendirme ekle')).toBe(false);
 });

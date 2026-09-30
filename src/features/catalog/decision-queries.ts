@@ -47,11 +47,16 @@ export const pollsQuery = (universityId: string, programId?: string) => infinite
   getNextPageParam: nextPage,
 });
 
-export const experiencesQuery = (universityId: string, programId?: string) => infiniteQueryOptions({
-  queryKey: [...decisionKeys.context(universityId, programId), 'experiences'],
+export const experiencesQuery = (universityId: string, programId?: string, templateType?: string) => infiniteQueryOptions({
+  queryKey: [...decisionKeys.context(universityId, programId), 'experiences', templateType],
   staleTime: 30_000,
   initialPageParam: 0,
-  queryFn: ({ pageParam, signal }) => api.call('get', '/api/experiences', { query: { universityId, programId, page: pageParam, size: 20 }, signal }),
+  queryFn: ({ pageParam, signal }) => api.call('get', '/api/experiences', { query: { universityId, programId, templateType, page: pageParam, size: 20 }, signal }),
   getNextPageParam: nextPage,
 });
 
+
+export const criteriaQuery=(universityId:string,programId?:string)=>queryOptions({queryKey:[...decisionKeys.context(universityId,programId),'criteria'],staleTime:30_000,queryFn:({signal})=>api.call('get','/api/evaluations/criteria',{query:{universityId,programId},signal})});
+export const myRatingsQuery=(universityId:string,programId?:string)=>queryOptions({queryKey:[...decisionKeys.context(universityId,programId),'my-ratings'],staleTime:30_000,queryFn:({signal})=>api.call('get','/api/evaluations/my-ratings',{query:{universityId,programId},signal,authenticated:true})});
+
+export const pollParticipationQuery=(pollIds:string[])=>queryOptions({queryKey:[...decisionKeys.all,'poll-votes',...pollIds],staleTime:30_000,queryFn:({signal})=>api.call('get','/api/me/poll-votes',{query:{pollIds},signal,authenticated:true})});

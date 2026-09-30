@@ -38,22 +38,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/questions/{id}/best-answer": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["best"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/questions/{id}/assignment": {
         parameters: {
             query?: never;
@@ -438,6 +422,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/experiences/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experience"];
+        put: operations["updateExperience"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/evaluations": {
         parameters: {
             query?: never;
@@ -512,22 +512,6 @@ export interface paths {
         get?: never;
         /** Sahibi yorumunı soft delete eder veya aktif soruda aynı kaydı geri yükler */
         put: operations["status_1"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/answers/{id}/like": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["like_1"];
-        put: operations["like_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -980,7 +964,23 @@ export interface paths {
         };
         get: operations["experiences"];
         put?: never;
-        post: operations["experience"];
+        post: operations["experience_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/experiences/{id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["experience_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1684,6 +1684,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/poll-votes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["votes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/notifications": {
         parameters: {
             query?: never;
@@ -2166,22 +2182,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/experiences/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["experience_1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/experience-sentiments": {
         parameters: {
             query?: never;
@@ -2222,6 +2222,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evaluations/my-ratings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["myRatings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/evaluations/criteria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["criteria"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2429,8 +2461,6 @@ export interface components {
             archivedAt?: string;
             /** Format: int64 */
             version?: number;
-            /** Format: uuid */
-            bestAnswerId?: string;
             statistics?: components["schemas"]["QuestionStatisticsResponse"];
         };
         QuestionStatisticsResponse: {
@@ -2460,10 +2490,6 @@ export interface components {
             liked?: boolean;
             /** Format: int64 */
             version?: number;
-        };
-        BestAnswerRequest: {
-            /** Format: uuid */
-            answerId: string;
         };
         AssignmentRequest: {
             assigned: boolean;
@@ -2516,6 +2542,8 @@ export interface components {
             totalVotes?: number;
             /** Format: int64 */
             verifiedVoteCount?: number;
+            activeAdmin?: boolean;
+            educationStatus?: string;
         };
         RetentionRequest: {
             targetType: string;
@@ -2923,6 +2951,8 @@ export interface components {
             resolutionReason?: string;
             /** Format: int64 */
             version?: number;
+            /** Format: uuid */
+            universityId?: string;
         };
         CatalogUpdateRequest: {
             name: string;
@@ -2952,6 +2982,35 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        ExperienceUpdateRequest: {
+            title: string;
+            body: string;
+            /** Format: int64 */
+            version: number;
+        };
+        ExperienceResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            authorId?: string;
+            authorName?: string;
+            templateType?: string;
+            title?: string;
+            body?: string;
+            sentiment?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            version?: number;
+            /** Format: uuid */
+            universityId?: string;
+            /** Format: uuid */
+            programId?: string;
+            educationStatus?: string;
+            activeAdmin?: boolean;
+            /** Format: date-time */
+            editedAt?: string;
+        };
         EvaluationRequest: {
             /** Format: uuid */
             universityId: string;
@@ -2960,6 +3019,8 @@ export interface components {
             /** Format: int32 */
             rating?: number;
             body?: string;
+            /** @enum {string} */
+            criterionKey?: "GENERAL" | "EDUCATION" | "ACADEMIC_STAFF" | "CAMPUS" | "TRANSPORT" | "HOUSING" | "CAREER" | "STUDENT_SERVICES";
         };
         EvaluationResponse: {
             /** Format: uuid */
@@ -3031,8 +3092,6 @@ export interface components {
             /** Format: date-time */
             moderatedAt?: string;
             /** Format: int64 */
-            likeCount?: number;
-            /** Format: int64 */
             version?: number;
             owned?: boolean;
             anonymous?: boolean;
@@ -3041,14 +3100,6 @@ export interface components {
             deleted: boolean;
             /** Format: int64 */
             version: number;
-        };
-        AnswerLikeRequest: {
-            liked: boolean;
-        };
-        AnswerLikeResponse: {
-            liked?: boolean;
-            /** Format: int64 */
-            likeCount?: number;
         };
         AnswerCommentUpdateRequest: {
             body: string;
@@ -3070,6 +3121,8 @@ export interface components {
             version?: number;
             /** Format: uuid */
             replyToId?: string;
+            /** Format: date-time */
+            editedAt?: string;
         };
         AdminAnswerResponse: {
             /** Format: uuid */
@@ -3101,8 +3154,6 @@ export interface components {
             deletedAt?: string;
             /** Format: date-time */
             moderatedAt?: string;
-            /** Format: int64 */
-            likeCount?: number;
             /** Format: int64 */
             version?: number;
             owned?: boolean;
@@ -3265,16 +3316,14 @@ export interface components {
             body: string;
             sentiment?: string;
         };
-        ExperienceResponse: {
+        ContentReportResponse: {
             /** Format: uuid */
             id?: string;
+            targetType?: string;
             /** Format: uuid */
-            authorId?: string;
-            authorName?: string;
-            templateType?: string;
-            title?: string;
-            body?: string;
-            sentiment?: string;
+            targetId?: string;
+            reason?: string;
+            status?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: int64 */
@@ -3326,19 +3375,6 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
-        };
-        ContentReportResponse: {
-            /** Format: uuid */
-            id?: string;
-            targetType?: string;
-            /** Format: uuid */
-            targetId?: string;
-            reason?: string;
-            status?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: int64 */
-            version?: number;
         };
         AnswerCommentRequest: {
             body: string;
@@ -3458,10 +3494,6 @@ export interface components {
             tanidikAnswerCount?: number;
             /** Format: int64 */
             communityAnswerCount?: number;
-            /** Format: int64 */
-            helpfulVoteCount?: number;
-            /** Format: int64 */
-            bestAnswerCount?: number;
             /** Format: int64 */
             helpedPeopleCount?: number;
             /** Format: date-time */
@@ -3661,6 +3693,12 @@ export interface components {
             size?: number;
             /** Format: int64 */
             totalElements?: number;
+        };
+        PollParticipationResponse: {
+            /** Format: uuid */
+            pollId?: string;
+            /** Format: uuid */
+            optionId?: string;
         };
         NotificationResponse: {
             /** Format: uuid */
@@ -3915,10 +3953,6 @@ export interface components {
             /** Format: int64 */
             answers?: number;
             /** Format: int64 */
-            bestAnswers?: number;
-            /** Format: int64 */
-            usefulVotes?: number;
-            /** Format: int64 */
             evaluations?: number;
             /** Format: int64 */
             experiences?: number;
@@ -3976,6 +4010,22 @@ export interface components {
             averageRating?: number;
             /** Format: int64 */
             evaluationCount?: number;
+        };
+        EvaluationRatingResponse: {
+            /** @enum {string} */
+            criterionKey?: "GENERAL" | "EDUCATION" | "ACADEMIC_STAFF" | "CAMPUS" | "TRANSPORT" | "HOUSING" | "CAREER" | "STUDENT_SERVICES";
+            /** Format: int32 */
+            rating?: number;
+        };
+        EvaluationCriterionResponse: {
+            /** @enum {string} */
+            criterionKey?: "GENERAL" | "EDUCATION" | "ACADEMIC_STAFF" | "CAMPUS" | "TRANSPORT" | "HOUSING" | "CAREER" | "STUDENT_SERVICES";
+            label?: string;
+            /** Format: double */
+            averageRating?: number;
+            /** Format: int64 */
+            voteCount?: number;
+            distribution?: number[];
         };
         MetricSummaryResponse: {
             metricKey?: string;
@@ -4063,10 +4113,6 @@ export interface components {
             answerCount?: number;
             /** Format: int64 */
             communityAnswerCount?: number;
-            /** Format: int64 */
-            helpfulVoteCount?: number;
-            /** Format: int64 */
-            bestAnswerCount?: number;
             /** Format: int64 */
             helpedPeopleCount?: number;
             /** Format: date-time */
@@ -4179,30 +4225,6 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["LikeResponse"];
                 };
-            };
-        };
-    };
-    best: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BestAnswerRequest"];
-            };
-        };
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -4960,6 +4982,54 @@ export interface operations {
             };
         };
     };
+    experience: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExperienceResponse"];
+                };
+            };
+        };
+    };
+    updateExperience: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperienceUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExperienceResponse"];
+                };
+            };
+        };
+    };
     list: {
         parameters: {
             query: {
@@ -5169,54 +5239,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AnswerResponse"];
-                };
-            };
-        };
-    };
-    like_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["AnswerLikeResponse"];
-                };
-            };
-        };
-    };
-    like_2: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AnswerLikeRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["AnswerLikeResponse"];
                 };
             };
         };
@@ -6148,6 +6170,7 @@ export interface operations {
             query: {
                 universityId: string;
                 programId?: string;
+                templateType?: string;
                 page?: number;
                 size?: number;
             };
@@ -6168,7 +6191,7 @@ export interface operations {
             };
         };
     };
-    experience: {
+    experience_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -6188,6 +6211,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ExperienceResponse"];
+                };
+            };
+        };
+    };
+    experience_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContentReportResponse"];
                 };
             };
         };
@@ -7227,6 +7276,28 @@ export interface operations {
             };
         };
     };
+    votes: {
+        parameters: {
+            query: {
+                pollIds: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PollParticipationResponse"][];
+                };
+            };
+        };
+    };
     notifications: {
         parameters: {
             query?: {
@@ -7930,28 +8001,6 @@ export interface operations {
             };
         };
     };
-    experience_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ExperienceResponse"];
-                };
-            };
-        };
-    };
     sentiments: {
         parameters: {
             query: {
@@ -8016,6 +8065,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["EvaluationSummaryResponse"];
+                };
+            };
+        };
+    };
+    myRatings: {
+        parameters: {
+            query: {
+                universityId: string;
+                programId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EvaluationRatingResponse"][];
+                };
+            };
+        };
+    };
+    criteria: {
+        parameters: {
+            query: {
+                universityId: string;
+                programId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EvaluationCriterionResponse"][];
                 };
             };
         };

@@ -4,7 +4,7 @@ describe('public web link parity', () => {
     ['/universiteler?city=Ankara', '/kesfet?kind=universities&city=Ankara'],
     ['/programlar?programName=Tıp&tur=DEVLET&yil=2025&sirala=SCORE&puanMin=400', '/kesfet?kind=programs&programName=T%C4%B1p&institutionType=DEVLET&year=2025&sort=SCORE&scoreFrom=400'],
     ['/populer?donem=WEEKLY', '/?period=WEEKLY'], ['/populer', '/?period=ALL_TIME'],
-    ['/sorular?cevap=unanswered&dogrulanmis=yes&sirala=MOST_VIEWED', '/?answered=false&verifiedAnswer=true&sort=MOST_VIEWED'],
+    ['/sorular?sirala=MOST_VIEWED', '/?sort=MOST_VIEWED'],
     ['/tanidiklar?educationStatus=MEZUN&universityId=', '/people?educationStatus=MEZUN'],
     ['/arama?q=kampus', '/search?q=kampus'], ['/siralama?period=YEARLY', '/leaderboard?period=YEARLY'],
     ['/istatistikler', '/statistics'], ['/durum', '/status'],

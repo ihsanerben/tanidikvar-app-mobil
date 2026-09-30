@@ -1,3 +1,4 @@
+import { shareLink } from '@/lib/share';
 import { z } from "zod";
 import { api } from "@/lib/api/client";
 import { useState } from "react";
@@ -17,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { FeatureForm } from "@/components/ui/feature-form";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ErrorState, Skeleton } from "@/components/ui/states";
-import { idParams } from "@/lib/navigation/params";
+import { idParams, sharePath } from "@/lib/navigation/params";
 import type { Schema } from "@/lib/api/types";
 import { orderDiscussion } from "./discussion-order";
 import { commentList, questionsApi } from "./api";
@@ -49,14 +50,7 @@ function Comments({ id, commentId }: { id: string; commentId?:string }) {
         <Text>{item.body}</Text>
         <Button label="Yanıtla" variant="secondary" onPress={()=>loginAction(()=>{setReply(item);setCompose(true);})}/>
         <Text variant="muted">{item.createdAt ? new Date(item.createdAt).toLocaleString('tr-TR') : ''}</Text>
-        <ActionsMenu title="Alt yorum işlemleri"><Button label="Yorumu bildir" variant="secondary" onPress={() => loginAction(() => setReportId(item.id!))} />
-        {item.authorId === me.data?.id && (
-          <Button
-            label="Yorumunu düzenle"
-            variant="secondary"
-            onPress={() => setEdit(item)}
-          />
-        )}</ActionsMenu>
+        {item.editedAt && <Text variant="muted" className="text-metadata">Düzenlendi · {new Date(item.editedAt).toLocaleString("tr-TR", {timeZone:"Europe/Istanbul",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</Text>}<ActionsMenu title="Alt yorum işlemleri" popover>{close => <><Button label="Paylaş" icon="share" variant="menu" onPress={() => { return shareLink(`${sharePath('sorular',id)}#comment-${item.id}`, close); }} />{item.authorId === me.data?.id ? <Button label="Düzenle" icon="edit" variant="menu" onPress={() => { close(); setEdit(item); }} /> : <Button label="Şikâyet et" icon="flag" variant="menu" onPress={() => { close(); loginAction(() => setReportId(item.id!)); }} />}</>}</ActionsMenu>
       </Card>
     );
   }

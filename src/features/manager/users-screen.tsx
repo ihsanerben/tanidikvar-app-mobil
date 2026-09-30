@@ -33,7 +33,7 @@ export function ManagerUsersScreen() {
     }, authenticated: true, signal }), getNextPageParam: nextPage,
   });
   const items = query.data?.pages.flatMap(page => page.items ?? []) ?? [];
-  return <FlashList data={items} keyExtractor={item => item.id!} renderItem={({ item }) => <UserRow user={item} />}
+  return <FlashList showsVerticalScrollIndicator={false} data={items} keyExtractor={item => item.id!} renderItem={({ item }) => <UserRow user={item} />}
     ListHeaderComponent={<View className="gap-3 px-gutter py-5"><Text variant="title" className="text-manager-text">Kullanıcı yönetimi</Text>
       <FormField label="Kullanıcı ara" value={draft.q} onChangeText={q => setDraft(old => ({ ...old, q }))} onSubmitEditing={() => setFilters(draft)} />
       <Select label="Durum" value={draft.status} options={[{ value: "ALL", label: "Tümü" }, { value: "VISIBLE", label: "Aktif" }, { value: "HIDDEN", label: "Pasif" }]} onChange={status => setDraft(old => ({ ...old, status }))} />

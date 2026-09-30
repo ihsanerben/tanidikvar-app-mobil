@@ -24,7 +24,7 @@ export function ManagerContentScreen() {
     }, authenticated: true, signal }), getNextPageParam: nextPage,
   });
   const items = query.data?.pages.flatMap(page => page.items ?? []) ?? [];
-  return <FlashList data={items} keyExtractor={(item, index) => item.id ?? String(index)} renderItem={({ item }) => <Pressable accessibilityRole="link" onPress={() => { const id = item.questionId || (item.kind === "QUESTION" ? item.id : undefined); if (id) router.push({ pathname: "/manager/questions/[id]", params: { id } }); }} className="mx-gutter mb-2 min-h-16 gap-1 rounded-card border border-manager-border bg-surface p-3">
+  return <FlashList showsVerticalScrollIndicator={false} data={items} keyExtractor={(item, index) => item.id ?? String(index)} renderItem={({ item }) => <Pressable accessibilityRole="link" onPress={() => { const id = item.questionId || (item.kind === "QUESTION" ? item.id : undefined); if (id) router.push({ pathname: "/manager/questions/[id]", params: { id } }); }} className="mx-gutter mb-2 min-h-16 gap-1 rounded-card border border-manager-border bg-surface p-3">
     <View className="flex-row justify-between gap-2"><Text variant="heading" className="min-w-0 flex-1">{item.title || (item.kind === "QUESTION" ? "Soru" : "Yorum")}</Text><Text variant="muted">{item.kind}</Text></View>
     <Text numberOfLines={2}>{item.body}</Text><Text variant="muted">{item.authorName || "Üye"} · {item.deletedAt ? "Silinmiş" : item.moderatedAt ? "Gizlenmiş" : "Görünür"}</Text>
   </Pressable>}

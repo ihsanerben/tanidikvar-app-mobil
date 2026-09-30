@@ -34,11 +34,10 @@ export function NotificationsScreen() {
       empty={<EmptyState title="Bildirim bulunamadı" description="Seçtiğin filtrelere uygun bir bildirim yok." />}
       header={<View className="gap-3 pb-5">
       <PageHeader title="Bildirimler" backHref="/profil" backLabel="Hesabıma dön" help="Hesabın, başvuruların, soruların, yorumların ve takiplerinle ilgili bildirimleri burada yönetebilirsin." />
-      <Card className="gap-2 p-3">
+      <Card className="gap-1.5 p-2.5">
       <Select label="Bildirim türü" value={draftType} options={[{ value: '', label: 'Tümü' }, { value: 'QUESTION', label: 'Sorular' }, { value: 'ANSWER', label: 'Yorumlar' }, {value:'ANSWER_COMMENT',label:'Yanıtlar'},{value:'POLL',label:'Anketler'},{value:'EVALUATION',label:'Değerlendirmeler'},{value:'EXPERIENCE',label:'Deneyimler'},{value:'METRIC',label:'Ölçümler'},{value:'ACHIEVEMENT',label:'Rozetler'},{ value: 'APPLICATION', label: 'Başvurular' }, { value: 'ACCOUNT', label: 'Hesap' }]} onChange={setDraftType} />
       <View className="flex-row items-center justify-between"><Text>Yalnız okunmamışlar</Text><Switch value={draftUnread} onValueChange={setDraftUnread} accessibilityLabel="Yalnız okunmamışlar" /></View>
-      <View className="flex-row flex-wrap gap-2"><Button label="Filtrele" onPress={() => setFilter({ type: draftType, unread: draftUnread })} /><Button label="Temizle" variant="secondary" onPress={() => { setDraftType(''); setDraftUnread(false); setFilter({ type: '', unread: false }); }} /></View>
-      <Button label="Bildirim ayarları" variant="secondary" onPress={() => setSettingsOpen(true)} />
+      <View className="flex-row flex-wrap items-center gap-1"><Button label="Filtrele" size="small" onPress={() => setFilter({ type: draftType, unread: draftUnread })} /><Button label="Temizle" size="small" variant="secondary" onPress={() => { setDraftType(''); setDraftUnread(false); setFilter({ type: '', unread: false }); }} /><View className="ml-auto"><Button label="Bildirim ayarları" size="small" variant="secondary" onPress={() => setSettingsOpen(true)} /></View></View>
       </Card>
     </View>} />
     <BottomSheet visible={settingsOpen} title="Bildirim ayarları" close={() => setSettingsOpen(false)}><PreferencesForm onSaved={() => setSettingsOpen(false)} /></BottomSheet>

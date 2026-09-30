@@ -15,7 +15,7 @@ import { leaderboardQuery } from "./api";
 import type { Schema } from "@/lib/api/types";
 import { publicProfile, publicTanidikProfile } from "@/features/profile/api";
 
-const rankingHelp = "Yalnız yayında kalan, özgün katkılar puana dönüşür.\n\nSoru sormak: 5 puan\nYorum yazmak: 10 puan\nFaydalı oyu almak: 3 puan\nEn iyi cevap seçilmek: 15 puan\nDeneyim paylaşmak: 12 puan\nDeğerlendirme yapmak: 8 puan\n\nDönemler İstanbul saatine göre hesaplanır.";
+const rankingHelp = "Yalnız yayında kalan, özgün katkılar puana dönüşür.\n\nSoru sormak: 10 puan\nYorum yazmak: 5 puan\nDeneyim paylaşmak: 3 puan\nAnket açmak: 3 puan\nAnkete katılmak: 1 puan\nDeğerlendirme yapmak: 1 puan\nÖlçüm paylaşmak: 1 puan\n\nDönemler İstanbul saatine göre hesaplanır.";
 const rankSurface = cva("min-h-8 min-w-8 items-center justify-center rounded-full px-1", {
   variants: { place: { first: "bg-rank-first", second: "bg-rank-second", third: "bg-rank-third", other: "bg-rank-default" } },
 });
@@ -37,7 +37,7 @@ export function LeaderboardScreen() {
 function Leaderboard({ filters }: { filters: LeaderboardFilters }) {
   const query = useQuery(leaderboardQuery(filters));
   return (
-    <FlashList
+    <FlashList showsVerticalScrollIndicator={false}
       data={query.data ?? []}
       keyExtractor={(item) => item.userId!}
       refreshing={query.isRefetching}
@@ -46,8 +46,8 @@ function Leaderboard({ filters }: { filters: LeaderboardFilters }) {
       }}
       ListHeaderComponent={
         <View className="gap-4 pb-5">
-          <PageHeader back={false} eyebrow="Kaliteli katkı" title="Katkı sıralaması" help={rankingHelp} />
-          <Tabs compact
+          <PageHeader back={false} title="Katkı sıralaması" help={rankingHelp} />
+          <Tabs compact fill
             label="Dönem"
             value={filters.period}
             options={[

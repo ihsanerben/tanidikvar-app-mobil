@@ -6,17 +6,21 @@ import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { QuestionByline } from './question-byline';
 import { QuestionContext } from './question-context';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 export function QuestionCard({ item, actions }: { item: Schema["QuestionResponse"]; actions?:ReactNode }) {
   return (
-    <Card compact className="gap-1">
-      {actions}
+    <View className="relative">
+    <Pressable accessibilityRole="link" accessibilityLabel={`${item.title} sorusunu aç`} onPress={() => item.id && router.push({ pathname: '/questions/[id]', params: { id: item.id } })}>
+    <Card compact className={actions ? "gap-1 pr-14" : "gap-1"}>
       <QuestionContext question={item} compact />
-      <Pressable accessibilityRole="link" accessibilityLabel={item.title} hitSlop={{ top: 8, bottom: 8 }} className="min-h-7 justify-center" onPress={() => item.id && router.push({ pathname: '/questions/[id]', params: { id: item.id } })}><Text variant="heading" numberOfLines={2}>{item.title}</Text></Pressable>
+      <Text variant="heading" numberOfLines={2}>{item.title}</Text>
       {!!item.body && <Text numberOfLines={1} className="text-excerpt text-muted">{item.body}</Text>}
-      <QuestionByline question={item} compact />
+      <View className="mt-2"><QuestionByline question={item} compact statsRight /></View>
       {item.archivedAt && <Badge label="Arşivlenmiş soru" />}
 
     </Card>
+    </Pressable>
+    {actions && <View className="absolute right-3 top-2">{actions}</View>}
+    </View>
   );
 }

@@ -51,7 +51,7 @@ export function AboutScreen() {
     </View>
     <View className="gap-3 border-t border-border pt-5" onLayout={event=>setHowY(event.nativeEvent.layout.y)}>
     <Text variant="unstyled" className="text-metadata font-bold tracking-widest text-primary">TANIDIKVAR NEDİR?</Text>
-    <Text variant="title">Broşürlerin ötesinde, kampüsün içinden.</Text>
+    <Text variant="title">Broşürlerin ötesinde,{'\n'}kampüsün içinden.</Text>
     <Text>Tercih döneminde aradığın gerçek deneyimleri, öğrenci ve mezun katkılarını tek bir yerde buluşturuyoruz.</Text></View>
     {[["01 / KEŞFET", "Merak ettiğin yeri bul.", "Üniversite, bölüm ve konular üzerinden sana yakın sorulara ve topluluk verilerine ulaş."], ["02 / DİNLE", "Yaşayanlardan öğren.", "Topluluk ve Tanıdık yorumlarını ayrı sekmelerde oku; gerçek deneyimleri karşılaştır."], ["03 / SOR", "Merak ettiklerini sor.", "Sorunu ilgili üniversite veya bölüme yönelt ve doğru kişilerden yanıt al."]].map(([number, title, body]) => <Card key={number} className={number.startsWith("02") ? "bg-primary-soft" : "bg-page"}><Text variant="muted">{number}</Text><Text variant="heading">{title}</Text><Text>{body}</Text></Card>)}
     <View className="gap-3 rounded-card bg-primary p-5"><Text variant="unstyled" className="text-center text-metadata font-bold tracking-widest text-primary-foreground">BİRLİKTE DAHA KOLAY</Text><Text variant="title" className="text-center text-primary-foreground">Birinin deneyimi,{'\n'}senin başlangıcın olabilir.</Text><Text className="text-center text-primary-foreground/80">Soru sormanın, karşılaştırmanın ve deneyim paylaşmanın buluşma noktası.</Text></View>

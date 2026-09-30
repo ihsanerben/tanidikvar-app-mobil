@@ -4,6 +4,12 @@ import { queryClient } from "@/lib/query/query-client";
 import { nextPage } from "@/lib/query/pagination";
 import { authKeys } from "@/features/auth/api";
 import type { Schema } from "@/lib/api/types";
+import { createApiClient } from "../../../packages/api-client/client";
+import { tokenManager } from "@/lib/auth/token-manager";
+import { env } from "@/lib/env";
+import type { ContributionSummary } from "./profile-identity-card";
+
+const summaryClient = createApiClient(env.EXPO_PUBLIC_API_URL, tokenManager);
 export const profileKeys = {
   me: ["profile", "me"] as const,
   public: (id: string) => ["profile", id] as const,
@@ -23,6 +29,12 @@ export const publicProfile = (id: string) =>
     staleTime: 30_000,
     queryFn: ({ signal }) =>
       api.call("get", "/api/profiles/{id}", { params: { id }, signal }),
+  });
+export const publicContributionSummary = (id: string) =>
+  queryOptions({
+    queryKey: [...profileKeys.public(id), "contribution-summary"],
+    staleTime: 30_000,
+    queryFn: ({ signal }) => summaryClient.request<ContributionSummary>(`/api/profiles/${id}/contribution-summary`, { method: "GET", signal }),
   });
 export const publicTanidikProfile = (id: string) =>
   queryOptions({
@@ -86,6 +98,8 @@ export const profileApi = {
       body,
       authenticated: true,
     });
+    await queryClient.cancelQueries({ queryKey: profileKeys.me });
+    queryClient.setQueryData(profileKeys.me, result);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: profileKeys.me }),
       queryClient.invalidateQueries({ queryKey: authKeys.all }),

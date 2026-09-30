@@ -13,14 +13,13 @@ import { ErrorState, Skeleton } from "@/components/ui/states";
 import { CatalogPicker } from "@/features/catalog/catalog-picker";
 import type { Schema } from "@/lib/api/types";
 import { myProfile, profileApi } from "./api";
+import { useCurrentUser } from "@/features/auth/use-current-user";
 import { profileSchema } from "./schemas";
 export function ProfileEditScreen() {
   const query = useQuery(myProfile());
   const [revision, setRevision] = useState(0);
-  const [saved, setSaved] = useState(false);
   return (
     <Page title="Profilim" backHref="/profil" backLabel="Hesabıma dön">
-      {saved && <Text accessibilityRole="alert" className="text-success">Profilin kaydedildi.</Text>}
       {query.isPending ? (
         <Skeleton variant="form" />
       ) : query.isError && !query.data ? (
@@ -34,9 +33,9 @@ export function ProfileEditScreen() {
         <Editor
           key={revision}
           profile={query.data}
-          onSaved={() => { setSaved(true); setRevision(value => value + 1); }}
+          onSaved={() => router.replace("/profil")}
           reload={() => {
-            void query.refetch().then(() => { setSaved(false); setRevision(value => value + 1); });
+            void query.refetch().then(() => { setRevision(value => value + 1); });
           }}
         />
       )}
@@ -52,6 +51,7 @@ function Editor({
   reload: () => void;
   onSaved: () => void;
 }) {
+  const user = useCurrentUser();
   // Freeze the form baseline until explicit reload/save; background reads must not replace a draft.
   const [profile] = useState(initialProfile);
   const [universityName, setUniversityName] = useState(
@@ -60,10 +60,15 @@ function Editor({
   const [programName, setProgramName] = useState(
     profile.education?.departmentName,
   );
+  if (user.isPending) return <Skeleton variant="form" />;
+  if (!user.data) return <ErrorState error={user.error} retry={() => void user.refetch()} />;
   return (
     <View className="gap-3">
     <FeatureForm
       schema={profileSchema}
+      confirm={values => user.data.role === "TANIDIK" && (profile.education?.universityId ?? "") !== (values.educationStatus === "YKS_ADAYI" ? "" : values.universityId)
+        ? "Üniversite bilgin değişeceği için Tanıdık statün kaldırılacak. Yeniden doğrulama başvurun otomatik oluşturulacak; yönetici onayladığında statün geri verilecek. Bilgilerini kaydetmek istiyor musun?"
+        : undefined}
       reload={reload}
       onSuccess={onSaved}
       defaults={{
@@ -135,6 +140,7 @@ function Editor({
               universityName={universityName}
               programName={programName}
               onUniversity={(item) => {
+                if (item.id === form.getValues("universityId")) return;
                 form.setValue("universityId", item.id!);
                 form.setValue("programId", "");
                 form.setValue("departmentId", "");

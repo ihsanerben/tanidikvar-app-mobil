@@ -73,7 +73,13 @@ it('preserves a known zero academic staff count and distinguishes absent data', 
   let tree!:ReactTestRenderer;
   try {
     await act(async()=>{tree=create(<QueryClientProvider client={client}><CompareScreen /></QueryClientProvider>);});
-    expect(tree.root.findByType(DataTable).props.rows).toContainEqual(['Akademik kadro','0','Veri yok']);
+    const tables=tree.root.findAllByType(DataTable);
+    expect(tables).toHaveLength(2);
+    expect(tables[0].props.columns[0]).toBe('Üniversite / program');
+    expect(tables[0].props.columns).toContain('Akademik kadro');
+    const staffColumn=tables[0].props.columns.indexOf('Akademik kadro');
+    expect(tables[0].props.rows.map((row:string[])=>row[staffColumn])).toEqual(['0','Veri yok']);
+    expect(tables[1].props.columns).toContain('Net verisinin yılı');
   } finally {
     if(tree) await act(async()=>tree.unmount());
     client.clear();

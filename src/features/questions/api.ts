@@ -19,8 +19,6 @@ export const questionList = (
     scope?: '' | 'GENERAL' | 'UNIVERSITY' | 'UNIVERSITY_DEPARTMENT';
     tagId?: string;
     city?: string;
-    answered?: '' | 'true' | 'false';
-    verifiedAnswer?: '' | 'true' | 'false';
     period?: '' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'ALL_TIME';
   } = {},
 ) =>
@@ -29,7 +27,7 @@ export const questionList = (
     initialPageParam: 0,
     staleTime: 30_000,
     queryFn: ({ pageParam, signal }) => {
-      const query = { q: filters.q, universityId: filters.universityId, departmentId: filters.departmentId, tagId: filters.tagId, city: filters.city || undefined, scope: filters.scope || undefined, answered: filters.answered ? filters.answered === 'true' : undefined, verifiedAnswer: filters.verifiedAnswer ? filters.verifiedAnswer === 'true' : undefined, page: pageParam, size: 20 };
+      const query = { q: filters.q, universityId: filters.universityId, departmentId: filters.departmentId, tagId: filters.tagId, city: filters.city || undefined, scope: filters.scope || undefined, page: pageParam, size: 20 };
       return filters.period && filters.period !== 'ALL_TIME' ? api.call('get', '/api/popular', { query: { ...query, period: filters.period }, signal }) : api.call("get", "/api/questions", {
         query: { ...query, programId:filters.programId, sort: filters.period === 'ALL_TIME' ? 'MOST_VIEWED' : filters.sort },
         signal,
@@ -196,23 +194,6 @@ export const questionsApi = {
           body,
           authenticated: true,
         }),
-  helpfulState: (id: string) =>
-    api.call("get", "/api/answers/{id}/like", {
-      params: { id },
-      authenticated: true,
-    }),
-  helpful: (id: string, liked: boolean) =>
-    api.call("put", "/api/answers/{id}/like", {
-      params: { id },
-      body: { liked },
-      authenticated: true,
-    }),
-  best: (id: string, answerId: string) =>
-    api.call("put", "/api/questions/{id}/best-answer", {
-      params: { id },
-      body: { answerId },
-      authenticated: true,
-    }),
   report: (id: string, reason: string, answer: boolean) =>
     answer
       ? api.call("post", "/api/answers/{id}/reports", {

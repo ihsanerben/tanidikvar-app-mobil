@@ -21,7 +21,7 @@ export function SearchOverview({ q, header }: { q: string; header: React.ReactEl
   const programs = useQuery({ queryKey: ["search", q, "programs"], enabled, queryFn: ({ signal }) => api.call("get", "/api/catalog-programs", { query: { q, page: 0, size: 8 }, signal }) });
   const questions = useQuery({ queryKey: ["search", q, "questions"], enabled, queryFn: ({ signal }) => api.call("get", "/api/questions", { query: { q, page: 0, size: 8 }, signal }) });
   const people = useQuery({ queryKey: ["search", q, "people"], enabled, queryFn: ({ signal }) => api.call("get", "/api/tanidiklar", { query: { q, page: 0, size: 8 }, signal }) });
-  return <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="gap-4 pb-10">{header}
+  return <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerClassName="gap-4 pb-10">{header}
     {enabled && <>
       <Group title="Üniversiteler" count={universities.data?.totalElements} pending={universities.isPending} error={universities.isError} retry={() => void universities.refetch()} items={universities.data?.items?.map(item => ({ id: item.id, title: item.name, subtitle: item.city, open: () => item.id && router.push({ pathname: "/universities/[id]", params: { id: item.id } }) }))} />
       <Group title="Programlar" count={programs.data?.totalElements} pending={programs.isPending} error={programs.isError} retry={() => void programs.refetch()} items={programs.data?.items?.map(item => ({ id: item.id, title: item.name, subtitle: [item.universityName, item.city].filter(Boolean).join(" · "), open: () => item.id && router.push({ pathname: "/programs/[id]", params: { id: item.id } }) }))} />

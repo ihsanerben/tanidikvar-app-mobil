@@ -34,8 +34,6 @@ export const questionParams = z.object({
   scope: z.enum(['', 'GENERAL', 'UNIVERSITY', 'UNIVERSITY_DEPARTMENT']).default(''),
   tagId: z.uuid().optional(),
   city: z.string().max(100).default(''),
-  answered: z.enum(['', 'true', 'false']).default(''),
-  verifiedAnswer: z.enum(['', 'true', 'false']).default(''),
   sort: z.enum(["NEWEST", "OLDEST", "MOST_VIEWED", "MOST_LIKED", "MOST_COMMENTED"]).default("NEWEST"),
   period: z.enum(['', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', 'ALL_TIME']).default(''),
 });
@@ -84,4 +82,4 @@ export const communityParams = z.object({
   view: z.enum(["questions", "people", "evaluations"]).default("questions"),
 });
 
-export const peopleParams=z.object({ q:z.string().max(150).default(""),universityId:z.uuid().optional(),departmentId:z.uuid().optional(),educationStatus:z.enum(["","UNIVERSITE_OGRENCISI","MEZUN"]).default(""),classYear:z.enum(["","1","2","3","4","5","6"]).default(""),expertise:z.string().max(80).default(""),verified:z.enum(["","true"]).default("") });
+export const peopleParams=z.object({ q:z.string().max(150).default(""),universityId:z.uuid().optional(),departmentId:z.uuid().optional(),educationStatus:z.enum(["","UNIVERSITE_OGRENCISI","MEZUN"]).default(""),classYear:z.enum(["","1","2","3","4","5","6"]).default(""),expertise:z.string().max(80).default("") });

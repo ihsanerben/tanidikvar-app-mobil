@@ -17,7 +17,7 @@ export function QuestionContext({ question, compact = false }: { question: Schem
   if (scope === 'GENERAL' && !question.tags?.some(tag => tag.available)) return null;
   const links = questionContextLinks(question);
   const school = (name: string | undefined, href: Href | undefined) => href ? <Pressable accessibilityRole="link" accessibilityLabel={`${name} sayfası`} hitSlop={8} onPress={() => router.push(href)}><Text variant="unstyled" numberOfLines={1} className={label({ scope, className: 'underline' })}>{name}</Text></Pressable> : <Text variant="unstyled" numberOfLines={1} className={label({ scope })}>{name}</Text>;
-  return <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0" contentContainerClassName="min-h-8 flex-row items-center gap-1.5">
+  return <ScrollView showsVerticalScrollIndicator={false} horizontal showsHorizontalScrollIndicator={false} className="w-full flex-grow-0" contentContainerClassName="min-h-8 flex-row items-center gap-1.5">
     <View className={badge({ scope })}>
       <Text variant="unstyled" className={label({ scope })}>●</Text>
       {scope === 'GENERAL' ? <Text variant="unstyled" className={label({ scope })}>Genel</Text> : <>{school(question.universityName, links.university)}{scope === 'UNIVERSITY_DEPARTMENT' && !!question.departmentName && <><Text variant="unstyled" className={label({ scope })}>·</Text>{school(question.departmentName, links.department)}</>}</>}

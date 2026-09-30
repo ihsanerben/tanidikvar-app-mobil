@@ -13,7 +13,7 @@ const metrics = [
   ["activeUsers", "Aktif kullanıcılar"], ["disabledUsers", "Pasif kullanıcılar"], ["activeAdmins", "Aktif Tanıdıklar"],
   ["pendingApplications", "Bekleyen başvurular"], ["activeQuestions", "Aktif sorular"], ["archivedQuestions", "Arşivlenmiş sorular"],
   ["hiddenQuestions", "Gizlenen sorular"], ["communityAnswers", "Topluluk yorumları"], ["adminAnswers", "Tanıdık yorumları"],
-  ["likes", "Faydalı oylar"], ["views", "Görüntülenmeler"],
+  ["likes", "Beğeniler"], ["views", "Görüntülenmeler"],
 ] as const;
 const destinations = {
   activeUsers: "/manager/users", disabledUsers: "/manager/users", activeAdmins: "/manager/users",

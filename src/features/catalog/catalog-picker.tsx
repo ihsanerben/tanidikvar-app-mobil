@@ -13,6 +13,7 @@ export function CatalogPicker({
   universityName,
   programName,
   showProgram = true,
+  compact = false,
   onUniversity,
   onProgram,
 }: {
@@ -20,6 +21,7 @@ export function CatalogPicker({
   universityName?: string;
   programName?: string;
   showProgram?: boolean;
+  compact?: boolean;
   onUniversity: (item: Schema["UniversityResponse"]) => void;
   onProgram: (item: Schema["ProgramSummaryResponse"]) => void;
 }) {
@@ -28,8 +30,8 @@ export function CatalogPicker({
   const [kind, setKind] = useState<"university" | "program" | null>(null);
   return (
     <View className="gap-3">
-      <SelectionField label="Üniversite" value={universityName || university.data?.name || "Üniversite seç"} onPress={() => setKind("university")} expanded={kind==='university'} />
-      {showProgram && <SelectionField label="Program" value={programName || pickedProgram || "Program seç"} disabled={!universityId} onPress={() => setKind("program")} expanded={kind==='program'} />}
+      <SelectionField compact={compact} label="Üniversite" value={universityName || university.data?.name || (compact ? "Seç" : "Üniversite seç")} onPress={() => setKind("university")} expanded={kind==='university'} />
+      {showProgram && <SelectionField compact={compact} label="Program" value={programName || pickedProgram || (compact ? "Seç" : "Program seç")} disabled={!universityId} onPress={() => setKind("program")} expanded={kind==='program'} />}
       <BottomSheet
         scroll={false}
         visible={kind !== null}

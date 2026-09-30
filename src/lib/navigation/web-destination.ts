@@ -1,7 +1,7 @@
 import { isSafeDestination } from './destination';
 
 const routes: Record<string, { path: string; defaults?: Record<string, string>; names?: Record<string, string> }> = {
-  '/sorular': { path: '/', names: { sirala: 'sort', cevap: 'answered', dogrulanmis: 'verifiedAnswer' } },
+  '/sorular': { path: '/', names: { sirala: 'sort' } },
   '/populer': { path: '/', defaults: { period: 'ALL_TIME' }, names: { donem: 'period' } },
   '/universiteler': { path: '/kesfet', defaults: { kind: 'universities' } },
   '/programlar': { path: '/kesfet', defaults: { kind: 'programs' }, names: { tur: 'institutionType', duzey: 'degreeLevel', puan: 'scoreType', yil: 'year', sirala: 'sort', siraMin: 'rankFrom', siraMax: 'rankTo', puanMin: 'scoreFrom', puanMax: 'scoreTo' } },
@@ -22,8 +22,6 @@ export function webDestination(path: string, search: string): string | null | un
     if (seen.has(name) || name === 'kind') return null;
     seen.add(name);
     let value = raw;
-    if (key === 'cevap') value = raw === 'answered' ? 'true' : raw === 'unanswered' ? 'false' : raw;
-    if (key === 'dogrulanmis') value = raw === 'yes' ? 'true' : raw === 'no' ? 'false' : raw;
     if (value || (!['universityId', 'departmentId', 'tagId'].includes(name) && !(name in (route.defaults ?? {})))) query.set(name, value);
   }
   const destination = route.path + (query.size ? `?${query}` : '');

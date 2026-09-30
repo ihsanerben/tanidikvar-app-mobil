@@ -32,3 +32,13 @@ it('submits the contact contract once, clears the form and shows the web success
   expect(tree.root.findAllByType(FormField).every(node=>node.props.value==='')).toBe(true);
   expect(tree.root.findAllByType(Text).some(node=>node.props.children==='Mesajın gönderildi. En kısa sürede sana döneceğiz.')).toBe(true);
 });
+it('sends an account suggestion with profile identity and only asks for title and description',async()=>{
+  await act(async()=>tree.unmount());
+  const identity={name:'Ayşe Yılmaz',email:'ayse@example.test'};
+  await act(async()=>{tree=create(<QueryClientProvider client={client}><ContactForm identity={identity} suggestion /></QueryClientProvider>);});
+  expect(tree.root.findAllByType(FormField).map(node=>node.props.label)).toEqual(['Başlık','Açıklama']);
+  await fill('Başlık','Yeni bir özellik');await fill('Açıklama','Programları daha kolay bulmak istiyorum.');
+  jest.mocked(api.call).mockResolvedValue(undefined);
+  await act(async()=>tree.root.findByType(Button).props.onPress());
+  expect(api.call).toHaveBeenCalledWith('post','/api/contact',{body:{...identity,subject:'Yeni bir özellik',message:'Programları daha kolay bulmak istiyorum.'}});
+});

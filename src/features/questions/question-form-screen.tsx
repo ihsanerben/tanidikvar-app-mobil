@@ -24,7 +24,7 @@ export function QuestionCreateScreen() {
   return (
     <Page title="Soru sor">
       {p.success ? (
-        <Editor
+        <QuestionEditor
           initial={{
             universityId: p.data.universityId,
             programId: p.data.programId,
@@ -58,7 +58,7 @@ function EditLoader({ id }: { id: string }) {
       }}
     />
   ) : (
-    <Editor
+    <QuestionEditor
       key={revision}
       initial={query.data}
       reload={() => {
@@ -67,12 +67,16 @@ function EditLoader({ id }: { id: string }) {
     />
   );
 }
-function Editor({
+export function QuestionEditor({
   initial: initialQuestion,
   reload,
+  onCancel,
+  onDone,
 }: {
   initial: Schema["QuestionResponse"];
   reload?: () => void;
+  onCancel?: () => void;
+  onDone?: () => void;
 }) {
   const [initial] = useState(initialQuestion);
   const [requestId] = useState(newRequestId);
@@ -82,7 +86,7 @@ function Editor({
     <FeatureForm
       schema={questionSchema}
       reload={reload}
-      onCancel={() => { if (router.canGoBack()) router.back(); else router.replace("/"); }}
+      onCancel={() => { if (onCancel) onCancel(); else if (router.canGoBack()) router.back(); else router.replace("/"); }}
       defaults={{
         title: initial.title ?? "",
         body: initial.body ?? "",
@@ -128,6 +132,7 @@ function Editor({
             })
           : await questionsApi.create({ content, requestId });
         await refreshQuestions();
+        onDone?.();
         if (result.id)
           router.replace({
             pathname: "/questions/[id]",

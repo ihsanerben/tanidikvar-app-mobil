@@ -1,0 +1,20 @@
+import {Pressable,View} from 'react-native';
+import {useMutation,useQuery, useQueryClient} from '@tanstack/react-query';
+import {api} from '@/lib/api/client';
+import type {Schema} from '@/lib/api/types';
+import {Card} from '@/components/ui/card';
+import {Text} from '@/components/ui/text';
+import {ErrorState, Skeleton,useOffline} from '@/components/ui/states';
+import {criteriaQuery, myRatingsQuery, decisionKeys} from './decision-queries';
+export function EvaluationRatings({universityId,programId,canContribute}:{universityId:string;programId?:string;canContribute:boolean}) {
+  const criteria=useQuery(criteriaQuery(universityId,programId));
+  const ratings=useQuery({...myRatingsQuery(universityId,programId),enabled:canContribute});
+  const client=useQueryClient();
+  return <View className="gap-3">{criteria.isPending&&<Skeleton/>}{criteria.isError&&<ErrorState error={criteria.error} retry={()=>void criteria.refetch()}/>}{!canContribute&&<Text variant="muted">Bu üniversitenin öğrencileri ve mezunları değerlendirmeye katılabilir.</Text>}{canContribute&&ratings.isError&&<ErrorState error={ratings.error} retry={()=>void ratings.refetch()}/>}<View className="flex-row flex-wrap items-start -mx-1">{criteria.data?.map(item=><View key={item.criterionKey} className="w-1/2 p-1"><Criterion key={item.criterionKey} item={item} rating={ratings.data?.find(row=>row.criterionKey===item.criterionKey)?.rating} canContribute={canContribute&&ratings.isSuccess} universityId={universityId} programId={programId} after={()=>client.invalidateQueries({queryKey:decisionKeys.context(universityId,programId)})}/></View>)}</View></View>;
+}
+function Criterion({item,rating,canContribute,universityId,programId,after}:{item:Schema['EvaluationCriterionResponse'];rating?:number;canContribute:boolean;universityId:string;programId?:string;after:()=>Promise<void>}) {
+  const offline=useOffline();
+  const mutation=useMutation({mutationFn:(value:number)=>api.call('put','/api/evaluations',{body:{universityId,programId,criterionKey:item.criterionKey,rating:value},authenticated:true}),retry:0,onSuccess:after});
+  const selected=mutation.isPending||mutation.isSuccess?mutation.variables:rating;
+  return <Card compact className="p-2"><View className="gap-1"><Text variant="unstyled" accessibilityRole="header" className="font-bold text-primary text-caption leading-4">{item.label}</Text><View className="flex-row flex-wrap items-center justify-between gap-1"><Text variant="unstyled" accessibilityRole="header" className="font-bold text-primary text-caption text-primary">{item.voteCount?(item.averageRating??0).toLocaleString('tr-TR',{maximumFractionDigits:1}):'—'} / 5</Text><Text variant="muted" className="text-caption">{item.voteCount??0} oy</Text></View></View><View className="gap-1">{[5,4,3,2,1].map(value=><View key={value} className={"min-h-touch-ios flex-row items-center gap-1 rounded-control px-0.5 "+(canContribute&&selected===value?'bg-primary-soft':'')}><View className="w-11">{canContribute?<Pressable accessibilityRole="radio" accessibilityLabel={`${item.label}: ${value} yıldız ver`} accessibilityState={{selected:selected===value,disabled:offline||mutation.isPending}} className="min-h-touch-ios min-w-touch-ios justify-center" disabled={offline||mutation.isPending} onPress={()=>{if(value!==selected)mutation.mutate(value);}}><Text className={selected===value?'text-caption font-bold text-primary':'text-caption text-muted'}>{value} ★</Text></Pressable>:<Text className="text-caption text-muted">{value} ★</Text>}</View><View className="h-2 flex-1 overflow-hidden rounded-full bg-primary-soft"><View className="h-2 rounded-full bg-primary" style={{width:`${(item.distribution?.[value-1]??0)/Math.max(item.voteCount??0,1)*100}%`}}/></View><Text className="w-5 text-right text-metadata text-muted">{item.distribution?.[value-1]??0}</Text></View>)}</View>{mutation.isPending&&<Text accessibilityRole="alert" variant="muted">Kaydediliyor…</Text>}{mutation.isSuccess&&<Text accessibilityRole="alert" className="text-success">Oyun kaydedildi.</Text>}{mutation.isError&&<ErrorState error={mutation.error} retry={()=>mutation.reset()}/>}</Card>;
+}

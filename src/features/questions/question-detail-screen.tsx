@@ -1,8 +1,9 @@
+import { shareLink } from '@/lib/share';
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import { RetentionButton } from "@/features/retention/retention-button";
 import { useEffect, useRef, useState } from "react";
-import { View, Share, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCurrentUser } from '@/features/auth/use-current-user';
@@ -79,7 +80,6 @@ function Detail({ id, answerId }: { id: string; answerId?: string }) {
     enabled: !!user.data && user.data.role !== "MANAGER",
     retry: false,
   });
-  const quota = useQuery({ queryKey: ['questions', 'quota'], queryFn: () => api.call('get', '/api/me/admin-quota', { authenticated: true }), staleTime: 30_000, enabled: user.data?.role === 'TANIDIK' });
   const [selectedTab, setTab] = useState<"community" | "tanidik">();
   const tab = selectedTab ?? ((query.data?.statistics?.adminAnswerCount ?? 0) > 0 ? "tanidik" : "community");
   const [compose, setCompose] = useState(false);
@@ -116,62 +116,39 @@ function Detail({ id, answerId }: { id: string; answerId?: string }) {
         <Text variant="heading">{question.title}</Text>
         <Text>{question.body}</Text>
         {question.archivedAt && <><Badge label="Arşivlenmiş soru" /><Text variant="muted">Bu soru okunabilir; arşivde olduğu için yeni katkı kabul etmiyor.</Text></>}
-        <QuestionByline question={question} compact actions={<>
+        <QuestionByline question={question} compact statsRight actions={<View className="flex-row items-center gap-0">
           <View accessible accessibilityLabel={`${question.statistics?.viewCount ?? 0} görüntülenme`} className="flex-row items-center gap-1"><Icon name="view" /><Text variant="muted">{question.statistics?.viewCount ?? 0}</Text></View>
-          <StatAction icon="heart" label="Soruyu beğen" count={question.statistics?.likeCount ?? 0} selected={like.data?.liked} disabled={!!user.data && (!like.isSuccess || !canWrite)} action={async () => { if (!user.data) { loginAction(() => undefined); return; } await questionsApi.like(id, !like.data?.liked, like.data?.version ?? 0); await refreshQuestions(id); }} />
-          <StatAction icon="comment" label="Yorum yaz" count={question.statistics?.totalAnswerCount ?? 0} disabled={!!question.archivedAt || user.data?.role === 'MANAGER'} onPress={() => loginAction(() => setCompose(true))} />
-          <ActionsMenu title="Soru işlemleri">
-            <RetentionButton size="small" kind="saved" id={id} />
-            <ActionButton size="small" label="Paylaş" action={() => Share.share({ message: sharePath("sorular", id, question.title) })} />
-        {owner && (
-          <>
-            <Button
-              label="Soruyu düzenle"
-              variant="secondary"
-              onPress={() =>
-                router.push({
-                  pathname: "/questions/[id]/edit",
-                  params: { id },
-                })
-              }
-            />
-            <ActionButton size="small"
-              label={
-                question.archivedAt ? "Soruyu yeniden aç" : "Soruyu arşivle"
-              }
-              confirm="Sorunun durumunu değiştirmek istediğine emin misin?"
-              action={() =>
-                question.archivedAt
-                  ? questionsApi.restore(id, question.version!)
-                  : questionsApi.archive(id, question.version!)
-              }
-              after={() => refreshQuestions(id)}
-            />
-          </>
-        )}
+          <StatAction compact icon="heart" label="Soruyu beğen" count={question.statistics?.likeCount ?? 0} selected={like.data?.liked} disabled={!!user.data && (!like.isSuccess || !canWrite)} action={async () => { if (!user.data) { loginAction(() => undefined); return; } await questionsApi.like(id, !like.data?.liked, like.data?.version ?? 0); await refreshQuestions(id); }} />
+          <StatAction compact icon="comment" label="Yorum yaz" count={question.statistics?.totalAnswerCount ?? 0} disabled={!!question.archivedAt || user.data?.role === 'MANAGER'} onPress={() => loginAction(() => { setAsTanidik(user.data?.role === 'TANIDIK'); setCompose(true); })} />
+          <View className="-ml-1"><ActionsMenu title="Soru işlemleri" kind="question" popover>{close => <>
+            <Button size="small" variant="menu" icon="share" label="Paylaş" onPress={() => { return shareLink(sharePath("sorular", id, question.title), close); }} />
+            <RetentionButton size="small" kind="saved" id={id} menu onActivated={close} />
         <Button
-          label="Soruyu bildir"
-          variant="secondary"
-          onPress={() => loginAction(() => setReport(true))}
+          label="Şikâyet et"
+          variant="menu"
+          icon="flag"
+          onPress={() => { close(); loginAction(() => setReport(true)); }}
         />
+          </>}</ActionsMenu></View>
+        </View>} />
+        {owner && <View className="flex-row flex-wrap items-center gap-2"><Button label="Soruyu düzenle" variant="secondary" onPress={() => router.push({ pathname: "/questions/[id]/edit", params: { id } })} /><ActionButton size="small" label={question.archivedAt ? "Soruyu yeniden aç" : "Soruyu arşivle"} confirm="Sorunun durumunu değiştirmek istediğine emin misin?" action={() => question.archivedAt ? questionsApi.restore(id, question.version!) : questionsApi.archive(id, question.version!)} after={() => refreshQuestions(id)} /></View>}
       <BottomSheet
         visible={report}
-        title="Soruyu bildir"
+        title="Soruyu şikâyet et"
         close={() => setReport(false)}
       >
         <FeatureForm
           schema={reportSchema}
           defaults={{ reason: "" }}
           fields={[
-            { name: "reason", label: "Bildirim gerekçesi", multiline: true },
+            { name: "reason", label: "Şikâyet nedeni", multiline: true },
           ]}
           submit={(value) => questionsApi.report(id, value.reason, false)}
           onSuccess={() => setReport(false)}
-          label="Bildir"
+          label="Şikâyeti gönder"
+          onCancel={() => setReport(false)}
         />
       </BottomSheet>
-          </ActionsMenu>
-        </>} />
       </Card>
       {ownCommunity.data?.deletedAt && (
         <AnswerCard
@@ -208,27 +185,20 @@ function Detail({ id, answerId }: { id: string; answerId?: string }) {
       />
       <BottomSheet
         visible={compose}
-        title="Cevabını paylaş"
+        title={asTanidik ? "Tanıdık yorumunu yaz" : "Topluluk yorumunu yaz"}
         close={() => setCompose(false)}
       >
-        {quota.data && <Text variant="muted">Bugün {quota.data.used ?? 0}/{quota.data.limit ?? 0} Tanıdık cevabı · {quota.data.remaining ?? 0} hakkın kaldı.</Text>}
         {user.data?.role === "TANIDIK" && (
-          <Tabs
-            label="Cevap türü"
-            variant="filled"
-            value={asTanidik ? "tanidik" : "community"}
-            onChange={(value) => setAsTanidik(value === "tanidik")}
-            options={[
-              { value: "community", label: "Topluluk" },
-              { value: "tanidik", label: "Tanıdık" },
-            ]}
-          />
+          <View className="mb-3 flex-row flex-wrap gap-2" accessibilityLabel="Yorum türü">
+            <Button label="Tanıdık yorumu" selected={asTanidik} variant={asTanidik ? "primary" : "secondary"} onPress={() => setAsTanidik(true)} />
+            <Button label="Topluluk yorumu" selected={!asTanidik} variant={!asTanidik ? "primary" : "secondary"} onPress={() => setAsTanidik(false)} />
+          </View>
         )}
         {user.data?.role === "TANIDIK" && (
           <View className="flex-row items-center justify-between">
-            <Text>Anonim yayımla</Text>
+            <Text>Yorumu anonim yayınla</Text>
             <Switch
-              accessibilityLabel="Anonim yayımla"
+              accessibilityLabel="Yorumu anonim yayınla"
               value={anonymous}
               onValueChange={setAnonymous}
             />
@@ -237,8 +207,9 @@ function Detail({ id, answerId }: { id: string; answerId?: string }) {
         <FeatureForm
           schema={bodySchema}
           defaults={{ body: "" }}
-          fields={[{ name: "body", label: "Cevabın", multiline: true }]}
-          label="Cevabı yayımla"
+          fields={[{ name: "body", label: "Yorum", multiline: true, hideLabel: true, placeholder: "Yorumunu yaz.", maxLength: 5000 }]}
+          label="Yanıtı yayınla"
+          onCancel={() => setCompose(false)}
           testID="answer-submit"
           submit={(value) =>
             questionsApi.answer(
@@ -252,7 +223,6 @@ function Detail({ id, answerId }: { id: string; answerId?: string }) {
             void refreshQuestions(id);
           }}
         />
-        {(asTanidik ? ownTanidik.data?.answer : ownCommunity.data) && <Text variant="muted" accessibilityRole="text">Bu soruda yorumun bulunuyor. Mevcut yorumunu düzenleyebilir veya yeni bir yorum ekleyebilirsin.</Text>}
       </BottomSheet>
 
     </View>
@@ -285,60 +255,37 @@ function AnswerCard({
   const [editSource, setEditSource] = useState(answer);
   const [reporting, setReporting] = useState(false);
   const loginAction = useLoginAction();
-  const helpful = useQuery({
-    queryKey: [...questionKeys.detail(question.id!), "helpful", answer.id],
-    queryFn: () => questionsApi.helpfulState(answer.id!),
-    staleTime: 30_000,
-    enabled: !!answer.id && !!userId,
-  });
   const owner = answer.owned || isOwn || (!!userId && userId === answer.authorId);
   const unavailable =
     !!answer.deletedAt || !!answer.moderatedAt || !!question.archivedAt;
   return (
-    <Card compact className={question.bestAnswerId === answer.id ? 'border-primary' : ''}>
-      {question.bestAnswerId === answer.id && <Badge label="✓ En iyi cevap" />}
+    <Card compact>
       <View className="flex-row items-start gap-2">
       <Pressable accessibilityRole={answer.authorId ? 'link' : undefined} disabled={!answer.authorId} onPress={() => router.push({pathname:'/profiles/[id]',params:{id:answer.authorId!}})} className="min-h-touch-android min-w-0 flex-1 flex-row items-center gap-2">
-        <Avatar size="small" name={answer.authorName || 'Anonim Tanıdık'} educationStatus={answer.educationStatus} tanidik={answer.activeAdmin && !!answer.authorId} />
+        <Avatar size="small" name={answer.authorName || 'Anonim Tanıdık'} educationStatus={answer.educationStatus} tanidik={answer.activeAdmin} anonymous={answer.anonymous === true || !answer.authorId} />
         <View className="min-w-0 flex-1"><Text variant="label">{answer.authorName || 'Anonim Tanıdık'}</Text>{!!answer.authorId && <Text variant="muted">{[answer.universityName,answer.departmentName].filter(Boolean).join(' · ')}</Text>}</View>
       </Pressable>
-      <ActionsMenu title="Cevap işlemleri">
-      <ActionButton label="Paylaş" action={() => Share.share({ message: sharePath('sorular', question.id!, question.title) })} />
-      {question.authorId === userId && !unavailable && question.bestAnswerId !== answer.id && <ActionButton label="En iyi cevap seç" action={() => questionsApi.best(question.id!, answer.id!)} after={() => refreshQuestions(question.id)} />}
-
-      {owner && (
+      <ActionsMenu title="Cevap işlemleri" popover>{close => <>
+      <Button variant="menu" icon="share" label="Paylaş" onPress={() => { return shareLink(`${sharePath('sorular', question.id!, question.title)}#answer-${answer.id}`, close); }} />
+      {owner ? (
         <>
           <Button
-            label="Cevabı düzenle"
-            variant="secondary"
+            label="Düzenle"
+            variant="menu"
+            icon="edit"
             disabled={unavailable}
             onPress={() => {
+              close();
               setEditSource(answer);
               setEditing(true);
             }}
           />
-          <ActionButton size="small"
-            label={answer.deletedAt ? "Cevabı geri getir" : "Cevabı kaldır"}
-            confirm="Cevabının görünürlüğünü değiştirmek istediğine emin misin?"
-            action={() =>
-              questionsApi.answerStatus(
-                answer.id!,
-                { deleted: !answer.deletedAt, version: answer.version! },
-                tanidik,
-              )
-            }
-            after={() => refreshQuestions(question.id)}
-          />
         </>
-      )}
-      <Button
-        label="Cevabı bildir"
-        variant="secondary"
-        onPress={() => loginAction(() => setReporting(true))}
-      />
+      ) : <Button label="Şikâyet et" variant="menu" icon="flag" onPress={() => { close(); loginAction(() => setReporting(true)); }} />}
+      </>}</ActionsMenu></View>
       <BottomSheet
         visible={editing}
-        title="Cevabı düzenle"
+        title="Yorumu düzenle"
         close={() => setEditing(false)}
       >
         <FeatureForm
@@ -348,7 +295,8 @@ function AnswerCard({
           }}
           schema={bodySchema}
           defaults={{ body: editSource.body ?? "" }}
-          fields={[{ name: "body", label: "Cevabın", multiline: true }]}
+          fields={[{ name: "body", label: "Yorum", multiline: true }]}
+          onCancel={() => setEditing(false)}
           submit={(values) =>
             questionsApi.answerUpdate(
               answer.id!,
@@ -364,27 +312,27 @@ function AnswerCard({
       </BottomSheet>
       <BottomSheet
         visible={reporting}
-        title="Cevabı bildir"
+        title="İçeriği şikâyet et"
         close={() => setReporting(false)}
       >
         <FeatureForm
           schema={reportSchema}
           defaults={{ reason: "" }}
           fields={[
-            { name: "reason", label: "Bildirim gerekçesi", multiline: true },
+            { name: "reason", label: "Şikâyet nedeni", multiline: true },
           ]}
           submit={(values) =>
             questionsApi.report(answer.id!, values.reason, true)
           }
           onSuccess={() => setReporting(false)}
-          label="Bildir"
+          label="Şikâyeti gönder"
+          onCancel={() => setReporting(false)}
         />
       </BottomSheet>
-      </ActionsMenu></View>
       <Text className="py-1">{answer.body}</Text>
-      <AnswerDiscussion answerId={answer.id!} userId={userId} unavailable={unavailable}
+      <AnswerDiscussion answerId={answer.id!} questionId={question.id!} questionTitle={question.title ?? 'Soru'} userId={userId} unavailable={unavailable}
         metadata={`${answer.publishedAt ? new Date(answer.publishedAt).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}${answer.editedAt ? ' · düzenlendi' : ''}`}
-        likeAction={<StatAction icon="heart" label="Yorumu faydalı bul" count={helpful.data?.likeCount ?? answer.likeCount ?? 0} selected={helpful.data?.liked} disabled={unavailable || owner || (!!userId && !helpful.isSuccess)} action={async () => { if (!userId) { loginAction(() => undefined); return; } await questionsApi.helpful(answer.id!, !helpful.data?.liked); await refreshQuestions(question.id); }} />}
+
       />
     </Card>
   );

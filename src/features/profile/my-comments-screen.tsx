@@ -93,8 +93,8 @@ function CommentCard({ item, kind }: { item: Comment; kind: "tanidik" | "communi
       <Text variant="muted">{item.publishedAt ? new Date(item.publishedAt).toLocaleString("tr-TR") : ""}</Text>
       {item.questionId && <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: "/questions/[id]", params: { id: item.questionId! } })} className="min-h-touch-ios android:min-h-touch-android min-w-touch-ios android:min-w-touch-android justify-center"><Text className="text-primary underline">Soru detayı</Text></Pressable>}
     </View>
-    <Text variant="muted">{item.likeCount ?? 0} faydalı oy{item.editedAt ? " · Düzenlendi" : ""}</Text>
-    {item.id && <ActionsMenu title="Yorum işlemleri">{!item.deletedAt && <Button label="Düzenle" variant="secondary" onPress={() => setDialog("edit")} />}<Button label={item.deletedAt ? "Geri getir" : "Kaldır"} variant="secondary" onPress={() => setDialog("status")} /></ActionsMenu>}
+    <Text variant="muted">{item.editedAt ? "Düzenlendi" : ""}</Text>
+    {item.id && <ActionsMenu title="Yorum işlemleri" popover>{close => <>{!item.deletedAt && <Button label="Düzenle" icon="edit" variant="menu" onPress={() => {close();setDialog("edit");}} />}<Button label={item.deletedAt ? "Geri getir" : "Kaldır"} icon="edit" variant="menu" onPress={() => {close();setDialog("status");}} /></>}</ActionsMenu>}
     <BottomSheet visible={!!dialog} title={dialog === "edit" ? "Yorumu düzenle" : item.deletedAt ? "Yorumu geri getir" : "Yorumu kaldır"} close={() => { if (!edit.isPending && !status.isPending) setDialog(null); }}>
       {dialog === "edit" ? <FeatureForm key={item.version} schema={editSchema} defaults={{ body: item.body ?? "" }} fields={[{ name: "body", label: "Yorum", multiline: true }]} label="Kaydet" submit={body => edit.mutateAsync(body)} />
         : <><Text>{item.deletedAt ? "Yorum yeniden görünür olacak." : "Yorum görünür listelerden kaldırılacak."}</Text><Button label={item.deletedAt ? "Geri getir" : "Kaldır"} variant={item.deletedAt ? "primary" : "danger"} pending={status.isPending} onPress={() => status.mutate()} /></>}

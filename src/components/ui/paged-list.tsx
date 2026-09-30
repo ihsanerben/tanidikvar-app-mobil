@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { View } from "react-native";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import type {
@@ -22,6 +22,7 @@ export function PagedList<T extends { id?: string }>({
   footer,
   maintainPosition = true,
   mapItems,
+  numColumns = 1,
 }: {
   query: UseInfiniteQueryResult<InfiniteData<Page<T>>, Error>;
   renderItem: ListRenderItem<T>;
@@ -30,22 +31,26 @@ export function PagedList<T extends { id?: string }>({
   footer?: ReactElement;
   maintainPosition?: boolean;
   mapItems?: (items: T[]) => T[];
+  numColumns?: number;
 }) {
   const offline = useOffline();
+  const [pullRefreshing, setPullRefreshing] = useState(false);
   const loaded = query.data?.pages.flatMap((page) => page.items ?? []) ?? [];
   const data = mapItems ? mapItems(loaded) : loaded;
   // v2 measures rows automatically; estimatedItemSize is a removed v1 prop.
   return (
-    <FlashList
+    <FlashList showsVerticalScrollIndicator={false}
       data={data}
+      numColumns={numColumns}
       maintainVisibleContentPosition={{ disabled: !maintainPosition }}
       renderItem={renderItem}
       keyExtractor={(item) => item.id!}
       ListHeaderComponent={header}
       ItemSeparatorComponent={Separator}
-      refreshing={query.isRefetching && !query.isFetchingNextPage}
+      refreshing={pullRefreshing}
       onRefresh={() => {
-        void query.refetch();
+        setPullRefreshing(true);
+        void query.refetch().finally(() => setPullRefreshing(false));
       }}
       onEndReached={() => {
         if (query.hasNextPage && !query.isFetching && !query.isError)

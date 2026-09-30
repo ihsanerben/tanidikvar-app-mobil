@@ -88,7 +88,7 @@ export const universityStats = (id: string) =>
         signal,
       }),
   });
-export function peopleList(universityId?: string, departmentId?: string, q?: string, filters: {educationStatus?:string;classYear?:number;verified?:boolean;expertise?:string} = {}) {
+export function peopleList(universityId?: string, departmentId?: string, q?: string, filters: {educationStatus?:string;classYear?:number;expertise?:string} = {}) {
   return infiniteQueryOptions({
     queryKey: [...catalogKeys.all, "people", universityId, departmentId, q, filters],
     staleTime: 30_000,

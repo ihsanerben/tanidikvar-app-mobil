@@ -13,12 +13,16 @@ export function RetentionButton({
   initialActive,
   targetType = "UNIVERSITY",
   size = "compact",
+  menu = false,
+  onActivated,
 }: {
   kind: CollectionKind;
   id: string;
   initialActive?: boolean;
   targetType?: "UNIVERSITY" | "PROGRAM";
   size?: "small" | "compact";
+  menu?: boolean;
+  onActivated?: () => void;
 }) {
   const client = useQueryClient();
   const { status } = useAuth();
@@ -41,20 +45,21 @@ export function RetentionButton({
       <Button size={size}
         testID={kind === "follows" ? "follow-toggle" : "save-toggle"}
         label={
-          !loggedIn ? (kind === 'follows' ? (targetType === 'PROGRAM' ? 'Bölümü takip et' : 'Üniversiteyi takip et') : 'Soruyu kaydet') : state.isPending
+          !loggedIn ? (kind === 'follows' ? (targetType === 'PROGRAM' ? 'Bölümü takip et' : 'Üniversiteyi takip et') : menu ? 'Kaydet' : 'Soruyu kaydet') : state.isPending
             ? "Durum yükleniyor…"
             : kind === "follows"
               ? state.data
                 ? "Takibi bırak"
                 : targetType === "PROGRAM" ? "Bölümü takip et" : "Üniversiteyi takip et"
               : state.data
-                ? "Kaydı kaldır"
-                : "Soruyu kaydet"
+                ? menu ? "Kayıttan çıkar" : "Kaydı kaldır"
+                : menu ? "Kaydet" : "Soruyu kaydet"
         }
-        variant="secondary"
+        variant={menu ? 'menu' : 'secondary'}
+        icon={menu ? 'save' : undefined}
         pending={mutation.isPending}
         disabled={loggedIn && (!state.isSuccess || offline)}
-        onPress={() => loginAction(() => mutation.mutate(!state.data))}
+        onPress={() => { onActivated?.(); loginAction(() => mutation.mutate(!state.data)); }}
       />
       {offline && (
         <Text variant="muted">Değiştirmek için internete bağlan.</Text>

@@ -1,0 +1,14 @@
+import {Controller} from 'react-hook-form';
+import {View} from 'react-native';
+import {z} from 'zod';
+import {api} from '@/lib/api/client';
+import type {Schema} from '@/lib/api/types';
+import {Card} from '@/components/ui/card';
+import {Text} from '@/components/ui/text';
+import {FeatureForm} from '@/components/ui/feature-form';
+import {FormField} from '@/components/ui/form-field';
+const schema=z.object({value:z.string().trim().refine(value=>value!==''&&Number.isFinite(Number(value.replace(',','.')))&&Number(value.replace(',','.'))>=0&&Number(value.replace(',','.'))<=1000000,'0–1.000.000 arasında bir değer gir.')});
+export function MeasurementCard({metricKey,label,metric,universityId,programId,canContribute,targeted,after}:{metricKey:string;label:string;metric?:Schema['MetricSummaryResponse'];universityId:string;programId?:string;canContribute:boolean;targeted:boolean;after:()=>void}) {
+ const unit=metricKey.startsWith('MONTHLY_')?'₺':['WEEKLY_STUDY_HOURS','CAMPUS_HOURS'].includes(metricKey)?'saat':'%';
+ return <Card compact className={targeted?'h-full p-2 border-2 border-primary':'h-full p-2 bg-surface'}><View className="gap-1"><Text variant="unstyled" accessibilityRole="header" className="font-bold text-primary text-caption leading-4">{label}</Text><View className="self-start rounded-full bg-primary-soft px-1.5 py-0.5"><Text variant="muted" className="text-caption">{metric?.sampleSize??0} katkı</Text></View></View>{targeted&&<Text variant="label">Bildirimdeki ölçüm</Text>}<View className="rounded-control bg-primary-soft p-2"><Text variant="muted" className="text-caption">Topluluk ortalaması</Text><Text variant="unstyled" accessibilityRole="header" className="font-bold text-[16px] text-primary">{metric?.privacyThresholdMet&&metric.average!=null?metric.average.toLocaleString('tr-TR',{maximumFractionDigits:2}):'—'} <Text variant="muted">{unit}</Text></Text>{metric?.sampleSize&&!metric.privacyThresholdMet&&<Text variant="muted" className="text-caption">Sonuç için en az 5 katkı gerekli</Text>}</View>{metric?.updatedAt&&<Text variant="muted" className="text-caption">Son güncelleme: {new Date(metric.updatedAt).toLocaleDateString('tr-TR',{month:'long',year:'numeric'})}</Text>}{canContribute&&<View className="border-t border-border pt-2"><FeatureForm schema={schema} defaults={{value:''}} fields={[]} label="Katıl" submit={values=>api.call('put','/api/context-metrics',{body:{universityId,programId,metricKey,value:Number(values.value.replace(',','.'))},authenticated:true})} onSuccess={after}>{form=><Controller control={form.control} name="value" render={({field,fieldState})=><FormField compact label={`Senin değerin (${unit})`} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} keyboardType="decimal-pad" editable={!form.formState.isSubmitting} error={fieldState.error?.message}/>}/>}</FeatureForm></View>}</Card>;
+}

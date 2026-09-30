@@ -1,5 +1,6 @@
+import { shareLink } from '@/lib/share';
 import { useQuery } from "@tanstack/react-query";
-import { Share, View } from "react-native";
+import { View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Page } from "@/components/ui/page";
 import { Card } from "@/components/ui/card";
@@ -66,13 +67,13 @@ function Report({ id, year }: { id: string; year: number }) {
             <Text variant="title">{profile.data?.name || "Tanıdık"}</Text>
             <Text variant="heading">{numberText(query.data.points)} Tanıdık Puanı</Text>
             <View className="flex-row flex-wrap justify-between gap-y-2">
-              <Metric value={query.data.answers} label="cevap" /><Metric value={query.data.usefulVotes} label="faydalı oy" />
-              <Metric value={query.data.bestAnswers} label="En İyi Cevap" /><Metric value={query.data.experiences} label="deneyim" />
+              <Metric value={query.data.answers} label="cevap" /><Metric value={query.data.evaluations} label="değerlendirme" />
+              <Metric value={query.data.experiences} label="deneyim" />
             </View>
             <Text>Topluluğun %{query.data.percentile?.toLocaleString("tr-TR", { maximumFractionDigits: 1 }) ?? "—"} diliminde</Text>
             <Text variant="muted">Gerçek deneyimlerle birbirimize yardımcı oluyoruz · TanıdıkVar</Text>
           </Card>
-          <Button label="Karneyi paylaş" onPress={() => { void Share.share({ message: `${profile.data?.name || 'Tanıdık'} ${year} Tanıdık Karnesi · https://tanidikvar.com.tr/tanidik/${id}/karne?year=${year}` }); }} />
+          <Button label="Karneyi paylaş" onPress={() => { void shareLink(`${profile.data?.name || 'Tanıdık'} ${year} Tanıdık Karnesi · https://tanidikvar.com.tr/tanidik/${id}/karne?year=${year}`); }} />
           <Text variant="muted">{numberText(query.data.pointEvents)} puan olayı · {numberText(query.data.evaluations)} değerlendirme</Text>
           {query.isError && (
             <ErrorState

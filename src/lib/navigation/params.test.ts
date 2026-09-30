@@ -20,9 +20,9 @@ describe("mobile route boundaries", () => {
     expect(isSafeDestination('/kesfet?kind=programs&programName=Tıp&year=2025&rankTo=5000&sort=SCORE')).toBe(true);
   });
   it('validates expanded question filters and rejects unknown fields on login destinations', () => {
-    expect(questionParams.parse({ scope: 'UNIVERSITY', universityId: id, answered: 'false', verifiedAnswer: 'true', period: 'YEARLY', sort: 'MOST_COMMENTED' }).period).toBe('YEARLY');
-    expect(questionParams.safeParse({ answered: 'yes' }).success).toBe(false);
-    expect(isSafeDestination('/?period=YEARLY&answered=false')).toBe(true);
+    expect(questionParams.parse({ scope: 'UNIVERSITY', universityId: id, period: 'YEARLY', sort: 'MOST_COMMENTED' }).period).toBe('YEARLY');
+    expect(questionParams.safeParse({ scope: 'UNKNOWN' }).success).toBe(false);
+    expect(isSafeDestination('/?period=YEARLY&sort=MOST_COMMENTED')).toBe(true);
     expect(isSafeDestination('/search?q=kampus&kind=people')).toBe(true);
     expect(isSafeDestination('/my-questions?status=ARCHIVED')).toBe(true);
     expect(isSafeDestination('/my-comments?kind=anonymous&scope=UNIVERSITY')).toBe(true);

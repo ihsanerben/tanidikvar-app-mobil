@@ -65,6 +65,7 @@ export function Page({
   backHref,
   backLabel,
   scrollRef,
+  compact = false,
 }: PropsWithChildren<{
   title: string;
   eyebrow?: string;
@@ -75,6 +76,7 @@ export function Page({
   backHref?: Href;
   backLabel?: string;
   scrollRef?:React.Ref<ScrollView>;
+  compact?: boolean;
 }>) {
   return (
     <Screen>
@@ -82,10 +84,10 @@ export function Page({
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView
+        <ScrollView showsVerticalScrollIndicator={false}
           ref={scrollRef}
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-4 pb-10"
+          contentContainerClassName={compact ? "gap-2.5 pb-8" : "gap-4 pb-10"}
           refreshControl={
             refresh ? (
               <RefreshControl refreshing={refreshing} onRefresh={refresh} />

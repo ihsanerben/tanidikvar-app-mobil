@@ -1,25 +1,24 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, router } from "expo-router";
-import { useForm, Controller, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { View } from "react-native";
+import { useState } from "react";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from "react-native";
+import { Text } from "@/components/ui/text";
+import { QuestionEditor } from "./question-form-screen";
+import { useLoginAction } from "@/features/auth/use-login-action";
 import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
-import { FilterPanel, FilterSelect, FilterRow, FilterCell } from "@/components/ui/filter-panel";
-import { universityFilterOptions, departmentFilterOptions, tagFilterOptions } from "@/features/catalog/filter-options";
-import { FormField } from "@/components/ui/form-field";
 import { PagedList } from "@/components/ui/paged-list";
 import { ErrorState } from "@/components/ui/states";
 import { questionParams } from "@/lib/navigation/params";
 import { questionList } from "./api";
 import { QuestionCard } from "./question-card";
-import { useState } from 'react';
+import { QuestionFilters } from "./question-filters";
 export function HomeScreen() {
   const parsed = questionParams.safeParse(useLocalSearchParams());
   return parsed.success ? (
-    <Feed key={JSON.stringify(parsed.data)} filters={parsed.data} />
+    <Feed filters={parsed.data} />
   ) : (
     <Screen>
       <PageHeader title="Sorular" />
@@ -32,16 +31,9 @@ function Feed({
 }: {
   filters: ReturnType<typeof questionParams.parse>;
 }) {
-  const query = useInfiniteQuery(questionList(filters));
-  const [open, setOpen] = useState(false);
-  const form = useForm({
-    resolver: zodResolver(questionParams),
-    defaultValues: filters,
-  });
-  const selectedUniversity = useWatch({ control: form.control, name: 'universityId' });
-  const universities = useQuery({ ...universityFilterOptions(), enabled: open });
-  const departments = useQuery({ ...departmentFilterOptions(selectedUniversity ?? ''), enabled: open && !!selectedUniversity });
-  const tags = useQuery({ ...tagFilterOptions(), enabled: open });
+  const [askOpen, setAskOpen] = useState(false);
+  const loginAction = useLoginAction();
+  const query = useInfiniteQuery({ ...questionList(filters), placeholderData: keepPreviousData });
   const header = (
     <View className="gap-4 pb-5">
       <PageHeader title={filters.period ? 'Popülerler' : 'Sorular'} back={false}
@@ -50,58 +42,10 @@ function Feed({
         label="Soru sor"
         size="standard"
         testID="ask-question"
-        onPress={() =>
-          router.push({
-            pathname: "/questions/new",
-            params: {
-              universityId: filters.universityId,
-              departmentId: filters.departmentId,
-            },
-          })
-        }
+        onPress={() => loginAction(() => setAskOpen(true))}
       />} />
-      {!filters.period && <View className="flex-row items-center gap-1.5"><View className="min-w-0 flex-1"><Controller
-        control={form.control}
-        name="q"
-        render={({ field }) => (
-          <FormField
-            label="Soru ara" hideLabel placeholder="Soru ara" returnKeyType="search"
-            value={field.value}
-            onChangeText={field.onChange}
-            onSubmitEditing={form.handleSubmit((values) =>
-              router.setParams(values),
-            )}
-          />
-        )}
-      /></View>
-      <View className="flex-row gap-1.5">
-        <View><Button label="Filtrele" variant="secondary" onPress={() => setOpen(true)} /></View>
-        <View><Button label="Ara" onPress={form.handleSubmit(values => router.setParams(values))} /></View>
-      </View></View>}
-      {!!filters.period && <Tabs compact label="Dönem" value={filters.period} options={[{ value: 'DAILY', label: 'Bugün' }, { value: 'WEEKLY', label: 'Bu hafta' }, { value: 'MONTHLY', label: 'Bu ay' }, { value: 'YEARLY', label: 'Bu yıl' }, { value: 'ALL_TIME', label: 'Tüm zamanlar' }]} onChange={period => router.setParams({ period })} />}
-      {!filters.period && <FilterPanel visible={open} title="Soruları filtrele" close={() => setOpen(false)}>
-        <FilterRow>
-          <FilterCell><Controller control={form.control} name="scope" render={({ field }) => <FilterSelect label="Soru kapsamı" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tüm kapsamlar' }, { value: 'GENERAL', label: 'Genel' }, { value: 'UNIVERSITY', label: 'Üniversite' }, { value: 'UNIVERSITY_DEPARTMENT', label: 'Üniversite + Bölüm' }]} />} /></FilterCell>
-          <FilterCell><Controller control={form.control} name="universityId" render={({ field }) => <FilterSelect label="Üniversite" value={field.value ?? ''} onChange={value => { field.onChange(value || undefined); form.setValue('departmentId', undefined); }} options={[{ value: '', label: universities.isPending ? 'Yükleniyor…' : 'Tüm üniversiteler' }, ...(universities.data ?? [])]} />} /></FilterCell>
-        </FilterRow>
-        <FilterRow>
-          <FilterCell><Controller control={form.control} name="departmentId" render={({ field }) => <FilterSelect label="Bölüm" disabled={!selectedUniversity} value={field.value ?? ''} onChange={value => field.onChange(value || undefined)} options={[{ value: '', label: selectedUniversity && departments.isPending ? 'Yükleniyor…' : 'Tüm bölümler' }, ...(departments.data ?? [])]} />} /></FilterCell>
-          <FilterCell><Controller control={form.control} name="tagId" render={({ field }) => <FilterSelect label="Etiket" value={field.value ?? ''} onChange={value => field.onChange(value || undefined)} options={[{ value: '', label: tags.isPending ? 'Yükleniyor…' : 'Tüm etiketler' }, ...(tags.data ?? [])]} />} /></FilterCell>
-        </FilterRow>
-        <FilterRow>
-          <FilterCell><Controller control={form.control} name="city" render={({ field }) => <FormField compact label="Şehir" placeholder="Örn. İstanbul" value={field.value} onChangeText={field.onChange} />} /></FilterCell>
-          <FilterCell><Controller control={form.control} name="answered" render={({ field }) => <FilterSelect label="Cevap durumu" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Cevaplanmış' }, { value: 'false', label: 'Cevap bekliyor' }]} />} /></FilterCell>
-        </FilterRow>
-        <FilterRow>
-          <FilterCell><Controller control={form.control} name="verifiedAnswer" render={({ field }) => <FilterSelect label="Doğrulanmış kişi cevabı" value={field.value} onChange={field.onChange} options={[{ value: '', label: 'Tümü' }, { value: 'true', label: 'Var' }, { value: 'false', label: 'Yok' }]} />} /></FilterCell>
-          <FilterCell><Controller control={form.control} name="sort" render={({ field }) => <FilterSelect label="Sıralama" value={field.value} onChange={field.onChange} options={[{ value: 'NEWEST', label: 'En yeni' }, { value: 'MOST_COMMENTED', label: 'En çok cevaplanan' }, { value: 'MOST_LIKED', label: 'En faydalı' }, { value: 'MOST_VIEWED', label: 'En çok görüntülenen' }, { value: 'OLDEST', label: 'En eski' }]} />} /></FilterCell>
-        </FilterRow>
-        {[universities, tags, ...(selectedUniversity ? [departments] : [])].filter(result => result.isError).map((result, index) => <ErrorState key={index} error={result.error} retry={() => { void result.refetch(); }} />)}
-        <View className="flex-row justify-between gap-2">
-          <Button label="Tümünü temizle" variant="secondary" onPress={() => { router.replace('/'); setOpen(false); }} />
-          <Button label="Ara" onPress={form.handleSubmit(values => { router.setParams(values); setOpen(false); })} />
-        </View>
-      </FilterPanel>}
+      {!filters.period && <QuestionFilters filters={filters} onApply={values => router.replace({ pathname: "/", params: values })} />}
+      {!!filters.period && <Tabs fill label="Dönem" value={filters.period} options={[{ value: 'DAILY', label: 'Bugün' }, { value: 'WEEKLY', label: 'Bu hafta' }, { value: 'MONTHLY', label: 'Bu ay' }, { value: 'YEARLY', label: 'Bu yıl' }, { value: 'ALL_TIME', label: 'Tüm zamanlar' }]} onChange={period => router.setParams({ period })} />}
       {filters.universityId && (
         <Button
           label="Tüm sorular"
@@ -113,7 +57,15 @@ function Feed({
   );
   return (
     <Screen>
-      <PagedList query={query} renderItem={QuestionCard} header={header} />
+      <PagedList query={query} renderItem={QuestionCard} header={header} maintainPosition={false} />
+      <Modal visible={askOpen} transparent animationType="fade" onRequestClose={() => setAskOpen(false)}>
+        <KeyboardAvoidingView className="flex-1 justify-center bg-black/40 px-3" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View className="max-h-[90%] overflow-hidden rounded-[16px] border border-border bg-surface shadow-lg">
+            <View className="flex-row items-center justify-between border-b border-border px-4 py-3"><Text variant="heading">Soru sor</Text><Pressable accessibilityRole="button" accessibilityLabel="Pencereyi kapat" onPress={() => setAskOpen(false)} className="min-h-touch-ios min-w-touch-ios items-center justify-center"><Text className="text-[22px] text-muted">×</Text></Pressable></View>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerClassName="gap-3 p-4"><QuestionEditor initial={{ universityId: filters.universityId, departmentId: filters.departmentId }} onCancel={() => setAskOpen(false)} onDone={() => setAskOpen(false)} /></ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </Screen>
   );
 }

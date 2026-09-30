@@ -5,7 +5,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import { Screen } from "@/components/ui/screen";
 import { PageHeader } from "@/components/ui/page";
-import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,9 +14,13 @@ import { useCurrentUser } from "@/features/auth/use-current-user";
 import { idParams } from "@/lib/navigation/params";
 import type { Schema } from "@/lib/api/types";
 import {AchievementMedallion} from "./achievement-medallion";
+import {groupAchievementEntries} from "./achievement-groups";
 import { achievementsQuery, achievementCatalogQuery } from "./api";
 
 type Achievement = Schema["AchievementResponse"];
+type Definition = Schema["AchievementDefinitionResponse"];
+type Entry = {achievement: Achievement;definition: Definition};
+type Group = {title:string;items:Entry[]};
 const help = "Rozetler, platformdaki faydalı katkıların ve belirli alanlardaki başarıların sonucunda kazanılır. Kazandığın rozetlerden en fazla üçünü seçerek Tanıdık profilinde öne çıkarabilirsin.";
 
 export function AchievementsScreen() {
@@ -41,15 +44,15 @@ function Achievements({ id }: { id: string }) {
   if (owner && query.data && catalog.data) return <ShowcaseForm key={id} id={id} items={query.data} catalog={catalog.data}
     header={header} refreshing={query.isRefetching} refresh={() => { void query.refetch(); }}
     onSaved={() => setSaved(true)} onChange={() => setSaved(false)} />;
-  return <FlashList data={query.data ?? []} keyExtractor={item => item.id!} renderItem={({item})=><Card><AchievementMedallion achievement={item} definition={catalog.data?.find(d=>d.key===item.key)}/>{renderAchievement({item,index:0,target:"Cell",extraData:undefined})}</Card>}
+  const groups=groupAchievementEntries((query.data??[]).map(achievement=>({achievement,definition:catalog.data?.find(definition=>definition.key===achievement.key)??{key:achievement.key??achievement.id??'OTHER',title:achievement.title??'Rozet',description:'Topluluğa yaptığın katkılar için kazanılan başarı rozeti.',icon:'★'}})));
+  return <FlashList showsVerticalScrollIndicator={false} data={groups} keyExtractor={group=>group.title} renderItem={renderGroup}
     refreshing={query.isRefetching} onRefresh={() => { void query.refetch(); }} ItemSeparatorComponent={Separator}
     ListHeaderComponent={<View>{header}{!owner && <Button label="Yıllık Tanıdık Karnesi" onPress={() => router.push({ pathname: "/annual-report/[id]", params: { id } })} />}</View>}
 
     ListEmptyComponent={query.isPending ? <Skeleton /> : query.isError ? <ErrorState error={query.error} retry={() => { void query.refetch(); }} /> : <EmptyState title="Henüz kazanılmış rozet yok" description="Katkılarınla kazandığın rozetler burada görünecek." />} />;
 }
-const renderAchievement: ListRenderItem<Achievement> = ({ item }) => <Card>
-  <Text variant="heading">{item.title}{item.periodYear ? ` · ${item.periodYear}` : ""}</Text>
-  {item.featured && <Badge label="Profilde gösteriliyor" />}
-  {item.awardedAt && <Text variant="muted">{new Date(item.awardedAt).toLocaleDateString("tr-TR")}</Text>}
-</Card>;
+const renderGroup: ListRenderItem<Group> = ({item:group}) => <View className="gap-3">
+  <Text variant="heading">{group.title}</Text>
+  <View className="flex-row flex-wrap">{group.items.map(({achievement,definition})=><View key={achievement.id} className="w-1/3 px-1 pb-2"><View className="flex-1 items-center gap-2 rounded-card border border-border bg-surface p-2"><AchievementMedallion achievement={achievement} definition={definition} compact/><Text className="text-center text-caption font-semibold text-primary" numberOfLines={3}>{achievement.title}{achievement.periodYear?` · ${achievement.periodYear}`:''}</Text>{achievement.featured&&<Badge label="Profilde"/>}</View></View>)}</View>
+</View>;
 function Separator() { return <View className="h-list-gap" />; }
